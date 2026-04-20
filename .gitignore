@@ -1,0 +1,66 @@
+# ─── Secrets (NEVER commit these) ────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.json
+secrets.local.*
+credentials.json
+config.local.*
+*.credentials
+
+# Notion / affiliate private tokens (if you ever save them to a file)
+notion-token*.txt
+notion.token
+*.secret
+
+# ─── OS ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+ehthumbs.db
+
+# ─── Editors / IDEs ──────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ─── Claude Code / local AI agent state ──────────────────────────────
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.anthropic/
+
+# ─── Node / build tooling (future-proof) ─────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+dist/
+build/
+
+# ─── Logs ────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Testing / coverage ──────────────────────────────────────────────
+coverage/
+.nyc_output/
+.jest/
+
+# ─── Misc local-only files ───────────────────────────────────────────
+*.tmp
+*.bak
+*.orig
+scratch/
+notes.private.md
