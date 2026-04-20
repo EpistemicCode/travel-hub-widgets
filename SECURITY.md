@@ -2,7 +2,7 @@
 
 ## What's safe to commit (and already is)
 
-- **Affiliate IDs** (`Allianceid`, `SID`, `trip_sub1`, `trip_sub3`) — public by design. They ride in every outbound URL a user clicks. Forking this repo and replacing them with your own IDs is the whole point.
+- **Affiliate IDs** (`Allianceid`, `SID`, `trip_sub1`, `trip_sub3`) — public by design. They ride in every outbound URL a user clicks. They are not secrets. (See LICENSE — copying or replacing these identifiers is not permitted.)
 - **Free API endpoints with no auth** — Open-Meteo, ipapi.co. No keys, no risk.
 
 ## What must NEVER be committed

@@ -1,43 +1,68 @@
 # travel-hub-widgets
 
-Self-contained HTML widgets for the **Travel Planning OS** Notion template. Embeds in any Notion page via `/embed`, hosts free on GitHub Pages.
+Hand-crafted widgets for the **Travel Planning OS** Notion template — live hotel/flight search, local time + weather, trip countdown. Designed to be **embedded directly into any Notion page via `/embed`**.
 
-- Utility widgets: countdown, map, currency, now-in weather, rotating quote
-- Affiliate widgets: stays search (Travelpayouts) — more coming
+> ⚠️ These widgets are free to **embed** in your own Notion pages. They are **not** free to copy, fork, redistribute, or rehost. See [LICENSE](./LICENSE).
 
-Zero backend, zero build step, zero external JS. Just HTML + a shared CSS token file.
+## How to use
 
-## Quick start (fork & use)
+Paste the widget URL into Notion using the `/embed` command. That's it — no download, no signup, no account.
 
-1. Fork this repo to your own GitHub.
-2. Enable **GitHub Pages** on `main` branch (Settings → Pages → Deploy from branch → main → `/root`).
-3. Open each affiliate HTML file, edit the `CONFIG` block at the top of the `<script>` tag and replace `{{MARKER}}` / `{{TRS}}` / `{{CID}}` with **your** affiliate IDs. (Without this, clicks still work but earn the repo owner's commission — not yours.)
-4. Commit + push. Your widgets live at `https://<your-user>.github.io/travel-hub-widgets/<name>.html`.
-5. In Notion, type `/embed` on your hub/module page and paste the widget URL. Resize the embed to match the widget's native dimensions (listed in each file's comment header).
+```
+Type /embed in Notion → paste the URL → resize to the size shown below
+```
 
-## Widget reference
+| Widget | Embed URL | Size |
+|---|---|---|
+| **Stays search** (hotels) | `https://epistemiccode.github.io/travel-hub-widgets/stays.html` | 480 × 360 |
+| **Flights search** | `https://epistemiccode.github.io/travel-hub-widgets/flights.html` | 480 × 380 |
+| **Now in …** (time + weather) | `https://epistemiccode.github.io/travel-hub-widgets/nowin.html` | 380 × 260 |
+| **Trip countdown** | `https://epistemiccode.github.io/travel-hub-widgets/countdown.html` | 340 × 260 |
 
-| File | Size | Type | Query params |
-|---|---|---|---|
-| `countdown.html` | 340×260 | utility | `?to=2026-05-02T21:40&dest=Ubud,+Bali&flight=GA+881` |
-| `map.html` | 480×320 | utility | `?stops=Canggu,Ubud&active=Ubud` |
-| `currency.html` | 480×320 | utility | `?home=USD&trip=IDR&amount=100` |
-| `nowin.html` | 380×260 | utility | `?lat=-8.5&lon=115.2&tz=Asia/Makassar&place=Ubud` |
-| `quote.html` | 560×200 | utility | `?accent=%23ff8a5c` |
-| `stays.html` | 480×320 | **affiliate** (Travelpayouts) | `?city=Bali&checkin=2026-05-01&checkout=2026-05-08&adults=2` |
+## Pre-configure with query params
+
+Each widget accepts URL query parameters so you can pre-fill defaults for your trip:
+
+```
+# Stays in Bali, 1-week window, 2 adults
+stays.html?city=Bali&checkin=2026-05-01&checkout=2026-05-08&adults=2
+
+# Flight from Shanghai to Bali, round-trip
+flights.html?from=SHA&to=DPS&depart=2026-05-01&return=2026-05-08&adults=2&type=RT
+
+# Now-in Ubud, Bali (local time + live weather)
+nowin.html?lat=-8.5069&lon=115.2625&tz=Asia/Makassar&place=Ubud
+
+# Countdown to a specific trip
+countdown.html?to=2026-05-02T21:40&dest=Ubud,+Bali&flight=GA+881
+```
+
+If you omit `lat`/`lon` on `nowin.html`, it auto-detects the viewer's location. If you omit the target date on `countdown.html`, it defaults to 30 days out.
 
 ## Affiliate disclosure
 
-Affiliate widgets include outbound links to booking partners. The repo owner may earn a commission when you click those links and complete a booking. Forking the repo and swapping the markers makes *you* the earner. No tracking beyond the affiliate partner's own redirect.
+`stays.html` and `flights.html` link out to Trip.com. When someone clicks through and books, the widget author may earn a referral commission at no extra cost to the traveler. The outbound URLs are direct `trip.com` links — no intermediate redirect, no tracking scripts.
 
-## Local preview
+## Data sources
 
-```bash
-cd travel-hub-widgets
-python -m http.server 8000
-# open http://localhost:8000/stays.html?city=Bali
-```
+All external APIs used are **free, public, and key-less**:
 
-## License
+- **Weather** — [Open-Meteo](https://open-meteo.com) (no signup)
+- **Visitor location fallback** — [ipapi.co](https://ipapi.co) (no signup)
+- **Time zones** — browser `Intl.DateTimeFormat` (no network)
 
-MIT. Fork freely.
+No analytics, no user tracking, no cookies.
+
+## Terms of use
+
+- ✅ **Embed** these URLs in your Notion pages, blog, documentation, or personal website
+- ✅ **Link** to this repository or the widgets
+- ❌ **Do not** fork, copy, mirror, rehost, or republish the widget source code
+- ❌ **Do not** modify the affiliate identifiers and rehost under your own brand
+- ❌ **Do not** bundle these widgets into a commercial product without written permission
+
+See [LICENSE](./LICENSE) for the full terms.
+
+## Contact
+
+Suggestions, partnership inquiries, or commercial licensing: open an issue on this repository.

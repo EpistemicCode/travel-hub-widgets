@@ -1,21 +1,64 @@
-MIT License
+Copyright (c) 2026 EpistemicCode / Path2Way. All rights reserved.
 
-Copyright (c) 2026 Path2Way
+The source code, HTML, CSS, JavaScript, and design assets in this
+repository (collectively, the "Work") are proprietary.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+GRANT OF USE (limited)
+----------------------
+You are granted a non-exclusive, non-transferable, revocable license
+to EMBED the hosted widget URLs (served from GitHub Pages at
+https://epistemiccode.github.io/travel-hub-widgets/) into your own
+Notion pages, personal website, blog, documentation, or presentation,
+for personal or commercial use, at no cost, provided that you do not
+modify the URLs in any way that alters the embedded affiliate
+identifiers.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+WHAT YOU MAY NOT DO
+-------------------
+Without prior written permission from the copyright holder, you may
+not:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  1. Copy, fork, clone, mirror, download, scrape, or otherwise
+     reproduce the source code of the Work, in whole or in part, for
+     any purpose including but not limited to rehosting, redistributing,
+     modifying, or creating derivative works.
+
+  2. Remove, obscure, alter, replace, or substitute any affiliate
+     identifier, tracking parameter, or attribution contained in the
+     Work, in source or in any deployed copy.
+
+  3. Rehost the Work on any other domain, server, CDN, or GitHub Pages
+     site, whether in original or modified form.
+
+  4. Claim authorship, rebrand, white-label, or sublicense the Work.
+
+  5. Bundle, repackage, or redistribute the Work as part of a template,
+     product, course, or commercial offering (other than as an embedded
+     URL pointing to the original hosted widget).
+
+  6. Use automated tools to bulk-download or archive the Work for
+     redistribution purposes.
+
+VIEWING AND DEBUGGING
+---------------------
+Normal operation of a web browser involves downloading the Work to the
+viewer's device in order to render it. Nothing in this license prevents
+such ordinary, transient viewing or browser-side inspection for
+educational or debugging purposes. Such viewing does not grant any
+rights beyond those listed above.
+
+NO WARRANTY
+-----------
+The Work is provided "AS IS", without warranty of any kind, express or
+implied, including but not limited to the warranties of merchantability,
+fitness for a particular purpose, and non-infringement. In no event
+shall the authors or copyright holders be liable for any claim, damages,
+or other liability, whether in an action of contract, tort, or
+otherwise, arising from, out of, or in connection with the Work or the
+use or other dealings in the Work.
+
+COMMERCIAL LICENSING
+--------------------
+For commercial use beyond the embed grant above — including white-label
+rights, source access, or custom affiliate integration — open an issue
+on this repository or contact the copyright holder.
