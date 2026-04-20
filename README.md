@@ -1,16 +1,26 @@
 # travel-hub-widgets
 
-Hand-crafted widgets for the **Travel Planning OS** Notion template — live hotel/flight search, local time + weather, trip countdown. Designed to be **embedded directly into any Notion page via `/embed`**.
+Hand-crafted travel widgets — live hotel/flight search, local time + weather, trip countdown. Designed for Notion, but embeddable on **any lawful page you control**: your blog, docs site, product page, company intranet, newsletter, or digital template.
 
-> ⚠️ These widgets are free to **embed** in your own Notion pages. They are **not** free to copy, fork, redistribute, or rehost. See [LICENSE](./LICENSE).
+> ⚠️ These widgets are free to **embed** (via URL or iframe) on any lawful site. They are **not** free to copy, fork, redistribute, or rehost. See [LICENSE](./LICENSE).
 
 ## How to use
 
-Paste the widget URL into Notion using the `/embed` command. That's it — no download, no signup, no account.
+Paste the widget URL into an embed block. That's it — no download, no signup, no code.
 
+**In Notion:**
 ```
-Type /embed in Notion → paste the URL → resize to the size shown below
+Type /embed → paste the URL → hit Embed link → resize to the dimensions below
 ```
+
+**On a website / blog / docs site:**
+```html
+<iframe src="https://epistemiccode.github.io/travel-hub-widgets/stays.html"
+        width="480" height="360" frameborder="0"
+        style="border:0; background: transparent;"></iframe>
+```
+
+Works in Ghost, WordPress, Substack (HTML/embed block), Webflow (Embed element), MDX, or any plain HTML page.
 
 | Widget | Embed URL | Size |
 |---|---|---|
