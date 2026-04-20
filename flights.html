@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find a flight</title>
+<!--
+  flights.html — Trip.com flight search widget · 480 × 380
+  Query params (all optional):
+    ?from=SHA&to=DPS&depart=2026-05-01&return=2026-05-08&adults=1&type=RT
+
+  Deep-link builder. Every click opens a real trip.com/flights/... URL
+  in a new tab with full search-state pre-filled. No redirect trick.
+
+  URL pattern derived from user's working Trip.com flight link:
+    https://www.trip.com/flights/<FromCity>-to-<ToCity>/tickets-<DCODE>-<ACODE>
+      ?flighttype=S|RT&dcity=<IATA>&acity=<IATA>&ddate=YYYY-MM-DD&rdate=...
+      &class=Y|C|F&adult=N&child=N
+      &Allianceid=...&SID=...&trip_sub1=...&trip_sub3=...
+-->
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body { padding: 0; width: 480px; height: 380px; }
+  .flights { padding: 18px 20px; height: 100%; display: flex; flex-direction: column; gap: 9px; }
+  .hdr .caps { display: block; margin-bottom: 4px; }
+  .hdr h2 { font-size: 22px; margin: 0; }
+  .hdr h2 em { font-style: italic; color: var(--accent); }
+  .row { display: grid; gap: 8px; }
+  .row.two   { grid-template-columns: 1fr 1fr; }
+  .row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .row.type-row { grid-template-columns: auto auto 1fr; align-items: center; gap: 14px; }
+  .field label { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 3px; }
+  .field input, .field select { width: 100%; }
+  .type-row label.radio { font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim); display: flex; align-items: center; gap: 4px; cursor: pointer; margin: 0; text-transform: uppercase; }
+  .type-row input[type=radio] { accent-color: var(--accent); width: auto; }
+  .search-btn { width: 100%; font-weight: 500; margin-top: 2px; }
+  .ft { display: flex; justify-content: space-between; align-items: center; margin-top: auto; font-size: 11px; }
+  .ft small.disclosure { margin: 0; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="card flights">
+  <div class="grain"></div>
+
+  <div class="hdr">
+    <span class="caps">Flights · wheels up</span>
+    <h2 class="serif"><em id="from-label">SHA</em> → <em id="to-label">DPS</em></h2>
+  </div>
+
+  <div class="row type-row">
+    <label class="radio"><input type="radio" name="type" value="RT" checked> Round-trip</label>
+    <label class="radio"><input type="radio" name="type" value="S"> One-way</label>
+    <div class="field" style="margin:0">
+      <select id="cabin" aria-label="Cabin class">
+        <option value="Y" selected>Economy</option>
+        <option value="S">Premium Economy</option>
+        <option value="C">Business</option>
+        <option value="F">First</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row two">
+    <div class="field">
+      <label for="from">From</label>
+      <input type="text" id="from" list="airports" autocomplete="off" placeholder="IATA code, e.g. SHA" maxlength="3">
+    </div>
+    <div class="field">
+      <label for="to">To</label>
+      <input type="text" id="to" list="airports" autocomplete="off" placeholder="IATA code, e.g. DPS" maxlength="3">
+    </div>
+  </div>
+  <datalist id="airports">
+    <option value="SHA">Shanghai Hongqiao</option>
+    <option value="PVG">Shanghai Pudong</option>
+    <option value="PEK">Beijing Capital</option>
+    <option value="HKG">Hong Kong</option>
+    <option value="TPE">Taipei Taoyuan</option>
+    <option value="ICN">Seoul Incheon</option>
+    <option value="NRT">Tokyo Narita</option>
+    <option value="HND">Tokyo Haneda</option>
+    <option value="KIX">Osaka Kansai</option>
+    <option value="BKK">Bangkok Suvarnabhumi</option>
+    <option value="DMK">Bangkok Don Mueang</option>
+    <option value="HKT">Phuket</option>
+    <option value="CNX">Chiang Mai</option>
+    <option value="DPS">Bali Denpasar</option>
+    <option value="CGK">Jakarta</option>
+    <option value="SIN">Singapore Changi</option>
+    <option value="KUL">Kuala Lumpur</option>
+    <option value="MNL">Manila</option>
+    <option value="DEL">Delhi</option>
+    <option value="BOM">Mumbai</option>
+    <option value="DXB">Dubai</option>
+    <option value="DOH">Doha</option>
+    <option value="IST">Istanbul</option>
+    <option value="CDG">Paris CDG</option>
+    <option value="ORY">Paris Orly</option>
+    <option value="LHR">London Heathrow</option>
+    <option value="LGW">London Gatwick</option>
+    <option value="AMS">Amsterdam</option>
+    <option value="FRA">Frankfurt</option>
+    <option value="FCO">Rome Fiumicino</option>
+    <option value="BCN">Barcelona</option>
+    <option value="MAD">Madrid</option>
+    <option value="JFK">New York JFK</option>
+    <option value="EWR">Newark</option>
+    <option value="LAX">Los Angeles</option>
+    <option value="SFO">San Francisco</option>
+    <option value="YVR">Vancouver</option>
+    <option value="YYZ">Toronto</option>
+    <option value="SYD">Sydney</option>
+    <option value="MEL">Melbourne</option>
+    <option value="AKL">Auckland</option>
+  </datalist>
+
+  <div class="row two">
+    <div class="field">
+      <label for="depart">Depart</label>
+      <input type="date" id="depart">
+    </div>
+    <div class="field" id="return-field">
+      <label for="return">Return</label>
+      <input type="date" id="return">
+    </div>
+  </div>
+
+  <div class="row two">
+    <div class="field">
+      <label for="adults">Adults</label>
+      <select id="adults">
+        <option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="children">Children</label>
+      <select id="children">
+        <option selected>0</option><option>1</option><option>2</option><option>3</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="search-btn" id="search">Search flights on Trip.com →</button>
+
+  <div class="ft">
+    <small style="color:var(--text-faint)">Flights via Trip.com global inventory</small>
+    <small class="disclosure">affiliate</small>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIG ─────────────────────────────────────────────────────────
+  const CONFIG = {
+    allianceId: "8106827",
+    sid:        "307071563",
+    sub1:       "Widget",
+    sub3:       "D15855548",
+  };
+  // IATA → city-slug used in Trip.com's SEO-friendly URL path.
+  // Path format: /flights/<FromCitySlug>-to-<ToCitySlug>/tickets-<FROM>-<TO>
+  // Falls back to the IATA code itself if we don't know the slug (still works).
+  const CITY_SLUG = {
+    SHA: "Shanghai", PVG: "Shanghai", PEK: "Beijing",
+    HKG: "Hong-Kong", TPE: "Taipei", ICN: "Seoul",
+    NRT: "Tokyo", HND: "Tokyo", KIX: "Osaka",
+    BKK: "Bangkok", DMK: "Bangkok", HKT: "Phuket", CNX: "Chiang-Mai",
+    DPS: "Bali", CGK: "Jakarta", SIN: "Singapore",
+    KUL: "Kuala-Lumpur", MNL: "Manila", DEL: "Delhi", BOM: "Mumbai",
+    DXB: "Dubai", DOH: "Doha", IST: "Istanbul",
+    CDG: "Paris", ORY: "Paris", LHR: "London", LGW: "London",
+    AMS: "Amsterdam", FRA: "Frankfurt", FCO: "Rome",
+    BCN: "Barcelona", MAD: "Madrid",
+    JFK: "New-York", EWR: "New-York", LAX: "Los-Angeles", SFO: "San-Francisco",
+    YVR: "Vancouver", YYZ: "Toronto",
+    SYD: "Sydney", MEL: "Melbourne", AKL: "Auckland",
+  };
+  // ────────────────────────────────────────────────────────────────────
+
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const today = new Date();
+  const plus = (d) => new Date(today.getTime() + d * 864e5).toISOString().slice(0, 10);
+
+  // Defaults from query params or sensible fallbacks (Shanghai → Bali, 30 days out)
+  $("from").value   = (params.get("from")   || "SHA").toUpperCase();
+  $("to").value     = (params.get("to")     || "DPS").toUpperCase();
+  $("depart").value = params.get("depart") || plus(30);
+  $("return").value = params.get("return") || plus(37);
+  if (params.get("adults"))   $("adults").value   = params.get("adults");
+  if (params.get("children")) $("children").value = params.get("children");
+  if (params.get("type") === "S") {
+    document.querySelector("input[name=type][value=S]").checked = true;
+    $("return-field").classList.add("hidden");
+  }
+
+  const updateLabels = () => {
+    $("from-label").textContent = ($("from").value || "···").toUpperCase();
+    $("to-label").textContent   = ($("to").value   || "···").toUpperCase();
+  };
+  $("from").addEventListener("input", updateLabels);
+  $("to").addEventListener("input", updateLabels);
+  updateLabels();
+
+  // Toggle return-date field on trip-type change
+  document.querySelectorAll("input[name=type]").forEach((r) => {
+    r.addEventListener("change", () => {
+      if (document.querySelector("input[name=type]:checked").value === "S") {
+        $("return-field").classList.add("hidden");
+      } else {
+        $("return-field").classList.remove("hidden");
+      }
+    });
+  });
+
+  function slugFor(code) {
+    return CITY_SLUG[code] || code;
+  }
+
+  function buildTripUrl() {
+    const from = ($("from").value || "").toUpperCase().trim();
+    const to   = ($("to").value   || "").toUpperCase().trim();
+    const type = document.querySelector("input[name=type]:checked").value; // S or RT
+    const path = `/flights/${slugFor(from)}-to-${slugFor(to)}/tickets-${from}-${to}`;
+
+    const q = new URLSearchParams({
+      // affiliate tracking
+      Allianceid: CONFIG.allianceId,
+      SID:        CONFIG.sid,
+      trip_sub1:  CONFIG.sub1,
+      trip_sub3:  CONFIG.sub3,
+      // route
+      flighttype: type,
+      dcity:      from,
+      acity:      to,
+      // dates (Trip.com flights use YYYY-MM-DD)
+      ddate:      $("depart").value,
+      // pax + class
+      adult:      $("adults").value,
+      child:      $("children").value,
+      class:      $("cabin").value,
+      // locale/currency hints
+      locale:     "en-XX",
+      curr:       "USD",
+    });
+    if (type === "RT") q.set("rdate", $("return").value);
+
+    return `https://www.trip.com${path}?${q.toString()}`;
+  }
+
+  $("search").addEventListener("click", () => {
+    const from = $("from").value.trim();
+    const to   = $("to").value.trim();
+    if (!from || !to || from.length !== 3 || to.length !== 3) {
+      alert("Please enter valid 3-letter airport codes (e.g. SHA, DPS).");
+      return;
+    }
+    window.open(buildTripUrl(), "_blank", "noopener,noreferrer");
+  });
+</script>
+</body>
+</html>

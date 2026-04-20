@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find a stay</title>
+<!--
+  stays.html — Trip.com hotel search widget · 480 × 360
+  Query params (all optional):
+    ?city=Bali&checkin=2026-05-01&checkout=2026-05-08&adults=2&children=0
+
+  This is a deep-link builder, NOT a fake/redirect page. Click Search and
+  Trip.com's real search-results page opens with every field pre-filled.
+  All values (city, dates, guests, currency, language) are passed as
+  standard Trip.com search params.
+
+  Affiliate tracking (Allianceid/SID/trip_sub1/trip_sub3) rides every URL.
+-->
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body { padding: 0; width: 480px; height: 360px; }
+  .stays { padding: 18px 20px; height: 100%; display: flex; flex-direction: column; gap: 9px; }
+  .hdr .caps { display: block; margin-bottom: 4px; }
+  .hdr h2 { font-size: 22px; margin: 0; }
+  .hdr h2 em { font-style: italic; color: var(--accent); }
+  .row { display: grid; gap: 8px; }
+  .row.two   { grid-template-columns: 1fr 1fr; }
+  .row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .row.city  { grid-template-columns: 2fr 1fr; }
+  .field label { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 3px; }
+  .field input, .field select { width: 100%; }
+  .search-btn { width: 100%; font-weight: 500; margin-top: 2px; }
+  .ft { display: flex; justify-content: space-between; align-items: center; margin-top: auto; font-size: 11px; }
+  .ft a { color: var(--text-dim); text-decoration: none; border-bottom: 1px dashed var(--line); padding-bottom: 1px; }
+  .ft a:hover { color: var(--accent); border-color: var(--accent-line); }
+</style>
+</head>
+<body>
+<div class="card stays">
+  <div class="grain"></div>
+
+  <div class="hdr">
+    <span class="caps">Stays · where to sleep</span>
+    <h2 class="serif">Find a stay in <em id="city-label">Bali</em></h2>
+  </div>
+
+  <div class="row city">
+    <div class="field">
+      <label for="city">Destination</label>
+      <input type="text" id="city" list="cities" autocomplete="off" placeholder="City or region">
+      <datalist id="cities">
+        <option value="Bali"></option>
+        <option value="Ubud"></option>
+        <option value="Tokyo"></option>
+        <option value="Osaka"></option>
+        <option value="Kyoto"></option>
+        <option value="Bangkok"></option>
+        <option value="Phuket"></option>
+        <option value="Chiang Mai"></option>
+        <option value="Singapore"></option>
+        <option value="Kuala Lumpur"></option>
+        <option value="Hong Kong"></option>
+        <option value="Seoul"></option>
+        <option value="Shanghai"></option>
+        <option value="Jakarta"></option>
+        <option value="Paris"></option>
+        <option value="London"></option>
+        <option value="Rome"></option>
+        <option value="Barcelona"></option>
+        <option value="New York"></option>
+        <option value="Dubai"></option>
+        <option value="Sydney"></option>
+      </datalist>
+    </div>
+    <div class="field">
+      <label for="currency">Currency</label>
+      <select id="currency">
+        <option value="USD" selected>USD</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+        <option value="AUD">AUD</option>
+        <option value="SGD">SGD</option>
+        <option value="MYR">MYR</option>
+        <option value="IDR">IDR</option>
+        <option value="THB">THB</option>
+        <option value="JPY">JPY</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row two">
+    <div class="field">
+      <label for="checkin">Check in</label>
+      <input type="date" id="checkin">
+    </div>
+    <div class="field">
+      <label for="checkout">Check out</label>
+      <input type="date" id="checkout">
+    </div>
+  </div>
+
+  <div class="row three">
+    <div class="field">
+      <label for="adults">Adults</label>
+      <select id="adults">
+        <option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="children">Children</label>
+      <select id="children">
+        <option selected>0</option><option>1</option><option>2</option><option>3</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="rooms">Rooms</label>
+      <select id="rooms">
+        <option selected>1</option><option>2</option><option>3</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="search-btn" id="search">Search stays on Trip.com →</button>
+
+  <div class="ft">
+    <a href="#" id="browse" target="_blank" rel="noopener noreferrer sponsored">Browse all destinations →</a>
+    <small class="disclosure">affiliate</small>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIG ─────────────────────────────────────────────────────────
+  // Your Trip.com affiliate IDs. Already filled.
+  const CONFIG = {
+    allianceId: "8106827",
+    sid:        "307071563",
+    sub1:       "Widget",       // channel tag (appears in your Trip.com reports)
+    sub3:       "D15855548",    // deep-link campaign ID
+  };
+  // Optional: Trip.com numeric city IDs for destinations where we know them.
+  // If a user picks a city NOT in this map, we still pass cityName + searchWord
+  // and Trip.com resolves it by keyword (searchType=CT).
+  //   - "17"=Bali and "2"=Shanghai are verified from real Trip.com URLs.
+  //   - Others omitted to avoid guessing. Keyword search covers the rest.
+  const CITY_IDS = {
+    "Bali": "17",
+    "Shanghai": "2",
+  };
+  // ────────────────────────────────────────────────────────────────────
+
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const today = new Date();
+  const plus = (d) => new Date(today.getTime() + d * 864e5).toISOString().slice(0, 10);
+
+  // Pre-fill from URL or defaults
+  $("city").value     = params.get("city")     || "Bali";
+  $("checkin").value  = params.get("checkin")  || plus(30);
+  $("checkout").value = params.get("checkout") || plus(37);
+  if (params.get("adults"))   $("adults").value   = params.get("adults");
+  if (params.get("children")) $("children").value = params.get("children");
+  if (params.get("rooms"))    $("rooms").value    = params.get("rooms");
+  if (params.get("currency")) $("currency").value = params.get("currency");
+
+  const updateLabel = () => {
+    $("city-label").textContent = $("city").value.trim() || "your next trip";
+  };
+  $("city").addEventListener("input", updateLabel);
+  updateLabel();
+
+  // Trip.com's checkin/checkout format: YYYY/MM/DD (they also accept YYYY-MM-DD; / is canonical)
+  const fmtDate = (iso) => iso.replaceAll("-", "/");
+
+  function buildTripUrl({ browseAll = false } = {}) {
+    const city = $("city").value.trim();
+    const curr = $("currency").value;
+    const q = new URLSearchParams({
+      // --- affiliate tracking (rides every URL) ---
+      Allianceid:  CONFIG.allianceId,
+      SID:         CONFIG.sid,
+      trip_sub1:   CONFIG.sub1,
+      trip_sub3:   CONFIG.sub3,
+      // --- language + currency ---
+      locale:      "en-XX",
+      curr:        curr,
+      barCurr:     curr,
+    });
+
+    if (!browseAll && city) {
+      // City by name (Trip.com resolves keyword when searchType=CT)
+      q.set("searchWord", city);
+      q.set("cityName",   city);
+      q.set("searchType", "CT");
+      // If we happen to know the numeric city ID, include it for a more exact match
+      if (CITY_IDS[city]) q.set("city", CITY_IDS[city]);
+
+      // Dates + guests
+      q.set("checkin",  fmtDate($("checkin").value));
+      q.set("checkout", fmtDate($("checkout").value));
+      q.set("adult",    $("adults").value);
+      q.set("crn",      $("rooms").value);  // crn = rooms (confirmed from Trip.com URL)
+      const kids = parseInt($("children").value, 10) || 0;
+      if (kids > 0) {
+        q.set("children", String(kids));
+        // Default age = 10 per child (Trip.com requires an age per child)
+        q.set("ages", Array(kids).fill("10").join(","));
+      }
+    }
+    return `https://www.trip.com/hotels/list?${q.toString()}`;
+  }
+
+  $("search").addEventListener("click", () => {
+    window.open(buildTripUrl(), "_blank", "noopener,noreferrer");
+  });
+  $("browse").addEventListener("click", (e) => {
+    e.preventDefault();
+    window.open(buildTripUrl({ browseAll: true }), "_blank", "noopener,noreferrer");
+  });
+</script>
+</body>
+</html>

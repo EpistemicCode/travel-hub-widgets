@@ -1,0 +1,105 @@
+/* Travel Hub Widgets — shared design tokens
+ * Source: Template/blueprints/widgets-spec.md (canonical)
+ * Matches the Bali-moody dark hub in Travel Hub.html
+ */
+:root {
+  --bg: #0f1114;
+  --card: #1a1e24;
+  --card-2: #1f232a;
+  --line: rgba(255, 255, 255, 0.07);
+  --text: #ededea;
+  --text-dim: #9a9a94;
+  --text-faint: #646460;
+  --accent: #ff8a5c;
+  --accent-soft: rgba(255, 138, 92, 0.14);
+  --accent-line: rgba(255, 138, 92, 0.35);
+  --good: #7fb992;
+  --warn: #d9b36a;
+
+  --font-display: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
+  --font-ui: "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+  --radius: 8px;
+  --hairline: 1px solid var(--line);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.card {
+  background: var(--card);
+  border: var(--hairline);
+  border-radius: var(--radius);
+  position: relative;
+  overflow: hidden;
+}
+
+.serif { font-family: var(--font-display); font-weight: 400; }
+.mono  { font-family: var(--font-mono); }
+
+.caps {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.accent { color: var(--accent); }
+
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/></svg>");
+}
+
+.disclosure {
+  display: block;
+  margin-top: 10px;
+  color: var(--text-faint);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+button, .btn {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent);
+  color: #1a1208;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+button:hover, .btn:hover { background: #ff9c75; }
+button:active, .btn:active { transform: translateY(1px); }
+
+input, select {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: var(--hairline);
+  background: var(--card-2);
+  color: var(--text);
+  color-scheme: dark;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}

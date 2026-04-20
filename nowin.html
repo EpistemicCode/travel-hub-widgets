@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Now in …</title>
+<!--
+  nowin.html — Local time + weather · 380 × 260
+  Query params (all optional):
+    ?lat=-8.5069&lon=115.2625&tz=Asia/Makassar&place=Ubud
+
+  If params are omitted, the widget auto-detects the visitor's location
+  via ipapi.co (free, no key, 1000/day) so it works out-of-the-box
+  when a template buyer first opens the page.
+
+  Data sources (both free, no API keys, no sign-up):
+    • Weather  — Open-Meteo  (api.open-meteo.com)
+    • IP geo   — ipapi.co    (fallback only)
+    • Time/tz  — browser's Intl API (always)
+-->
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body { padding: 0; width: 380px; height: 260px; }
+  .nowin { padding: 18px 20px; height: 100%; display: flex; flex-direction: column; gap: 6px; position: relative; }
+  .hdr { display: flex; align-items: center; justify-content: space-between; }
+  .hdr .caps .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 6px; animation: pulse 2s ease-in-out infinite; vertical-align: middle; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+  h2 { font-size: 22px; margin: 4px 0 10px; }
+  h2 em { font-style: italic; color: var(--accent); }
+  .big-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px; }
+  .cell .v { font-family: var(--font-display); font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .cell .l { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); margin-top: 4px; }
+  .sub-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; color: var(--text-dim); font-size: 12px; }
+  .sub-row span.k { color: var(--text-faint); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; margin-right: 6px; }
+  .loading { color: var(--text-faint); }
+</style>
+</head>
+<body>
+<div class="card nowin">
+  <div class="grain"></div>
+
+  <div class="hdr">
+    <span class="caps"><span class="dot"></span>Now in</span>
+    <span class="caps mono" id="tz-short">—</span>
+  </div>
+  <h2 class="serif"><em id="place">…</em></h2>
+
+  <div class="big-row">
+    <div class="cell">
+      <div class="v mono" id="time">--:--</div>
+      <div class="l">Local time</div>
+    </div>
+    <div class="cell">
+      <div class="v" id="temp">--°</div>
+      <div class="l" id="condition">loading</div>
+    </div>
+  </div>
+
+  <div class="sub-row">
+    <div><span class="k">Sunset</span><span id="sunset">—</span></div>
+    <div><span class="k">Humidity</span><span id="humid">—</span></div>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+
+  // Map Open-Meteo WMO weather codes to short human labels
+  // https://open-meteo.com/en/docs
+  const WMO = {
+    0:"clear", 1:"mostly clear", 2:"partly cloudy", 3:"overcast",
+    45:"fog", 48:"icy fog",
+    51:"light drizzle", 53:"drizzle", 55:"heavy drizzle",
+    61:"light rain", 63:"rain", 65:"heavy rain",
+    66:"freezing rain", 67:"freezing rain",
+    71:"light snow", 73:"snow", 75:"heavy snow", 77:"snow grains",
+    80:"showers", 81:"showers", 82:"heavy showers",
+    85:"snow showers", 86:"snow showers",
+    95:"thunderstorm", 96:"thunderstorm · hail", 99:"thunderstorm · hail",
+  };
+
+  const tickTime = (tz) => {
+    const now = new Date();
+    $("time").textContent = new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz,
+    }).format(now);
+    $("tz-short").textContent = tz.split("/").pop().replace(/_/g, " ");
+  };
+
+  async function loadWeather(lat, lon) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+      + `&current=temperature_2m,relative_humidity_2m,weather_code`
+      + `&daily=sunset&timezone=auto&forecast_days=1`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("weather");
+    const j = await r.json();
+    const c = j.current;
+    $("temp").textContent      = `${Math.round(c.temperature_2m)}°C`;
+    $("condition").textContent = WMO[c.weather_code] || "—";
+    $("humid").textContent     = `${c.relative_humidity_2m}%`;
+    const sunset = j.daily.sunset[0];  // "2026-04-20T18:14"
+    $("sunset").textContent = sunset.slice(11, 16);
+  }
+
+  async function resolveLocation() {
+    // 1) Explicit URL params (template buyer configured this widget)
+    if (params.get("lat") && params.get("lon")) {
+      return {
+        lat:   parseFloat(params.get("lat")),
+        lon:   parseFloat(params.get("lon")),
+        tz:    params.get("tz")    || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        place: params.get("place") || "your location",
+      };
+    }
+    // 2) Fallback — detect visitor's location via ipapi.co (free, no key)
+    try {
+      const r = await fetch("https://ipapi.co/json/", { cache: "no-store" });
+      const j = await r.json();
+      if (!j.latitude || !j.longitude) throw new Error("no geo");
+      return {
+        lat:   j.latitude,
+        lon:   j.longitude,
+        tz:    j.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        place: j.city || j.region || j.country_name || "your location",
+      };
+    } catch (e) {
+      // 3) Last-resort fallback — browser timezone only
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      return { lat: null, lon: null, tz, place: tz.split("/").pop().replace(/_/g, " ") };
+    }
+  }
+
+  (async () => {
+    const loc = await resolveLocation();
+    $("place").textContent = loc.place;
+    tickTime(loc.tz);
+    setInterval(() => tickTime(loc.tz), 1000 * 15);
+    if (loc.lat != null && loc.lon != null) {
+      try { await loadWeather(loc.lat, loc.lon); }
+      catch { $("condition").textContent = "weather unavailable"; }
+    } else {
+      $("temp").textContent = "—";
+      $("condition").textContent = "enable location";
+    }
+  })();
+</script>
+</body>
+</html>

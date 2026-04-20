@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Countdown</title>
+<!--
+  countdown.html — Trip countdown · 340 × 260
+  Query params (all optional):
+    ?to=2026-05-02T21:40&dest=Ubud,+Bali&flight=GA+881
+
+  If `to` is omitted, defaults to 30 days from now. Ticks every second.
+-->
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  body { padding: 0; width: 340px; height: 260px; }
+  .cd { padding: 18px 20px; height: 100%; display: flex; flex-direction: column; gap: 4px; }
+  .hdr .caps { display: block; margin-bottom: 2px; }
+  .dest { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--accent); line-height: 1.1; }
+  .cells { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 6px; }
+  .cells .c { background: var(--card-2); border: 1px solid var(--line); border-radius: 6px; padding: 10px 0 6px; text-align: center; }
+  .cells .v { font-family: var(--font-display); font-size: 28px; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .cells .l { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-faint); margin-top: 4px; }
+  .ft { margin-top: auto; font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; }
+  .done { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--good); text-align: center; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="card cd">
+  <div class="grain"></div>
+
+  <div class="hdr">
+    <span class="caps">Countdown · wheels up in</span>
+    <div class="dest" id="dest">your next trip</div>
+  </div>
+
+  <div class="cells" id="cells">
+    <div class="c"><div class="v mono" id="d">--</div><div class="l">Days</div></div>
+    <div class="c"><div class="v mono" id="h">--</div><div class="l">Hours</div></div>
+    <div class="c"><div class="v mono" id="m">--</div><div class="l">Min</div></div>
+    <div class="c"><div class="v mono" id="s">--</div><div class="l">Sec</div></div>
+  </div>
+
+  <div class="ft">
+    <span id="flight">—</span>
+    <span class="mono" id="target">—</span>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+
+  // Defaults: destination param or "your next trip"; target date or +30d
+  const targetISO = params.get("to") || (() => {
+    const d = new Date(Date.now() + 30 * 864e5);
+    d.setHours(12, 0, 0, 0);
+    return d.toISOString().slice(0, 16);
+  })();
+  const target = new Date(targetISO);
+
+  $("dest").textContent   = params.get("dest")   || "your next trip";
+  $("flight").textContent = params.get("flight") || "";
+  $("target").textContent = new Intl.DateTimeFormat("en-GB", {
+    day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).format(target);
+
+  const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+
+  function tick() {
+    const diff = target - new Date();
+    if (diff <= 0) {
+      $("cells").innerHTML = '<div class="done" style="grid-column:1/-1">✈️ Safe travels.</div>';
+      clearInterval(timer);
+      return;
+    }
+    const d = Math.floor(diff / 864e5);
+    const h = Math.floor((diff % 864e5) / 36e5);
+    const m = Math.floor((diff % 36e5) / 6e4);
+    const s = Math.floor((diff % 6e4) / 1000);
+    $("d").textContent = pad(d);
+    $("h").textContent = pad(h);
+    $("m").textContent = pad(m);
+    $("s").textContent = pad(s);
+  }
+  tick();
+  const timer = setInterval(tick, 1000);
+</script>
+</body>
+</html>
