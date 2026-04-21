@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="widget-version" content="1.2.0">
 <title>Now in …</title>
 <!--
   nowin.html — Local time + weather · fluid (fills any iframe size)
@@ -73,6 +74,26 @@
 </div>
 
 <script>
+  window.addEventListener('error', (e) => { if (e.error) showOfflineCard('script'); });
+  window.addEventListener('unhandledrejection', (e) => {
+    const msg = String(e.reason && (e.reason.message || e.reason));
+    if (/fetch|network|failed|abort/i.test(msg)) showOfflineCard('network');
+  });
+  function showOfflineCard(code) {
+    document.body.innerHTML = `
+      <div class="card" style="position:absolute;inset:0;display:flex;flex-direction:column;
+           justify-content:center;align-items:center;padding:24px;text-align:center;gap:10px;">
+        <div class="grain"></div>
+        <div class="caps" style="color:var(--text-faint)">Widget unavailable</div>
+        <div class="serif" style="font-size:20px">Something went wrong</div>
+        <div style="color:var(--text-dim);font-size:12px;max-width:280px">
+          Check your connection or disable any script-blocking extension for this page.
+        </div>
+        <button onclick="location.reload()" class="btn-ghost" style="margin-top:6px">Retry</button>
+        <div class="caps mono" style="color:var(--text-faint);font-size:9px">code · ${code}</div>
+      </div>`;
+  }
+
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
 
@@ -235,13 +256,19 @@
         if (match) return {lat: match.lat, lon: match.lon, tz: match.tz, place: match.name};
       }
     } catch (e) { /* sandbox */ }
-    // (c) IP geo → snap to nearest CITIES entry
+    // (c) IP geo → snap to nearest CITIES entry (3s timeout so blocked/slow connections fall through fast)
     try {
-      const r = await fetch("https://ipapi.co/json/", {cache: "no-store"});
-      const j = await r.json();
-      if (!j.latitude || !j.longitude) throw new Error("no geo");
-      const city = nearestCity(j.latitude, j.longitude);
-      return {lat: city.lat, lon: city.lon, tz: city.tz, place: city.name};
+      const ac = new AbortController();
+      const t = setTimeout(() => ac.abort(), 3000);
+      try {
+        const r = await fetch("https://ipapi.co/json/", { cache: "no-store", signal: ac.signal });
+        const j = await r.json();
+        if (!j.latitude || !j.longitude) throw new Error("no geo");
+        const city = nearestCity(j.latitude, j.longitude);
+        return {lat: city.lat, lon: city.lon, tz: city.tz, place: city.name};
+      } finally {
+        clearTimeout(t);
+      }
     } catch (e) { /* fall through */ }
     // (d) Browser Intl timezone → match CITIES entry
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;

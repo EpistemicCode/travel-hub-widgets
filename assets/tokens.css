@@ -89,6 +89,19 @@ button, .btn {
 button:hover, .btn:hover { background: #ff9c75; }
 button:active, .btn:active { transform: translateY(1px); }
 
+.btn-ghost {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: var(--hairline);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.06); }
+
 input, select {
   font-family: inherit;
   font-size: 13px;

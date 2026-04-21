@@ -3,35 +3,105 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="widget-version" content="1.2.0">
 <title>Countdown</title>
 <!--
   countdown.html — Trip countdown · 340 × 260
   Query params (all optional):
     ?to=2026-05-02T21:40&dest=Ubud,+Bali&flight=GA+881
 
-  If `to` is omitted, defaults to 30 days from now. Ticks every second.
+  If `to` is omitted, shows setup form (or restores from localStorage).
 -->
 <link rel="stylesheet" href="assets/tokens.css">
 <style>
   html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: transparent; }
+
+  /* ── shared card shell ── */
   .cd { position: absolute; inset: 0; box-sizing: border-box; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+
+  /* ── countdown view ── */
   .hdr .caps { display: block; margin-bottom: 2px; }
   .dest { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--accent); line-height: 1.1; }
+  .mood { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2px; transition: color 0.4s; }
   .cells { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 6px; }
   .cells .c { background: var(--card-2); border: 1px solid var(--line); border-radius: 6px; padding: 10px 0 6px; text-align: center; }
   .cells .v { font-family: var(--font-display); font-size: 28px; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
   .cells .l { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-faint); margin-top: 4px; }
   .ft { margin-top: auto; font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; }
   .done { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--good); text-align: center; margin-top: 18px; }
+  .edit-btn { font-size: 10px; letter-spacing: 0.1em; color: var(--text-dim); text-decoration: none; cursor: pointer; background: none; border: none; padding: 0; }
+  .edit-btn:hover { color: var(--accent); }
+  .cd-top-row { display: flex; justify-content: space-between; align-items: flex-start; }
+
+  /* ── setup view ── */
+  #setup-view { position: absolute; inset: 0; box-sizing: border-box; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+  #setup-view h2 { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--accent); margin: 0; line-height: 1.1; }
+  #setup-view .subtitle { margin: -8px 0 0; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field .caps { display: block; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field input {
+    width: 100%; box-sizing: border-box;
+    background: var(--card-2); border: 1px solid var(--hairline, var(--line));
+    border-radius: 5px; padding: 8px; font-size: 12px;
+    color: var(--text); font-family: var(--font-sans, sans-serif);
+    outline: none;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .field input::placeholder { color: var(--text-faint); }
+  .setup-actions { display: flex; gap: 8px; margin-top: auto; }
+  .btn-set { flex: 1; background: var(--accent); border: none; border-radius: 5px; padding: 9px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; cursor: pointer; font-family: var(--font-sans, sans-serif); }
+  .btn-set:hover { opacity: 0.88; }
+  .btn-cancel { background: none; border: 1px solid var(--line); border-radius: 5px; padding: 9px 12px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; font-family: var(--font-sans, sans-serif); }
+  .btn-cancel:hover { color: var(--text); }
 </style>
 </head>
 <body>
-<div class="card cd">
+
+<!-- ── SETUP VIEW ── -->
+<div id="setup-view" class="card" style="display:none">
+  <div class="grain"></div>
+  <h2>Where to next?</h2>
+  <div class="caps subtitle">Set your next trip</div>
+
+  <div class="row-2">
+    <div class="field">
+      <span class="caps">Date</span>
+      <input type="date" id="inp-date" required>
+    </div>
+    <div class="field">
+      <span class="caps">Time (optional)</span>
+      <input type="time" id="inp-time" value="09:00">
+    </div>
+  </div>
+
+  <div class="field">
+    <span class="caps">Destination</span>
+    <input type="text" id="inp-dest" placeholder="e.g. Bali, Indonesia" required>
+  </div>
+
+  <div class="field">
+    <span class="caps">Flight no. (optional)</span>
+    <input type="text" id="inp-flight" placeholder="e.g. GA 881">
+  </div>
+
+  <div class="setup-actions">
+    <button class="btn-set" id="btn-set">Set trip</button>
+    <button class="btn-cancel" id="btn-cancel" style="display:none">Cancel</button>
+  </div>
+</div>
+
+<!-- ── COUNTDOWN VIEW ── -->
+<div id="countdown-view" class="card cd" style="display:none">
   <div class="grain"></div>
 
-  <div class="hdr">
-    <span class="caps">Countdown · wheels up in</span>
-    <div class="dest" id="dest">your next trip</div>
+  <div class="cd-top-row">
+    <div class="hdr">
+      <span class="caps">Countdown · wheels up in</span>
+      <div class="mood" id="mood"></div>
+      <div class="dest" id="dest">your next trip</div>
+    </div>
+    <button class="edit-btn" id="edit-btn" title="Edit trip">✎ Edit</button>
   </div>
 
   <div class="cells" id="cells">
@@ -48,44 +118,186 @@
 </div>
 
 <script>
+  // Only real uncaught JS exceptions trigger the offline card — not resource
+  // load errors (favicon/extensions/ResizeObserver noise). e.error is null for
+  // those; populated only for actual thrown errors.
+  window.addEventListener('error', (e) => { if (e.error) showOfflineCard('script'); });
+  window.addEventListener('unhandledrejection', (e) => {
+    const msg = String(e.reason && (e.reason.message || e.reason));
+    if (/fetch|network|failed|abort/i.test(msg)) showOfflineCard('network');
+  });
+  function showOfflineCard(code) {
+    document.body.innerHTML = `
+      <div class="card" style="position:absolute;inset:0;display:flex;flex-direction:column;
+           justify-content:center;align-items:center;padding:24px;text-align:center;gap:10px;">
+        <div class="grain"></div>
+        <div class="caps" style="color:var(--text-faint)">Widget unavailable</div>
+        <div class="serif" style="font-size:20px">Something went wrong</div>
+        <div style="color:var(--text-dim);font-size:12px;max-width:280px">
+          Check your connection or disable any script-blocking extension for this page.
+        </div>
+        <button onclick="location.reload()" class="btn-ghost" style="margin-top:6px">Retry</button>
+        <div class="caps mono" style="color:var(--text-faint);font-size:9px">code · ${code}</div>
+      </div>`;
+  }
+
   const $ = (id) => document.getElementById(id);
+  const pad = (n) => String(Math.max(0, n)).padStart(2, '0');
+  const LS_KEY = 'countdown:trip';
+
+  // ── state ──────────────────────────────────────────────────────────────
+  let trip = null; // { to: ISO string, dest: string, flight: string }
+  let timer = null;
+
+  // ── resolve on load ────────────────────────────────────────────────────
   const params = new URLSearchParams(location.search);
 
-  // Defaults: destination param or "your next trip"; target date or +30d
-  const targetISO = params.get("to") || (() => {
-    const d = new Date(Date.now() + 30 * 864e5);
-    d.setHours(12, 0, 0, 0);
-    return d.toISOString().slice(0, 16);
-  })();
-  const target = new Date(targetISO);
+  if (params.get('to')) {
+    // Priority 1: URL params (Notion embed flow)
+    trip = {
+      to:     params.get('to'),
+      dest:   params.get('dest')   || '',
+      flight: params.get('flight') || '',
+    };
+    showCountdown();
+  } else {
+    // Priority 2: localStorage
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) { trip = JSON.parse(saved); showCountdown(); }
+      else        { showSetup(false); }
+    } catch (_) {
+      showSetup(false);
+    }
+  }
 
-  $("dest").textContent   = params.get("dest")   || "your next trip";
-  $("flight").textContent = params.get("flight") || "";
-  $("target").textContent = new Intl.DateTimeFormat("en-GB", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit", hour12: false,
-  }).format(target);
+  // ── views ──────────────────────────────────────────────────────────────
+  function showSetup(hasExisting) {
+    stopTimer();
+    if (hasExisting && trip) {
+      // Pre-fill
+      const isoLocal = trip.to.slice(0, 16); // "2026-05-01T09:00"
+      $('inp-date').value   = isoLocal.slice(0, 10);
+      $('inp-time').value   = isoLocal.slice(11, 16) || '09:00';
+      $('inp-dest').value   = trip.dest   || '';
+      $('inp-flight').value = trip.flight || '';
+      $('btn-cancel').style.display = '';
+    } else {
+      $('btn-cancel').style.display = 'none';
+    }
+    $('setup-view').style.display    = '';
+    $('countdown-view').style.display = 'none';
+  }
 
-  const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+  function showCountdown() {
+    if (!trip) return;
+    $('setup-view').style.display    = 'none';
+    $('countdown-view').style.display = '';
+    $('dest').textContent   = trip.dest   || 'your next trip';
+    $('flight').textContent = trip.flight || '';
+    $('target').textContent = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    }).format(new Date(trip.to));
+    stopTimer();
+    tick();
+    timer = setInterval(tick, 1000);
+  }
 
+  function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+  // ── mood tiers ─────────────────────────────────────────────────────────
+  const TIERS = [
+    // [min_ms_remaining or null, max_ms_remaining or null, text, accent, extraStyle]
+    // Elapsed states (diff < 0): use negative elapsed
+    { test: (ms) => ms <= -72 * 36e5,    text: 'safe travels · welcome back', accent: 'var(--text-dim)',  extra: '' },
+    { test: (ms) => ms < 0,              text: 'currently traveling 🌴',       accent: '#7ac0a8',          extra: '' },
+    { test: (ms) => ms < 24 * 36e5,      text: 'wheels up soon ✈',             accent: '#ff9d72',          extra: 'letter-spacing:0.06em' },
+    { test: (ms) => ms < 7  * 864e5,     text: 'almost there',                 accent: '#ff9d72',          extra: '' },
+    { test: (ms) => ms < 14 * 864e5,     text: 'packing mode',                 accent: '#ff9d72',          extra: '' },
+    { test: (ms) => ms < 30 * 864e5,     text: 'booking window',               accent: 'var(--accent)',    extra: '' },
+    { test: (ms) => ms < 60 * 864e5,     text: 'research mode',                accent: 'var(--accent)',    extra: '' },
+    { test: () => true,                  text: 'dreaming · planning',           accent: 'var(--accent)',    extra: '' },
+  ];
+
+  let lastTierText = null;
+
+  function applyMood(ms) {
+    const tier = TIERS.find(t => t.test(ms));
+    if (!tier) return;
+    if (tier.text !== lastTierText) {
+      lastTierText = tier.text;
+      const el = $('mood');
+      el.textContent = tier.text;
+      el.style.cssText = `color:${tier.accent};${tier.extra ? tier.extra + ';' : ''}`;
+      // Also tint the big number accent for sub-24h
+      const vals = document.querySelectorAll('#countdown-view .v');
+      vals.forEach(v => v.style.color = tier.accent !== 'var(--text-dim)' && tier.accent !== 'var(--accent)' ? tier.accent : '');
+    }
+  }
+
+  // ── tick ───────────────────────────────────────────────────────────────
   function tick() {
-    const diff = target - new Date();
+    const target = new Date(trip.to);
+    const diff   = target - new Date();
+
+    applyMood(diff);
+
     if (diff <= 0) {
-      $("cells").innerHTML = '<div class="done" style="grid-column:1/-1">✈️ Safe travels.</div>';
-      clearInterval(timer);
+      // Elapsed — show "done" state but keep ticking for mood updates
+      const elapsed = Math.abs(diff);
+      const eD = Math.floor(elapsed / 864e5);
+      const eH = Math.floor((elapsed % 864e5) / 36e5);
+      const eM = Math.floor((elapsed % 36e5) / 6e4);
+      const eS = Math.floor((elapsed % 6e4) / 1000);
+      // Show elapsed time in cells
+      $('d').textContent = pad(eD);
+      $('h').textContent = pad(eH);
+      $('m').textContent = pad(eM);
+      $('s').textContent = pad(eS);
       return;
     }
+
     const d = Math.floor(diff / 864e5);
     const h = Math.floor((diff % 864e5) / 36e5);
     const m = Math.floor((diff % 36e5) / 6e4);
     const s = Math.floor((diff % 6e4) / 1000);
-    $("d").textContent = pad(d);
-    $("h").textContent = pad(h);
-    $("m").textContent = pad(m);
-    $("s").textContent = pad(s);
+    $('d').textContent = pad(d);
+    $('h').textContent = pad(h);
+    $('m').textContent = pad(m);
+    $('s').textContent = pad(s);
   }
-  tick();
-  const timer = setInterval(tick, 1000);
+
+  // ── setup form submit ──────────────────────────────────────────────────
+  $('btn-set').addEventListener('click', () => {
+    const dateVal   = $('inp-date').value;
+    const timeVal   = $('inp-time').value  || '09:00';
+    const destVal   = $('inp-dest').value.trim();
+    const flightVal = $('inp-flight').value.trim();
+
+    if (!dateVal)  { $('inp-date').focus(); return; }
+    if (!destVal)  { $('inp-dest').focus(); return; }
+
+    // Combine into local ISO (no Z — browser treats as local TZ)
+    const toISO = dateVal + 'T' + timeVal;
+
+    trip = { to: toISO, dest: destVal, flight: flightVal };
+
+    try { localStorage.setItem(LS_KEY, JSON.stringify(trip)); } catch (_) {}
+
+    history.replaceState(null, '',
+      '?to='   + encodeURIComponent(toISO) +
+      '&dest=' + encodeURIComponent(destVal) +
+      (flightVal ? '&flight=' + encodeURIComponent(flightVal) : '')
+    );
+
+    lastTierText = null; // force mood re-render
+    showCountdown();
+  });
+
+  // ── edit / cancel ──────────────────────────────────────────────────────
+  $('edit-btn').addEventListener('click', () => showSetup(true));
+  $('btn-cancel').addEventListener('click', () => showCountdown());
 </script>
 </body>
 </html>
