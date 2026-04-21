@@ -50,7 +50,10 @@
     <span class="caps mono" id="tz-short">—</span>
   </div>
   <h2 class="serif"><em id="place">…</em></h2>
-  <select id="city-picker" style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);background:transparent;border:none;border-bottom:1px dashed var(--line);padding:1px 2px;cursor:pointer;margin-top:-4px;width:auto;max-width:100%;"></select>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:-4px;">
+    <select id="city-picker" style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);background:transparent;border:none;border-bottom:1px dashed var(--line);padding:1px 2px;cursor:pointer;width:auto;max-width:100%;"></select>
+    <button id="auto-btn" class="caps" style="font-size:10px;color:var(--text-faint);background:none;border:none;cursor:pointer;padding:0;letter-spacing:0.1em;" title="Reset to auto-detected location">↺ auto</button>
+  </div>
 
   <div class="big-row">
     <div class="cell">
@@ -224,6 +227,14 @@
       const match = CITIES.find(c => c.name.toLowerCase() === placeParam.toLowerCase());
       if (match) return {lat: match.lat, lon: match.lon, tz: match.tz, place: match.name};
     }
+    // (b2) localStorage backstop — used when URL params are stripped
+    try {
+      const saved = localStorage.getItem('nowin:place');
+      if (saved) {
+        const match = CITIES.find(c => c.name === saved);
+        if (match) return {lat: match.lat, lon: match.lon, tz: match.tz, place: match.name};
+      }
+    } catch (e) { /* sandbox */ }
     // (c) IP geo → snap to nearest CITIES entry
     try {
       const r = await fetch("https://ipapi.co/json/", {cache: "no-store"});
@@ -257,7 +268,16 @@
     sel.addEventListener("change", async () => {
       const city = CITIES.find(c => c.name === sel.value);
       if (!city) return;
+      history.replaceState(null, '', '?place=' + encodeURIComponent(city.name));
+      try { localStorage.setItem('nowin:place', city.name); } catch (e) { /* sandbox */ }
       applyLocation({lat: city.lat, lon: city.lon, tz: city.tz, place: city.name});
+    });
+    $("auto-btn").addEventListener("click", async () => {
+      history.replaceState(null, '', location.pathname);
+      try { localStorage.removeItem('nowin:place'); } catch (e) { /* sandbox */ }
+      const loc = await resolveLocation();
+      buildPicker(loc.place);
+      await applyLocation(loc);
     });
   }
 
