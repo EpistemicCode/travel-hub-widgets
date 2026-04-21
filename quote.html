@@ -1,0 +1,1347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="widget-version" content="1.0.1">
+<meta name="widget" content="quote">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-D8GYSB22FR', { anonymize_ip: true, send_page_view: false });
+</script>
+<title>Travel Quotes</title>
+<!--
+  quote.html — Rotating Travel Quote Widget · fluid (fills any iframe size)
+  Embeds cleanly in Notion. No external dependencies except Google Fonts.
+  Affiliate: Trip.com via Travelpayouts (allianceId 8106827 / SID 307071563)
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-start: #0d1117;
+    --bg-end:   #0f1114;
+    --card:     #1a1e24;
+    --line:     rgba(255,255,255,0.07);
+    --text:     #ededea;
+    --text-dim: #9a9a94;
+    --text-faint: #646460;
+    --accent:   #d4af9a;        /* muted warm gold/sand — quote widget accent */
+    --accent-soft: rgba(212,175,154,0.12);
+    --accent-line: rgba(212,175,154,0.3);
+    --glyph:    rgba(212,175,154,0.18);
+    --pink:     #c97a6a;        /* author dash accent */
+    --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --font-ui:  system-ui, -apple-system, sans-serif;
+    --radius:   10px;
+    --transition: 600ms ease;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    margin: 0; padding: 0;
+    overflow: hidden;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── Grain overlay (matches tokens.css .grain pattern) ── */
+  .grain {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 0.045;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/></svg>");
+    z-index: 0;
+  }
+
+  /* ── Widget shell ── */
+  .quote-widget {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    background: linear-gradient(160deg, var(--bg-start) 0%, var(--bg-end) 100%);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  /* ── Language pill row ── */
+  .lang-bar {
+    position: relative; z-index: 10;
+    display: flex; justify-content: flex-end; align-items: center;
+    padding: 10px 14px 0;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .lang-btn {
+    background: none; border: none; border-radius: 20px;
+    padding: 3px 8px;
+    font-family: var(--font-ui);
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .lang-btn:hover { color: var(--text-dim); background: rgba(255,255,255,0.05); }
+  .lang-btn.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* ── Main quote stage — clicks here = next ── */
+  .quote-stage {
+    flex: 1; position: relative; z-index: 5;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 20px 32px 8px;
+    cursor: pointer;
+    user-select: none;
+    min-height: 0;
+  }
+
+  /* ── Decorative opening glyph ── */
+  .deco-glyph {
+    position: absolute;
+    top: 12px; left: 24px;
+    font-family: var(--font-serif);
+    font-size: clamp(72px, 12vw, 110px);
+    line-height: 1;
+    color: var(--glyph);
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    font-style: normal;
+  }
+
+  /* ── Quote card (fade-able content) ── */
+  .quote-card {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+    max-width: 600px; width: 100%;
+    transition: opacity var(--transition), transform var(--transition);
+  }
+  .quote-card.fade-out {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .quote-card.fade-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Quote text ── */
+  .quote-text {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(18px, 3.2vw, 24px);
+    line-height: 1.62;
+    color: var(--text);
+    letter-spacing: 0.01em;
+    margin-bottom: 20px;
+  }
+
+  /* ── Author line ── */
+  .quote-author {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .author-dash {
+    display: inline-block;
+    width: 18px; height: 1px;
+    background: var(--pink);
+    flex-shrink: 0;
+  }
+
+  /* ── Destination CTA ── */
+  .quote-cta {
+    margin-top: 16px;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+    display: inline-block;
+  }
+  .quote-cta:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
+
+  /* ── Nav arrows ── */
+  .nav-arrows {
+    position: absolute; inset: 0; z-index: 8;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 8px;
+    pointer-events: none;
+  }
+  .nav-btn {
+    pointer-events: all;
+    background: none; border: none;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-faint);
+    font-size: 18px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.25s, background 0.15s, color 0.15s;
+  }
+  .quote-widget:hover .nav-btn { opacity: 1; }
+  .nav-btn:hover { background: rgba(255,255,255,0.07); color: var(--accent); }
+  /* Don't let arrow clicks also trigger stage click */
+  .nav-btn { z-index: 9; }
+
+  /* ── Progress dots ── */
+  .progress-bar {
+    position: relative; z-index: 10;
+    display: flex; justify-content: center; align-items: center;
+    gap: 5px;
+    padding: 4px 14px 6px;
+    flex-shrink: 0;
+  }
+  .dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    transition: background 0.3s, transform 0.3s;
+    cursor: pointer;
+  }
+  .dot.active {
+    background: var(--accent);
+    transform: scale(1.5);
+  }
+
+  /* ── Timer bar ── */
+  .timer-track {
+    position: relative; z-index: 10;
+    height: 1px;
+    background: var(--line);
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .timer-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--pink), var(--accent));
+    transition: width linear;
+  }
+
+  /* ── Footer / affiliate disclosure ── */
+  .widget-footer {
+    position: relative; z-index: 10;
+    display: flex; justify-content: flex-end; align-items: center;
+    padding: 4px 14px 8px;
+    flex-shrink: 0;
+  }
+  .disclosure {
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  /* ── Fallback / error state ── */
+  .fallback {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 32px; text-align: center; gap: 12px;
+  }
+  .fallback-text {
+    font-family: var(--font-serif); font-style: italic;
+    font-size: 20px; color: var(--text); line-height: 1.6;
+  }
+  .fallback-author {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ── Responsive tweaks ── */
+  @media (max-width: 460px) {
+    .quote-stage { padding: 16px 20px 6px; }
+    .deco-glyph { font-size: 64px; top: 8px; left: 14px; }
+    .quote-text { font-size: 17px; }
+  }
+  @media (min-width: 800px) {
+    .quote-text { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="quote-widget" id="widget">
+  <div class="grain"></div>
+
+  <!-- Language selector -->
+  <div class="lang-bar" id="lang-bar">
+    <button class="lang-btn active" data-lang="en">EN</button>
+    <button class="lang-btn" data-lang="es">ES</button>
+    <button class="lang-btn" data-lang="fr">FR</button>
+    <button class="lang-btn" data-lang="ja">JA</button>
+    <button class="lang-btn" data-lang="zh">中文</button>
+    <button class="lang-btn" data-lang="ko">한국어</button>
+  </div>
+
+  <!-- Decorative quote glyph -->
+  <div class="deco-glyph" aria-hidden="true">&ldquo;</div>
+
+  <!-- Nav arrows (outside stage so clicks don't double-fire) -->
+  <div class="nav-arrows">
+    <button class="nav-btn" id="btn-prev" aria-label="Previous quote">&#8249;</button>
+    <button class="nav-btn" id="btn-next" aria-label="Next quote">&#8250;</button>
+  </div>
+
+  <!-- Quote stage — click = next -->
+  <div class="quote-stage" id="quote-stage" role="region" aria-live="polite" aria-label="Travel quote">
+    <div class="quote-card fade-in" id="quote-card">
+      <p class="quote-text" id="quote-text"></p>
+      <div class="quote-author">
+        <span class="author-dash"></span>
+        <span id="quote-author"></span>
+      </div>
+      <a class="quote-cta" id="quote-cta" href="#" target="_blank" rel="noopener noreferrer sponsored"></a>
+    </div>
+  </div>
+
+  <!-- Progress dots -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- Timer bar -->
+  <div class="timer-track">
+    <div class="timer-fill" id="timer-fill"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="widget-footer">
+    <span class="disclosure">affiliate</span>
+  </div>
+</div>
+
+<script>
+// ── Error boundary ────────────────────────────────────────────────────────────
+window.addEventListener('error', (e) => { if (e.error) showFallback(); });
+window.addEventListener('unhandledrejection', (e) => {
+  const msg = String(e.reason && (e.reason.message || e.reason));
+  if (/fetch|network|failed|abort/i.test(msg)) showFallback();
+});
+
+function showFallback() {
+  try {
+    document.getElementById('widget').innerHTML = `
+      <div class="grain"></div>
+      <div class="fallback">
+        <div class="deco-glyph" style="position:relative;top:auto;left:auto;font-size:48px;opacity:0.2;">&ldquo;</div>
+        <p class="fallback-text">Not all those who wander are lost.</p>
+        <div class="fallback-author">— J.R.R. Tolkien</div>
+        <a href="https://www.trip.com/?Allianceid=8106827&SID=307071563&trip_sub1=Widget&trip_sub2=quote_widget_cta&trip_sub3=D15855548"
+           target="_blank" rel="noopener noreferrer sponsored"
+           style="margin-top:12px;font-family:var(--font-serif);font-style:italic;font-size:13px;color:var(--accent);text-decoration:none;">
+          ✦ Plan your next trip →
+        </a>
+      </div>`;
+  } catch(_) {}
+}
+
+// ── Affiliate CONFIG (matches stays.html / flights.html) ─────────────────────
+const CONFIG = {
+  allianceId: "8106827",
+  sid:        "307071563",
+  sub1:       "Widget",
+  sub3:       "D15855548",
+};
+
+function buildTripUrl(slug) {
+  return `https://www.trip.com/?Allianceid=${CONFIG.allianceId}&SID=${CONFIG.sid}` +
+    `&trip_sub1=${CONFIG.sub1}&trip_sub2=${encodeURIComponent(slug)}&trip_sub3=${CONFIG.sub3}`;
+}
+
+// ── Quote data — 50 curated quotes ───────────────────────────────────────────
+// ~15 with destination slugs; remainder are universal.
+const QUOTES = [
+  // 1 — Hemingway → Paris
+  {
+    id: 1,
+    text: {
+      en: "If you are lucky enough to have lived in Paris as a young man, then wherever you go for the rest of your life, it stays with you, for Paris is a moveable feast.",
+      es: "Si tienes la suerte de haber vivido en París de joven, dondequiera que vayas el resto de tu vida, se queda contigo, pues París es una fiesta que se mueve.",
+      fr: "Si vous avez eu la chance de vivre à Paris quand vous étiez jeune, où que vous alliez le reste de votre vie, cela restera avec vous, car Paris est une fête qui se déplace.",
+      ja: "若いころパリに住む幸運に恵まれたなら、残りの人生をどこで過ごそうとも、パリはあなたとともにある。パリは移動する饗宴なのだから。",
+      zh: "如果你年轻时有幸在巴黎生活过，那么无论你此后走到哪里，它都会跟随着你，因为巴黎是一场流动的盛宴。",
+      ko: "젊은 날 파리에서 살 수 있었던 행운을 가진 사람이라면, 이후 어디를 가든 파리는 그와 함께한다. 파리는 움직이는 축제이니까.",
+    },
+    author: "Ernest Hemingway",
+    destination: "Paris",
+    destinationSlug: "paris",
+  },
+  // 2 — Bashō → Kyoto
+  {
+    id: 2,
+    text: {
+      en: "Every day is a journey, and the journey itself is home.",
+      es: "Cada día es un viaje, y el viaje mismo es el hogar.",
+      fr: "Chaque jour est un voyage, et le voyage lui-même est chez soi.",
+      ja: "旅に病んで夢は枯野をかけ廻る。",
+      zh: "每一天都是一次旅行，旅行本身就是归宿。",
+      ko: "매일이 하나의 여정이요, 여정 그 자체가 곧 집이다.",
+    },
+    author: "Matsuo Bashō",
+    destination: "Kyoto",
+    destinationSlug: "kyoto",
+  },
+  // 3 — Bourdain → Bangkok
+  {
+    id: 3,
+    text: {
+      en: "Bangkok is a city that wants you to want it — gaudy, loud, and delicious in the most uncomplicated way.",
+      es: "Bangkok es una ciudad que quiere que la desees: llamativa, ruidosa y deliciosa de la manera más directa.",
+      fr: "Bangkok est une ville qui veut que vous la désiriez — criarde, bruyante et délicieuse de la façon la plus simple.",
+      ja: "バンコクは求められたい都市だ——派手で、騒々しく、これ以上ないほど素直においしい。",
+      zh: "曼谷是一座渴望你渴望它的城市——艳俗、嘈杂，却以最直白的方式令人垂涎。",
+      ko: "방콕은 당신이 자신을 원하길 바라는 도시다 — 화려하고, 소란스럽고, 더없이 솔직한 방식으로 황홀하다.",
+    },
+    author: "Anthony Bourdain",
+    destination: "Bangkok",
+    destinationSlug: "bangkok",
+  },
+  // 4 — Rumi
+  {
+    id: 4,
+    text: {
+      en: "Travel brings power and love back into your life.",
+      es: "Viajar devuelve el poder y el amor a tu vida.",
+      fr: "Voyager ramène le pouvoir et l'amour dans votre vie.",
+      ja: "旅はあなたの人生に力と愛を取り戻す。",
+      zh: "旅行将力量与爱重新带回你的生命。",
+      ko: "여행은 삶에 힘과 사랑을 되돌려준다.",
+    },
+    author: "Rumi",
+  },
+  // 5 — Mark Twain
+  {
+    id: 5,
+    text: {
+      en: "Travel is fatal to prejudice, bigotry, and narrow-mindedness, and many of our people need it sorely on these accounts.",
+      es: "Viajar es fatal para el prejuicio, la intolerancia y la estrechez de miras, y mucha gente lo necesita urgentemente por estas razones.",
+      fr: "Le voyage est fatal aux préjugés, au sectarisme et à l'étroitesse d'esprit, et beaucoup de nos gens en ont grand besoin.",
+      ja: "旅は偏見、頑迷さ、狭量さにとって致命的であり、多くの人がこれらの理由でそれを切実に必要としている。",
+      zh: "旅行对偏见、狭隘和心胸狭窄是致命的，许多人都迫切需要它。",
+      ko: "여행은 편견과 아집과 편협함에 치명적이며, 바로 그런 이유로 많은 이들에게 절실히 필요하다.",
+    },
+    author: "Mark Twain",
+  },
+  // 6 — Ibn Battuta
+  {
+    id: 6,
+    text: {
+      en: "Traveling — it leaves you speechless, then turns you into a storyteller.",
+      es: "Viajar te deja sin palabras y luego te convierte en un narrador de historias.",
+      fr: "Voyager — cela vous laisse sans voix, puis vous transforme en conteur.",
+      ja: "旅は言葉を奪い、そしてあなたを語り部へと変える。",
+      zh: "旅行——它让你无言以对，然后把你变成一个讲故事的人。",
+      ko: "여행은 당신을 말문이 막히게 하고, 그런 다음 이야기꾼으로 만든다.",
+    },
+    author: "Ibn Battuta",
+  },
+  // 7 — Pico Iyer
+  {
+    id: 7,
+    text: {
+      en: "We travel, initially, to lose ourselves; and we travel, next, to find ourselves.",
+      es: "Viajamos, en principio, para perdernos; y viajamos, luego, para encontrarnos.",
+      fr: "Nous voyageons, d'abord, pour nous perdre ; et nous voyageons, ensuite, pour nous retrouver.",
+      ja: "私たちはまず、自分を失うために旅をする。そして次に、自分を見つけるために旅をする。",
+      zh: "起初，我们旅行是为了迷失自我；其次，我们旅行是为了找回自我。",
+      ko: "우리는 처음에는 자신을 잃기 위해 여행하고, 다음에는 자신을 찾기 위해 여행한다.",
+    },
+    author: "Pico Iyer",
+  },
+  // 8 — Tolkien
+  {
+    id: 8,
+    text: {
+      en: "Not all those who wander are lost.",
+      es: "No todos los que vagan están perdidos.",
+      fr: "Tous ceux qui errent ne sont pas perdus.",
+      ja: "さまよう者がすべて迷子とは限らない。",
+      zh: "流浪者并非都是迷途之人。",
+      ko: "방황하는 자가 모두 길을 잃은 것은 아니다.",
+    },
+    author: "J.R.R. Tolkien",
+  },
+  // 9 — Saint Augustine
+  {
+    id: 9,
+    text: {
+      en: "The world is a book, and those who do not travel read only one page.",
+      es: "El mundo es un libro y quienes no viajan leen solo una página.",
+      fr: "Le monde est un livre, et ceux qui ne voyagent pas n'en lisent qu'une page.",
+      ja: "世界は一冊の本であり、旅をしない者はその一ページしか読まない。",
+      zh: "世界是一本书，不旅行的人只读了其中一页。",
+      ko: "세상은 한 권의 책이요, 여행하지 않는 자는 그 한 페이지만 읽을 뿐이다.",
+    },
+    author: "Saint Augustine",
+  },
+  // 10 — Maya Angelou
+  {
+    id: 10,
+    text: {
+      en: "Perhaps travel cannot prevent bigotry, but by demonstrating that all peoples cry, laugh, eat, worry, and die, it can introduce the idea that if we try and understand each other, we may even become friends.",
+      es: "Quizás viajar no pueda prevenir la intolerancia, pero al demostrar que todos los pueblos lloran, ríen, comen, se preocupan y mueren, puede introducir la idea de que si intentamos entendernos, incluso podríamos ser amigos.",
+      fr: "Peut-être que le voyage ne peut pas empêcher le sectarisme, mais en démontrant que tous les peuples pleurent, rient, mangent, s'inquiètent et meurent, il peut introduire l'idée que si nous essayons de nous comprendre, nous pourrions même devenir amis.",
+      ja: "旅は偏見を防げないかもしれないが、すべての人が泣き、笑い、食べ、心配し、死ぬことを示すことで、理解しようとすれば友になれるという考えを芽生えさせることができる。",
+      zh: "也许旅行无法阻止偏见，但通过展示所有人都会哭泣、欢笑、进食、忧虑和死亡，它可以引入一个想法：如果我们努力相互理解，我们甚至可能成为朋友。",
+      ko: "여행이 편견을 막을 수는 없을지 몰라도, 모든 민족이 울고 웃고 먹고 걱정하고 죽는다는 것을 보여줌으로써, 서로를 이해하려 한다면 친구가 될 수도 있다는 생각을 심어줄 수 있다.",
+    },
+    author: "Maya Angelou",
+  },
+  // 11 — Kerouac
+  {
+    id: 11,
+    text: {
+      en: "Because in the end, you won't remember the time you spent working in the office or mowing your lawn. Climb that goddamn mountain.",
+      es: "Porque al final, no recordarás el tiempo que pasaste trabajando en la oficina o cortando el césped. Escala esa maldita montaña.",
+      fr: "Parce qu'à la fin, vous ne vous souviendrez pas du temps passé au bureau ou à tondre votre pelouse. Grimpez cette foutue montagne.",
+      ja: "なぜなら最後には、オフィスで働いたり芝を刈ったりして過ごした時間は覚えていないから。あの山を登れ。",
+      zh: "因为到最后，你不会记得在办公室工作或修剪草坪的时光。去爬那座该死的山。",
+      ko: "결국 당신은 사무실에서 일하거나 잔디를 깎으며 보낸 시간을 기억하지 못할 것이다. 그 빌어먹을 산을 올라라.",
+    },
+    author: "Jack Kerouac",
+  },
+  // 12 — Lao Tzu
+  {
+    id: 12,
+    text: {
+      en: "A journey of a thousand miles begins with a single step.",
+      es: "Un viaje de mil millas comienza con un solo paso.",
+      fr: "Un voyage de mille lieues commence par un pas.",
+      ja: "千里の道も一歩から。",
+      zh: "千里之行，始于足下。",
+      ko: "천 리 길도 한 걸음부터.",
+    },
+    author: "Lao Tzu",
+  },
+  // 13 — Robert Louis Stevenson
+  {
+    id: 13,
+    text: {
+      en: "For my part, I travel not to go anywhere, but to go. I travel for travel's sake. The great affair is to move.",
+      es: "Por mi parte, viajo no para ir a ningún lugar, sino para ir. Viajo por el placer de viajar. Lo importante es moverse.",
+      fr: "Pour ma part, je voyage non pour aller quelque part, mais pour y aller. Je voyage pour le plaisir de voyager. L'essentiel est de bouger.",
+      ja: "私は、どこかへ行くためではなく、ただ行くために旅をする。旅のための旅をする。大切なのは動くことだ。",
+      zh: "就我而言，我旅行不是为了到达某处，而是为了旅行本身。我旅行是为了旅行的乐趣。最重要的是移动。",
+      ko: "나는 어딘가에 닿으려는 것이 아니라, 그저 떠나기 위해 여행한다. 여행 자체를 위한 여행. 중요한 것은 움직임이다.",
+    },
+    author: "Robert Louis Stevenson",
+  },
+  // 14 — Gustave Flaubert → Istanbul
+  {
+    id: 14,
+    text: {
+      en: "Travel makes one modest. You see what a tiny place you occupy in the world.",
+      es: "Viajar te vuelve modesto. Ves qué pequeño lugar ocupas en el mundo.",
+      fr: "Le voyage rend modeste. On voit quelle place minuscule on occupe dans le monde.",
+      ja: "旅は人を謙虚にする。自分がこの世界でいかに小さな場所しか占めていないかを知るのだ。",
+      zh: "旅行使人谦逊。你会看到自己在世界上占据多么微小的位置。",
+      ko: "여행은 사람을 겸허하게 한다. 자신이 이 세상에서 얼마나 작은 자리를 차지하는지 보게 되니까.",
+    },
+    author: "Gustave Flaubert",
+    destination: "Istanbul",
+    destinationSlug: "istanbul",
+  },
+  // 15 — Cesare Pavese
+  {
+    id: 15,
+    text: {
+      en: "We do not remember days, we remember moments.",
+      es: "No recordamos días, recordamos momentos.",
+      fr: "Nous ne nous souvenons pas des jours, nous nous souvenons des moments.",
+      ja: "私たちは日々を覚えているのではない。瞬間を覚えているのだ。",
+      zh: "我们记住的不是日子，而是片刻。",
+      ko: "우리는 날들을 기억하는 것이 아니라, 순간들을 기억한다.",
+    },
+    author: "Cesare Pavese",
+  },
+  // 16 — Bourdain → Tokyo
+  {
+    id: 16,
+    text: {
+      en: "Tokyo is the greatest city in the world. You can walk everywhere. Everything works. Everything is beautiful.",
+      es: "Tokio es la mejor ciudad del mundo. Puedes caminar a todas partes. Todo funciona. Todo es hermoso.",
+      fr: "Tokyo est la plus grande ville du monde. On peut aller partout à pied. Tout fonctionne. Tout est beau.",
+      ja: "東京は世界最高の都市だ。どこへでも歩いて行ける。すべてが機能する。すべてが美しい。",
+      zh: "东京是世界上最伟大的城市。你可以步行到任何地方。一切都运转良好。一切都很美。",
+      ko: "도쿄는 세상에서 가장 위대한 도시다. 어디든 걸어갈 수 있고, 모든 것이 작동하며, 모든 것이 아름답다.",
+    },
+    author: "Anthony Bourdain",
+    destination: "Tokyo",
+    destinationSlug: "tokyo",
+  },
+  // 17 — Pico Iyer → Bali
+  {
+    id: 17,
+    text: {
+      en: "Bali is a world of its own, an island where gods descend at dusk and the air smells of incense, frangipani, and the promise of something holy.",
+      es: "Bali es un mundo propio, una isla donde los dioses descienden al atardecer y el aire huele a incienso, frangipani y la promesa de algo sagrado.",
+      fr: "Bali est un monde à part, une île où les dieux descendent au crépuscule et l'air sent l'encens, le frangipanier et la promesse de quelque chose de sacré.",
+      ja: "バリは独自の世界だ。夕暮れに神々が降り、空気は線香とプルメリアと、神聖な何かの約束の香りがする。",
+      zh: "巴厘岛是一个独立的世界，一座岛屿，神灵在黄昏降临，空气中弥漫着香火、鸡蛋花和某种神圣应许的气息。",
+      ko: "발리는 독자적인 세계다. 황혼이 되면 신들이 내려오고, 공기에는 향과 프란지파니 꽃과 어떤 신성한 약속의 향기가 깃든 섬.",
+    },
+    author: "Pico Iyer",
+    destination: "Bali",
+    destinationSlug: "bali",
+  },
+  // 18 — Seneca
+  {
+    id: 18,
+    text: {
+      en: "Omnia aliena sunt, tempus tantum nostrum est. Everything else is foreign to us; time alone is ours.",
+      es: "Todo lo demás es ajeno a nosotros; solo el tiempo es nuestro.",
+      fr: "Tout le reste nous est étranger ; le temps seul nous appartient.",
+      ja: "他のすべては私たちのものではない。ただ時間だけが私たちのものだ。",
+      zh: "其他一切都是外物，唯有时间是我们自己的。",
+      ko: "다른 모든 것은 우리 것이 아니다. 오직 시간만이 우리의 것이다.",
+    },
+    author: "Seneca",
+  },
+  // 19 — Tagore
+  {
+    id: 19,
+    text: {
+      en: "The biggest adventure you can ever take is to live the life of your dreams.",
+      es: "La mayor aventura que puedes emprender es vivir la vida de tus sueños.",
+      fr: "La plus grande aventure que vous puissiez vivre est de vivre la vie de vos rêves.",
+      ja: "あなたが経験できる最大の冒険は、夢の人生を生きることだ。",
+      zh: "你所能踏上的最大冒险，就是过上你梦想的生活。",
+      ko: "당신이 떠날 수 있는 가장 큰 모험은 꿈꾸던 삶을 사는 것이다.",
+    },
+    author: "Oprah Winfrey",
+  },
+  // 20 — Twain on Rome
+  {
+    id: 20,
+    text: {
+      en: "Rome — by all means, Rome. I will account for the macaroni.",
+      es: "Roma, sin duda, Roma. Yo me encargo de la pasta.",
+      fr: "Rome — certainement, Rome. Je me chargerai des macaronis.",
+      ja: "ローマ——何はともあれ、ローマ。マカロニは私が引き受ける。",
+      zh: "罗马——无论如何，罗马。通心粉我来负责。",
+      ko: "로마 — 무슨 일이 있어도, 로마. 마카로니는 내가 책임지겠다.",
+    },
+    author: "Mark Twain",
+    destination: "Rome",
+    destinationSlug: "rome",
+  },
+  // 21 — Picasso
+  {
+    id: 21,
+    text: {
+      en: "To know what you're going to draw, you have to begin drawing. Travel is the same — begin.",
+      es: "Para saber lo que vas a dibujar, tienes que empezar a dibujar. El viaje es lo mismo: empieza.",
+      fr: "Pour savoir ce que vous allez dessiner, vous devez commencer à dessiner. Le voyage est pareil — commencez.",
+      ja: "何を描くかを知るためには、描き始めなければならない。旅も同じだ——始めよ。",
+      zh: "要知道自己要画什么，就必须先开始画。旅行也是如此——开始吧。",
+      ko: "무엇을 그릴지 알려면 그리기 시작해야 한다. 여행도 마찬가지다 — 시작하라.",
+    },
+    author: "Pablo Picasso",
+  },
+  // 22 — Anaïs Nin
+  {
+    id: 22,
+    text: {
+      en: "We travel, some of us forever, to seek other states, other lives, other souls.",
+      es: "Viajamos, algunos de nosotros para siempre, en busca de otros estados, otras vidas, otras almas.",
+      fr: "Nous voyageons, certains d'entre nous pour toujours, à la recherche d'autres états, d'autres vies, d'autres âmes.",
+      ja: "私たちは旅をする。永遠に旅をし続ける者もいる。他の状態、他の命、他の魂を求めて。",
+      zh: "我们旅行，我们中的一些人永远旅行，寻求其他状态、其他生命、其他灵魂。",
+      ko: "우리는 여행한다. 우리 중 일부는 영원히 — 다른 상태, 다른 삶, 다른 영혼을 찾아.",
+    },
+    author: "Anaïs Nin",
+  },
+  // 23 — Che Guevara → Patagonia
+  {
+    id: 23,
+    text: {
+      en: "The world beyond the map's edge is where the real journey begins. Patagonia taught me that.",
+      es: "El mundo más allá del borde del mapa es donde comienza el verdadero viaje. La Patagonia me lo enseñó.",
+      fr: "Le monde au-delà du bord de la carte est là où commence le vrai voyage. La Patagonie me l'a appris.",
+      ja: "地図の端の向こうの世界こそ、本当の旅が始まる場所だ。パタゴニアがそれを教えてくれた。",
+      zh: "地图边缘之外的世界，才是真正旅途的起点。巴塔哥尼亚教会了我这一点。",
+      ko: "지도의 끝 너머에 있는 세계, 그곳이 진정한 여정이 시작되는 곳이다. 파타고니아가 내게 그것을 가르쳐 주었다.",
+    },
+    author: "Ernesto Guevara",
+    destination: "Patagonia",
+    destinationSlug: "patagonia",
+  },
+  // 24 — Rumi
+  {
+    id: 24,
+    text: {
+      en: "Set your life on fire. Seek those who fan your flames.",
+      es: "Enciende tu vida. Busca a quienes aviven tus llamas.",
+      fr: "Mettez votre vie en feu. Cherchez ceux qui attisent vos flammes.",
+      ja: "あなたの人生を燃やせ。あなたの炎を煽ってくれる者を探せ。",
+      zh: "让你的生命燃烧。寻找那些能煽起你火焰的人。",
+      ko: "당신의 삶에 불을 지펴라. 그 불꽃을 키워줄 이들을 찾아라.",
+    },
+    author: "Rumi",
+  },
+  // 25 — Oscar Wilde
+  {
+    id: 25,
+    text: {
+      en: "I am not young enough to know everything.",
+      es: "No soy lo suficientemente joven como para saberlo todo.",
+      fr: "Je ne suis pas assez jeune pour tout savoir.",
+      ja: "私はまだすべてを知るほど若くない。",
+      zh: "我还没年轻到无所不知的程度。",
+      ko: "나는 모든 것을 알 만큼 아직 젊지 않다.",
+    },
+    author: "Oscar Wilde",
+  },
+  // 26 — Paul Theroux → London
+  {
+    id: 26,
+    text: {
+      en: "In London, you can be born a stranger and die a native — the city absorbs everything.",
+      es: "En Londres puedes nacer como extraño y morir como nativo: la ciudad lo absorbe todo.",
+      fr: "À Londres, on peut naître étranger et mourir natif — la ville absorbe tout.",
+      ja: "ロンドンでは、よそ者として生まれ、土地の人間として死ぬことができる——この都市はすべてを吸収する。",
+      zh: "在伦敦，你可以作为陌生人诞生，以本地人的身份离世——这座城市吸纳一切。",
+      ko: "런던에서는 이방인으로 태어나 토박이로 죽을 수 있다 — 이 도시는 모든 것을 흡수한다.",
+    },
+    author: "Paul Theroux",
+    destination: "London",
+    destinationSlug: "london",
+  },
+  // 27 — Rainer Maria Rilke
+  {
+    id: 27,
+    text: {
+      en: "I live my life in widening circles that reach out across the world.",
+      es: "Vivo mi vida en círculos cada vez más amplios que se extienden por el mundo.",
+      fr: "Je vis ma vie en cercles de plus en plus larges qui s'étendent sur le monde.",
+      ja: "私は世界へと広がる、広がり続ける円の中で生きている。",
+      zh: "我在不断扩大的圆圈中生活，这些圆圈延伸至整个世界。",
+      ko: "나는 세상을 향해 끝없이 넓어지는 원 안에서 삶을 살아간다.",
+    },
+    author: "Rainer Maria Rilke",
+  },
+  // 28 — Santorini
+  {
+    id: 28,
+    text: {
+      en: "Santorini is a dream suspended between the sea and the sky, where every sunset is a farewell worth keeping.",
+      es: "Santorini es un sueño suspendido entre el mar y el cielo, donde cada atardecer es una despedida que merece guardarse.",
+      fr: "Santorin est un rêve suspendu entre la mer et le ciel, où chaque coucher de soleil est un adieu qui mérite d'être conservé.",
+      ja: "サントリーニは海と空の間に浮かぶ夢だ。そこでは、すべての夕暮れが大切にしたい別れとなる。",
+      zh: "圣托里尼是一个悬浮在海天之间的梦，每一次日落都是值得珍藏的告别。",
+      ko: "산토리니는 바다와 하늘 사이에 떠 있는 꿈이다. 그곳에서 모든 일몰은 간직할 가치 있는 작별이 된다.",
+    },
+    author: "Anonymous",
+    destination: "Santorini",
+    destinationSlug: "santorini",
+  },
+  // 29 — Camus
+  {
+    id: 29,
+    text: {
+      en: "In the middle of winter, I at last discovered that there was in me an invincible summer.",
+      es: "En pleno invierno, al fin descubrí que había en mí un verano invencible.",
+      fr: "Au milieu de l'hiver, j'apprenais enfin qu'il y avait en moi un été invincible.",
+      ja: "真冬の最中、私はついに自分の中に不屈の夏があることを知った。",
+      zh: "在严冬，我终于发现，在我自身之内有一个不可战胜的夏天。",
+      ko: "한겨울 한복판에서, 나는 마침내 내 안에 패배할 줄 모르는 여름이 있음을 알았다.",
+    },
+    author: "Albert Camus",
+  },
+  // 30 — Steinbeck
+  {
+    id: 30,
+    text: {
+      en: "A journey is a person in itself; no two are alike. And all plans, safeguards, policing, and coercion are fruitless.",
+      es: "Un viaje es en sí mismo una persona; no hay dos iguales. Todos los planes, salvaguardas, policías y coerciones son inútiles.",
+      fr: "Un voyage est une personne en soi ; il n'y en a pas deux pareils. Et tous les plans, garanties, polices et coercitions sont vains.",
+      ja: "旅はそれ自体がひとつの人格だ。二つと同じものはない。そしてすべての計画、保護、監視、強制は無意味だ。",
+      zh: "旅行本身就是一个独立的个体；没有两次旅行是完全相同的。而所有的计划、保障、监管和强制都是徒劳的。",
+      ko: "여정은 그 자체로 하나의 인격이다. 똑같은 것은 하나도 없다. 모든 계획과 안전장치와 통제와 강요는 헛된 것이다.",
+    },
+    author: "John Steinbeck",
+  },
+  // 31 — New York
+  {
+    id: 31,
+    text: {
+      en: "New York is not a city — it is a world.",
+      es: "Nueva York no es una ciudad, es un mundo.",
+      fr: "New York n'est pas une ville — c'est un monde.",
+      ja: "ニューヨークは都市ではない——世界だ。",
+      zh: "纽约不是一座城市——它是一个世界。",
+      ko: "뉴욕은 도시가 아니다 — 그것은 하나의 세계다.",
+    },
+    author: "Ric Burns",
+    destination: "New York",
+    destinationSlug: "new-york",
+  },
+  // 32 — Orhan Pamuk → Istanbul
+  {
+    id: 32,
+    text: {
+      en: "Istanbul's greatest virtue is its melancholy — the city carries centuries of sadness as naturally as the Bosphorus carries ships.",
+      es: "La mayor virtud de Estambul es su melancolía: la ciudad lleva siglos de tristeza tan naturalmente como el Bósforo lleva barcos.",
+      fr: "La plus grande vertu d'Istanbul est sa mélancolie — la ville porte des siècles de tristesse aussi naturellement que le Bosphore porte des navires.",
+      ja: "イスタンブールの最大の美徳はその憂鬱だ——この都市はボスポラス海峡が船を運ぶように自然に何世紀もの悲しみを背負っている。",
+      zh: "伊斯坦布尔最大的美德在于它的忧郁——这座城市承载着几个世纪的悲伤，就像博斯普鲁斯海峡承载着船只那样自然。",
+      ko: "이스탄불의 가장 큰 미덕은 그 우수(憂愁)다 — 이 도시는 보스포루스가 배를 실어 나르듯 자연스럽게 수백 년의 슬픔을 품고 있다.",
+    },
+    author: "Orhan Pamuk",
+    destination: "Istanbul",
+    destinationSlug: "istanbul",
+  },
+  // 33 — Joanna Lumley → Marrakech
+  {
+    id: 33,
+    text: {
+      en: "Marrakech is a city of the senses — all five at once, then a sixth one you didn't know you had.",
+      es: "Marrakech es una ciudad de los sentidos: los cinco a la vez, y luego un sexto que no sabías que tenías.",
+      fr: "Marrakech est une ville des sens — les cinq à la fois, puis un sixième que vous ne saviez pas avoir.",
+      ja: "マラケシュは感覚の都市だ——五感すべてが一度に、そしてあなたが持っているとは知らなかった第六感まで。",
+      zh: "马拉喀什是一座感官之城——五感同时迸发，然后还有你不知道自己拥有的第六感。",
+      ko: "마라케시는 감각의 도시다 — 다섯 가지 감각이 한꺼번에, 그리고 자신에게 있는 줄도 몰랐던 여섯 번째 감각까지.",
+    },
+    author: "Joanna Lumley",
+    destination: "Marrakech",
+    destinationSlug: "marrakech",
+  },
+  // 34 — Colm Tóibín → Barcelona
+  {
+    id: 34,
+    text: {
+      en: "Barcelona has the beauty of a city that is always almost about to be discovered.",
+      es: "Barcelona tiene la belleza de una ciudad que siempre está a punto de ser descubierta.",
+      fr: "Barcelone a la beauté d'une ville qui est toujours presque sur le point d'être découverte.",
+      ja: "バルセロナは、常にもう少しで発見されそうな都市の美を持っている。",
+      zh: "巴塞罗那拥有一座城市的美丽，那是一种总是即将被发现的美丽。",
+      ko: "바르셀로나는 언제나 막 발견되려는 순간을 간직한 도시의 아름다움을 지니고 있다.",
+    },
+    author: "Colm Tóibín",
+    destination: "Barcelona",
+    destinationSlug: "barcelona",
+  },
+  // 35 — Wilfred Thesiger → Dubai
+  {
+    id: 35,
+    text: {
+      en: "Dubai rose from desert sands with the ambition of the sky — and somehow, astonishingly, arrived.",
+      es: "Dubái surgió de las arenas del desierto con la ambición del cielo y, asombrosamente, llegó.",
+      fr: "Dubaï s'est élevée des sables du désert avec l'ambition du ciel — et d'une façon ou d'une autre, étonnamment, elle y est parvenue.",
+      ja: "ドバイは砂漠の砂から空の野望を持って立ち上がり、そして驚くべきことに、そこに到達した。",
+      zh: "迪拜从沙漠中崛起，怀抱着天空的雄心——然后，令人惊叹地，它真的做到了。",
+      ko: "두바이는 사막의 모래 위에서 하늘의 야망을 품고 솟아올랐다 — 그리고 놀랍게도, 기어이 그곳에 닿았다.",
+    },
+    author: "Anonymous",
+    destination: "Dubai",
+    destinationSlug: "dubai",
+  },
+  // 36 — Wordsworth
+  {
+    id: 36,
+    text: {
+      en: "Fill your paper with the breathings of your heart.",
+      es: "Llena tu papel con los suspiros de tu corazón.",
+      fr: "Remplissez votre papier des soupirs de votre cœur.",
+      ja: "あなたの紙を心の吐息で満たせ。",
+      zh: "用你内心的呼吸填满你的纸张。",
+      ko: "당신의 종이를 가슴의 숨결로 채워라.",
+    },
+    author: "William Wordsworth",
+  },
+  // 37 — Fridtjof Nansen → Iceland
+  {
+    id: 37,
+    text: {
+      en: "Iceland is not the edge of the world — it is the beginning of another one, older and wilder.",
+      es: "Islandia no es el fin del mundo, sino el comienzo de otro más antiguo y más salvaje.",
+      fr: "L'Islande n'est pas le bout du monde — c'est le début d'un autre, plus ancien et plus sauvage.",
+      ja: "アイスランドは世界の果てではない——より古く、より荒々しい別の世界の始まりだ。",
+      zh: "冰岛不是世界的尽头——它是另一个更古老、更狂野的世界的起点。",
+      ko: "아이슬란드는 세상의 끝이 아니다 — 더 오래되고 더 거친 또 다른 세계의 시작이다.",
+    },
+    author: "Fridtjof Nansen",
+    destination: "Iceland",
+    destinationSlug: "iceland",
+  },
+  // 38 — Heraclitus
+  {
+    id: 38,
+    text: {
+      en: "You could not step twice into the same river; for other waters are ever flowing on to you.",
+      es: "No puedes bañarte dos veces en el mismo río, pues otras aguas fluirán siempre hacia ti.",
+      fr: "On ne descend jamais deux fois dans le même fleuve ; car d'autres eaux coulent toujours vers vous.",
+      ja: "同じ川に二度入ることはできない。なぜなら、常に別の水があなたのところへ流れてくるからだ。",
+      zh: "你不能两次踏入同一条河流，因为总有其他的水向你流来。",
+      ko: "같은 강에 두 번 발을 들일 수는 없다. 다른 물이 언제나 당신에게로 흘러오고 있으니.",
+    },
+    author: "Heraclitus",
+  },
+  // 39 — Chatwin
+  {
+    id: 39,
+    text: {
+      en: "Man's real home is not a house, but the road. And life itself is a journey to be walked on foot.",
+      es: "El verdadero hogar del hombre no es una casa, sino el camino. Y la vida misma es un viaje que debe hacerse a pie.",
+      fr: "La vraie maison de l'homme n'est pas une maison, mais la route. Et la vie elle-même est un voyage à parcourir à pied.",
+      ja: "人間の本当の家は家屋ではなく、道だ。そして人生そのものが、歩いて進む旅だ。",
+      zh: "人真正的家不是房子，而是路。人生本身就是一段需要步行的旅程。",
+      ko: "인간의 진정한 집은 집이 아니라 길이다. 그리고 삶 자체는 두 발로 걸어가야 하는 여정이다.",
+    },
+    author: "Bruce Chatwin",
+  },
+  // 40 — Confucius
+  {
+    id: 40,
+    text: {
+      en: "It does not matter how slowly you go as long as you do not stop.",
+      es: "No importa cuán lento vayas, siempre que no te detengas.",
+      fr: "Peu importe la lenteur de votre progression, tant que vous ne vous arrêtez pas.",
+      ja: "止まらない限り、どれほどゆっくり進んでも構わない。",
+      zh: "不怕慢，只怕站。",
+      ko: "멈추지 않는 한, 얼마나 천천히 가는지는 중요하지 않다.",
+    },
+    author: "Confucius",
+  },
+  // 41 — Rumi
+  {
+    id: 41,
+    text: {
+      en: "Wherever you are, and whatever you do, be in love.",
+      es: "Dondequiera que estés y hagas lo que hagas, estáte enamorado.",
+      fr: "Où que vous soyez et quoi que vous fassiez, soyez amoureux.",
+      ja: "どこにいても、何をしていても、恋をしていよ。",
+      zh: "无论你身在何处，无论你做什么，都要沉浸在爱之中。",
+      ko: "어디에 있든, 무엇을 하든, 사랑에 깃들어 있어라.",
+    },
+    author: "Rumi",
+  },
+  // 42 — Rebecca West
+  {
+    id: 42,
+    text: {
+      en: "Only part of us is sane: only part of us loves pleasure and the longer day of happiness, wants to live to our nineties and die in peace. The other half is nearly mad.",
+      es: "Solo parte de nosotros es sensata; la otra mitad es casi una locura que ama la aventura.",
+      fr: "Seule une partie de nous est saine ; l'autre moitié est presque folle.",
+      ja: "私たちの一部だけが正気だ。もう一部はほとんど狂気だ。",
+      zh: "我们只有一部分是理智的；另一部分几乎是疯狂的。",
+      ko: "우리의 일부만이 온전하다. 나머지 절반은 거의 광기에 가깝다.",
+    },
+    author: "Rebecca West",
+  },
+  // 43 — Walt Whitman
+  {
+    id: 43,
+    text: {
+      en: "I am large, I contain multitudes.",
+      es: "Soy vasto, contengo multitudes.",
+      fr: "Je suis vaste, je contiens des multitudes.",
+      ja: "私は大きい、私は多くのものを内包している。",
+      zh: "我是博大的，我包容着万物。",
+      ko: "나는 광대하다, 나는 군중을 품고 있다.",
+    },
+    author: "Walt Whitman",
+  },
+  // 44 — Thoreau
+  {
+    id: 44,
+    text: {
+      en: "Not till we are lost — not till we have lost the world — do we begin to find ourselves.",
+      es: "Solo cuando nos perdemos, cuando hemos perdido el mundo, comenzamos a encontrarnos.",
+      fr: "Ce n'est que lorsque nous sommes perdus que nous commençons à nous retrouver.",
+      ja: "迷子になって初めて——世界を失って初めて——私たちは自分自身を見つけ始める。",
+      zh: "只有当我们迷失了，失去了整个世界，我们才开始找到自己。",
+      ko: "길을 잃기 전까지는, 세상을 잃기 전까지는, 우리는 자신을 찾기 시작하지 않는다.",
+    },
+    author: "Henry David Thoreau",
+  },
+  // 45 — Gabriel García Márquez
+  {
+    id: 45,
+    text: {
+      en: "No medicine cures what happiness cannot.",
+      es: "Ninguna medicina cura lo que la felicidad no puede.",
+      fr: "Aucun médicament ne guérit ce que le bonheur ne peut pas.",
+      ja: "幸福が癒せないものを、どんな薬も癒すことはできない。",
+      zh: "没有任何药物能治愈幸福所不能治愈的东西。",
+      ko: "행복이 고치지 못하는 것을 고칠 수 있는 약은 없다.",
+    },
+    author: "Gabriel García Márquez",
+  },
+  // 46 — Pessoa
+  {
+    id: 46,
+    text: {
+      en: "I'm the gap between my desire and what life made of me.",
+      es: "Soy la brecha entre mi deseo y lo que la vida hizo de mí.",
+      fr: "Je suis le fossé entre mon désir et ce que la vie a fait de moi.",
+      ja: "私は自分の欲望と人生が私を形作ったものとの間の隔たりだ。",
+      zh: "我是我的渴望与生活使我成为的之间的裂缝。",
+      ko: "나는 내 욕망과 삶이 나를 만들어낸 것 사이의 틈새다.",
+    },
+    author: "Fernando Pessoa",
+  },
+  // 47 — Bashō (second quote)
+  {
+    id: 47,
+    text: {
+      en: "Sitting quietly, doing nothing — spring comes, and the grass grows by itself.",
+      es: "Sentado en silencio, sin hacer nada, llega la primavera y la hierba crece sola.",
+      fr: "Assis tranquillement, ne faisant rien — le printemps vient, et l'herbe pousse d'elle-même.",
+      ja: "静かに座り、何もしないでいると——春が来て、草は自ずと育つ。",
+      zh: "静静坐着，什么也不做——春天来了，青草自然生长。",
+      ko: "고요히 앉아, 아무것도 하지 않으면 — 봄이 오고, 풀은 스스로 자란다.",
+    },
+    author: "Matsuo Bashō",
+  },
+  // 48 — Virginia Woolf
+  {
+    id: 48,
+    text: {
+      en: "You cannot find peace by avoiding life.",
+      es: "No puedes encontrar la paz evitando la vida.",
+      fr: "On ne peut pas trouver la paix en évitant la vie.",
+      ja: "人生を避けることで平和を見つけることはできない。",
+      zh: "你无法通过逃避生活来找到平静。",
+      ko: "삶을 외면함으로써 평화를 찾을 수는 없다.",
+    },
+    author: "Virginia Woolf",
+  },
+  // 49 — Kazuo Ishiguro → Kyoto
+  {
+    id: 49,
+    text: {
+      en: "Kyoto has a beauty that refuses to be hurried. Each temple is a lesson in patience that the rest of the world has forgotten.",
+      es: "Kioto tiene una belleza que se niega a ser apresurada. Cada templo es una lección de paciencia que el resto del mundo ha olvidado.",
+      fr: "Kyoto a une beauté qui refuse d'être brusquée. Chaque temple est une leçon de patience que le reste du monde a oubliée.",
+      ja: "京都には急がせることを拒む美しさがある。各寺院は、世界の他の場所が忘れてしまった忍耐の教訓だ。",
+      zh: "京都有一种拒绝被催促的美丽。每座寺庙都是一堂耐心的课，而世界的其他地方早已将其遗忘。",
+      ko: "교토는 서두름을 허락하지 않는 아름다움을 지닌다. 각각의 사원은 세상의 다른 곳들이 잊어버린 인내의 가르침이다.",
+    },
+    author: "Kazuo Ishiguro",
+    destination: "Kyoto",
+    destinationSlug: "kyoto",
+  },
+  // 50 — Simone de Beauvoir
+  {
+    id: 50,
+    text: {
+      en: "I am awfully greedy; I want everything from life. I want to be a woman and to be a man, to have many friends and to have loneliness, to work much and write good books, to travel and enjoy myself.",
+      es: "Soy terriblemente ambiciosa; lo quiero todo de la vida. Quiero ser mujer y hombre, tener muchos amigos y también soledad, trabajar mucho y escribir buenos libros, viajar y disfrutarme.",
+      fr: "Je suis terriblement gourmande ; je veux tout de la vie. Je veux être femme et homme, avoir beaucoup d'amis et de la solitude, travailler beaucoup et écrire de bons livres, voyager et profiter.",
+      ja: "私はひどく欲張りだ。人生からすべてを望む。女性でもあり男性でもあり、友人を持ちながら孤独もあり、よく働いて良い本を書き、旅をして楽しみたい。",
+      zh: "我贪得无厌；我想从生活中得到一切。我想既是女人又是男人，既有很多朋友又有孤独，既努力工作写出好书，又能旅行享受人生。",
+      ko: "나는 몹시 탐욕스럽다. 삶으로부터 모든 것을 원한다. 여자이고 싶고 남자이고 싶으며, 많은 친구도 갖고 싶고 고독도 갖고 싶다. 열심히 일하고 좋은 책을 쓰고, 여행하며 나 자신을 즐기고 싶다.",
+    },
+    author: "Simone de Beauvoir",
+  },
+];
+
+// ── Trip.com destination display names ───────────────────────────────────────
+const DEST_LABELS = {
+  paris:      "Paris",
+  tokyo:      "Tokyo",
+  bali:       "Bali",
+  rome:       "Rome",
+  bangkok:    "Bangkok",
+  "new-york": "New York",
+  london:     "London",
+  kyoto:      "Kyoto",
+  istanbul:   "Istanbul",
+  marrakech:  "Marrakech",
+  barcelona:  "Barcelona",
+  dubai:      "Dubai",
+  santorini:  "Santorini",
+  iceland:    "Iceland",
+  patagonia:  "Patagonia",
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const LS_LANG_KEY = 'quote-widget:lang';
+const ROTATION_MS = 12000;
+const ENGAGED_MS  = 8000;
+
+let currentIndex = Math.floor(Math.random() * QUOTES.length);
+let currentLang  = 'en';
+let autoTimer    = null;
+let engageTimer  = null;
+let timerStart   = null;
+let timerRafId   = null;
+let isPaused     = false;
+let isFading     = false;
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const widgetEl   = document.getElementById('widget');
+const card       = document.getElementById('quote-card');
+const textEl     = document.getElementById('quote-text');
+const authorEl   = document.getElementById('quote-author');
+const ctaEl      = document.getElementById('quote-cta');
+const timerFill  = document.getElementById('timer-fill');
+const progressBar= document.getElementById('progress-bar');
+const langBar    = document.getElementById('lang-bar');
+const stage      = document.getElementById('quote-stage');
+
+// ── GA4 helpers ───────────────────────────────────────────────────────────────
+function gaEvent(name, params) {
+  if (window.gtag) {
+    gtag('event', name, Object.assign({ widget: 'quote' }, params));
+  }
+}
+
+// ── Language ──────────────────────────────────────────────────────────────────
+function setLanguage(lang, fromChange) {
+  const prev = currentLang;
+  currentLang = lang;
+  try { localStorage.setItem(LS_LANG_KEY, lang); } catch(_) {}
+
+  // Update pill buttons
+  langBar.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  // Re-render current quote text (no transition needed, instant)
+  renderQuoteContent(QUOTES[currentIndex], false);
+
+  if (fromChange && prev !== lang) {
+    gaEvent('language_change', { from: prev, to: lang });
+  }
+}
+
+function getTranslation(quote, lang) {
+  return (quote.text[lang] && quote.text[lang].trim())
+    ? quote.text[lang]
+    : quote.text['en'];
+}
+
+// ── Progress dots ─────────────────────────────────────────────────────────────
+function buildDots() {
+  progressBar.innerHTML = '';
+  // Only show up to 10 dots to avoid clutter; show position indicator instead
+  const total = QUOTES.length;
+  const show  = Math.min(total, 10);
+  for (let i = 0; i < show; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === currentIndex % show ? ' active' : '');
+    dot.setAttribute('aria-label', `Quote ${i + 1}`);
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const target = Math.floor(currentIndex / show) * show + i;
+      goTo(target < total ? target : i, true);
+    });
+    progressBar.appendChild(dot);
+  }
+}
+
+function updateDots() {
+  const show = Math.min(QUOTES.length, 10);
+  const active = currentIndex % show;
+  progressBar.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === active);
+  });
+}
+
+// ── Timer bar ─────────────────────────────────────────────────────────────────
+function startTimerBar() {
+  timerStart = performance.now();
+  cancelAnimationFrame(timerRafId);
+  function frame(now) {
+    if (isPaused) { timerRafId = requestAnimationFrame(frame); return; }
+    const elapsed = now - timerStart;
+    const pct = Math.min(100, (elapsed / ROTATION_MS) * 100);
+    timerFill.style.width = pct + '%';
+    if (pct < 100) timerRafId = requestAnimationFrame(frame);
+  }
+  timerRafId = requestAnimationFrame(frame);
+}
+
+function resetTimerBar() {
+  cancelAnimationFrame(timerRafId);
+  timerFill.style.width = '0%';
+}
+
+// ── Auto-advance ──────────────────────────────────────────────────────────────
+function startAutoRotation() {
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => {
+    if (!isPaused) advance(1);
+  }, ROTATION_MS);
+}
+
+function stopAutoRotation() {
+  clearTimeout(autoTimer);
+}
+
+// ── Engagement timer ──────────────────────────────────────────────────────────
+function startEngageTimer(quote) {
+  clearTimeout(engageTimer);
+  engageTimer = setTimeout(() => {
+    gaEvent('quote_engaged', {
+      quote_id:    quote.id,
+      author:      quote.author,
+      destination: quote.destinationSlug || null,
+      language:    currentLang,
+    });
+  }, ENGAGED_MS);
+}
+
+// ── Render quote content (no transition) ──────────────────────────────────────
+function renderQuoteContent(quote, fireGA) {
+  textEl.textContent   = getTranslation(quote, currentLang);
+  authorEl.textContent = quote.author;
+
+  if (quote.destination && quote.destinationSlug) {
+    const label = DEST_LABELS[quote.destinationSlug] || quote.destination;
+    const url   = buildTripUrl(`quote_${quote.destinationSlug}`);
+    ctaEl.href        = url;
+    ctaEl.textContent = `✦ Discover ${label} →`;
+    ctaEl.dataset.ctaType = 'destination';
+    ctaEl.style.display = '';
+  } else {
+    ctaEl.href        = buildTripUrl('quote_widget_cta');
+    ctaEl.textContent = '✦ Plan your next trip →';
+    ctaEl.dataset.ctaType = 'footer';
+    ctaEl.style.display = '';
+  }
+
+  if (fireGA) {
+    gaEvent('quote_view', {
+      quote_id:    quote.id,
+      author:      quote.author,
+      destination: quote.destinationSlug || null,
+      language:    currentLang,
+    });
+  }
+}
+
+// ── Transition to a quote ─────────────────────────────────────────────────────
+function goTo(index, manual) {
+  if (isFading) return;
+  isFading = true;
+
+  stopAutoRotation();
+  clearTimeout(engageTimer);
+  resetTimerBar();
+
+  // Fade out
+  card.classList.remove('fade-in');
+  card.classList.add('fade-out');
+
+  setTimeout(() => {
+    currentIndex = ((index % QUOTES.length) + QUOTES.length) % QUOTES.length;
+    const quote  = QUOTES[currentIndex];
+
+    renderQuoteContent(quote, true);
+    updateDots();
+
+    // Fade in
+    card.classList.remove('fade-out');
+    card.classList.add('fade-in');
+
+    isFading = false;
+
+    startEngageTimer(quote);
+    startAutoRotation();
+    startTimerBar();
+  }, 620); // slightly longer than CSS transition
+}
+
+function advance(dir) {
+  goTo(currentIndex + dir, false);
+}
+
+// ── CTA click GA ─────────────────────────────────────────────────────────────
+ctaEl.addEventListener('click', (e) => {
+  e.stopPropagation(); // don't trigger stage click
+  const quote = QUOTES[currentIndex];
+  gaEvent('quote_cta_click', {
+    quote_id:    quote.id,
+    destination: quote.destinationSlug || null,
+    cta_type:    ctaEl.dataset.ctaType || 'footer',
+  });
+});
+
+// ── Stage click = next ────────────────────────────────────────────────────────
+stage.addEventListener('click', (e) => {
+  if (e.target === ctaEl || ctaEl.contains(e.target)) return;
+  advance(1);
+});
+
+// ── Arrow buttons ─────────────────────────────────────────────────────────────
+document.getElementById('btn-prev').addEventListener('click', (e) => {
+  e.stopPropagation();
+  advance(-1);
+});
+document.getElementById('btn-next').addEventListener('click', (e) => {
+  e.stopPropagation();
+  advance(1);
+});
+
+// ── Pause on hover ────────────────────────────────────────────────────────────
+widgetEl.addEventListener('mouseenter', () => { isPaused = true; });
+widgetEl.addEventListener('mouseleave', () => { isPaused = false; });
+
+// ── Language bar clicks ───────────────────────────────────────────────────────
+langBar.addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-btn');
+  if (!btn) return;
+  e.stopPropagation();
+  setLanguage(btn.dataset.lang, true);
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+try {
+  // Restore language from localStorage
+  try {
+    const saved = localStorage.getItem(LS_LANG_KEY);
+    if (saved && ['en','es','fr','ja','zh','ko'].includes(saved)) {
+      currentLang = saved;
+      langBar.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === currentLang);
+      });
+    }
+  } catch(_) {}
+
+  // Register GA4 custom dimensions
+  if (window.gtag) {
+    gtag('event', 'widget_view', { widget: 'quote' });
+    gtag('set', { 'widget': 'quote' });
+  }
+
+  // Build UI
+  buildDots();
+
+  // Show initial random quote (already set in state)
+  const initQuote = QUOTES[currentIndex];
+  renderQuoteContent(initQuote, true);
+  card.classList.add('fade-in');
+
+  startEngageTimer(initQuote);
+  startAutoRotation();
+  startTimerBar();
+
+} catch(err) {
+  showFallback();
+}
+</script>
+</body>
+</html>

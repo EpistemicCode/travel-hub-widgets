@@ -15,7 +15,7 @@ can curl any widget and verify which release is live.
 - nowin: city selection now persists across refresh via URL param + localStorage
 - nowin: "↺ auto" button to clear saved city and re-detect
 - nowin: snap-to-nearest-city from 80-entry CITIES list for accurate weather
-- GA4 (G-1WH2JWQLZB) on index.html directory page only (widgets stay cookieless)
+- GA4 (G-D8GYSB22FR) on index.html directory page only (widgets stay cookieless)
 - affiliate_click events on stays + flights Search buttons (no-op unless host page has gtag)
 - ipapi.co fetch now has a 3s timeout so blocked/slow connections fall through fast
 - Global error boundary: widgets show a graceful offline card instead of breaking
