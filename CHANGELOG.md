@@ -5,7 +5,10 @@ Version is embedded as `<meta name="widget-version">` in each HTML file so you
 can curl any widget and verify which release is live.
 
 ## [Unreleased]
-- (work-in-progress entries go here; promote to a dated release block on publish)
+- GA4 events across revenue widgets (stays/flights/countdown): widget_view, search_intent, affiliate_click, trip_set
+- trip_sub2 encoding on outbound Trip.com URLs — enables per-destination revenue breakdown in Trip.com dashboard
+- countdown: "Copy for Notion" banner in iframe contexts (honest fix for Notion's sandbox-storage limitation)
+- error boundary: no longer triggers on resource/extension noise (only real JS exceptions)
 
 ## [1.2.0] — 2026-04-21
 ### Added

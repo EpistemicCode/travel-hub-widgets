@@ -47,7 +47,17 @@ nowin.html?lat=-8.5069&lon=115.2625&tz=Asia/Makassar&place=Ubud
 countdown.html?to=2026-05-02T21:40&dest=Ubud,+Bali&flight=GA+881
 ```
 
-If you omit `lat`/`lon` on `nowin.html`, it auto-detects the viewer's location. If you omit the target date on `countdown.html`, it defaults to 30 days out.
+If you omit `lat`/`lon` on `nowin.html`, it auto-detects the viewer's location and snaps to the nearest major city. If you open `countdown.html` without a `?to=` param, it shows an in-widget setup form.
+
+### Saving your trip inside Notion
+
+`countdown.html` lets you fill in your trip in the widget itself, but **Notion's iframe sandbox clears storage on every page refresh**, so the in-widget setup won't survive a reload inside Notion. The workaround is one-time and simple:
+
+1. Set your trip in the widget (either direct link, or inside the Notion embed — doesn't matter)
+2. Click the **Copy URL** button that appears
+3. In Notion, click your countdown embed → `•••` → **Replace link** → paste the copied URL
+
+The URL now contains your trip (`?to=...&dest=...&flight=...`) and Notion will reload that exact URL forever. No code, no Notion setup — just paste.
 
 ## Affiliate disclosure
 

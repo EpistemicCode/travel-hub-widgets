@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.2.0">
+<meta name="widget-version" content="1.3.0">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1WH2JWQLZB"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-1WH2JWQLZB', { anonymize_ip: true, send_page_view: false });
+</script>
 <title>Find a flight</title>
 <!--
   flights.html — Trip.com flight search widget · 480 × 380
@@ -156,6 +163,7 @@
     const msg = String(e.reason && (e.reason.message || e.reason));
     if (/fetch|network|failed|abort/i.test(msg)) showOfflineCard('network');
   });
+  if (window.gtag) gtag('event', 'widget_view', { widget: 'flights' });
   function showOfflineCard(code) {
     document.body.innerHTML = `
       <div class="card" style="position:absolute;inset:0;display:flex;flex-direction:column;
@@ -270,14 +278,22 @@
   }
 
   $("search").addEventListener("click", () => {
-    const from = $("from").value.trim();
-    const to   = $("to").value.trim();
-    if (!from || !to || from.length !== 3 || to.length !== 3) {
+    const fromVal = $("from").value.trim().toUpperCase();
+    const toVal   = $("to").value.trim().toUpperCase();
+    if (!fromVal || !toVal || fromVal.length !== 3 || toVal.length !== 3) {
       alert("Please enter valid 3-letter airport codes (e.g. SHA, DPS).");
       return;
     }
-    if (window.gtag) gtag("event", "affiliate_click", {widget: "flights"});
-    window.open(buildTripUrl(), "_blank", "noopener,noreferrer");
+    const route = fromVal + '-' + toVal;
+
+    if (window.gtag) {
+      gtag('event', 'search_intent', { widget: 'flights', route });
+      gtag('event', 'affiliate_click', { widget: 'flights', route });
+    }
+
+    const sub2 = 'flights_' + fromVal + '-' + toVal;
+    const url = buildTripUrl();
+    window.open(url + '&trip_sub2=' + encodeURIComponent(sub2), "_blank", "noopener,noreferrer");
   });
 </script>
 </body>

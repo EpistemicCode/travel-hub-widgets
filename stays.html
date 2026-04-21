@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.2.0">
+<meta name="widget-version" content="1.3.0">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-1WH2JWQLZB"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-1WH2JWQLZB', { anonymize_ip: true, send_page_view: false });
+</script>
 <title>Find a stay</title>
 <!--
   stays.html — Trip.com hotel search widget · 480 × 360
@@ -135,6 +142,7 @@
     const msg = String(e.reason && (e.reason.message || e.reason));
     if (/fetch|network|failed|abort/i.test(msg)) showOfflineCard('network');
   });
+  if (window.gtag) gtag('event', 'widget_view', { widget: 'stays' });
   function showOfflineCard(code) {
     document.body.innerHTML = `
       <div class="card" style="position:absolute;inset:0;display:flex;flex-direction:column;
@@ -231,8 +239,36 @@
   }
 
   $("search").addEventListener("click", () => {
-    if (window.gtag) gtag("event", "affiliate_click", {widget: "stays"});
-    window.open(buildTripUrl(), "_blank", "noopener,noreferrer");
+    const cityVal   = $("city").value.trim();
+    const checkinRaw  = $("checkin").value;
+    const checkoutRaw = $("checkout").value;
+    const adultsVal = parseInt($("adults").value, 10) || 2;
+    const daysAhead = checkinRaw
+      ? Math.round((new Date(checkinRaw) - new Date()) / 864e5)
+      : 0;
+    const tripLen = (checkinRaw && checkoutRaw)
+      ? Math.round((new Date(checkoutRaw) - new Date(checkinRaw)) / 864e5)
+      : 0;
+
+    if (window.gtag) {
+      gtag('event', 'search_intent', {
+        widget: 'stays',
+        destination: cityVal,
+        days_ahead: daysAhead,
+        trip_length: tripLen,
+        adults: adultsVal,
+      });
+      gtag('event', 'affiliate_click', { widget: 'stays', destination: cityVal });
+    }
+
+    // trip_sub2: slugify destination as stays_<cityname>
+    const slug = 'stays_' + cityVal.toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '')
+      .slice(0, 40);
+
+    const url = buildTripUrl();
+    window.open(url + '&trip_sub2=' + encodeURIComponent(slug), "_blank", "noopener,noreferrer");
   });
   $("browse").addEventListener("click", (e) => {
     e.preventDefault();
