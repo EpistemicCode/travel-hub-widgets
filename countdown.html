@@ -157,24 +157,39 @@
   let trip = null; // { to: ISO string, dest: string, flight: string }
   let timer = null;
 
+  // Validate a trip object — must have a parseable `to` date.
+  // Returns true if valid, false if Invalid Date / missing fields.
+  const isValidTrip = (t) => {
+    if (!t || typeof t !== 'object' || !t.to) return false;
+    const d = new Date(t.to);
+    return d instanceof Date && !isNaN(d.getTime());
+  };
+
   // ── resolve on load ────────────────────────────────────────────────────
   const params = new URLSearchParams(location.search);
 
   if (params.get('to')) {
     // Priority 1: URL params (Notion embed flow)
-    trip = {
+    const candidate = {
       to:     params.get('to'),
       dest:   params.get('dest')   || '',
       flight: params.get('flight') || '',
     };
-    showCountdown();
+    if (isValidTrip(candidate)) { trip = candidate; showCountdown(); }
+    else                         { showSetup(false); }  // bad URL — fall through to form
   } else {
-    // Priority 2: localStorage
+    // Priority 2: localStorage (validated — corrupt entries are discarded)
     try {
       const saved = localStorage.getItem(LS_KEY);
-      if (saved) { trip = JSON.parse(saved); showCountdown(); }
-      else        { showSetup(false); }
+      if (saved) {
+        const candidate = JSON.parse(saved);
+        if (isValidTrip(candidate)) { trip = candidate; showCountdown(); }
+        else { try { localStorage.removeItem(LS_KEY); } catch(_){} showSetup(false); }
+      } else {
+        showSetup(false);
+      }
     } catch (_) {
+      try { localStorage.removeItem(LS_KEY); } catch(_){}
       showSetup(false);
     }
   }
@@ -198,15 +213,17 @@
   }
 
   function showCountdown() {
-    if (!trip) return;
+    if (!isValidTrip(trip)) { showSetup(false); return; }  // safety net
     $('setup-view').style.display    = 'none';
     $('countdown-view').style.display = '';
     $('dest').textContent   = trip.dest   || 'your next trip';
     $('flight').textContent = trip.flight || '';
-    $('target').textContent = new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', hour12: false,
-    }).format(new Date(trip.to));
+    try {
+      $('target').textContent = new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+      }).format(new Date(trip.to));
+    } catch (_) { $('target').textContent = trip.to; }
     stopTimer();
     tick();
     timer = setInterval(tick, 1000);
