@@ -5,23 +5,29 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Now in …</title>
 <!--
-  nowin.html — Local time + weather · 380 × 260
+  nowin.html — Local time + weather · fluid (fills any iframe size)
   Query params (all optional):
-    ?lat=-8.5069&lon=115.2625&tz=Asia/Makassar&place=Ubud
+    ?lat=-8.5069&lon=115.2625&place=Ubud
+    ?place=Tokyo          (looks up CITIES list, uses that city's coords/tz)
+    (no params)           (IP geo → snap to nearest major city via Haversine)
 
-  If params are omitted, the widget auto-detects the visitor's location
-  via ipapi.co (free, no key, 1000/day) so it works out-of-the-box
-  when a template buyer first opens the page.
+  Location resolution order:
+    (a) ?lat= + ?lon= explicit → use directly; place from ?place= or "your location"
+    (b) ?place=<name> only    → case-insensitive match in CITIES list
+    (c) IP geo (ipapi.co)     → snap to nearest CITIES entry by Haversine distance
+    (d) Browser Intl tz       → match CITIES by tz string, fallback to tz name
 
-  Data sources (both free, no API keys, no sign-up):
+  Viewer can also override via the city picker select rendered below the place name.
+
+  Data sources (all free, no keys):
     • Weather  — Open-Meteo  (api.open-meteo.com)
-    • IP geo   — ipapi.co    (fallback only)
+    • IP geo   — ipapi.co    (fallback only, snapped to nearest major city)
     • Time/tz  — browser's Intl API (always)
 -->
 <link rel="stylesheet" href="assets/tokens.css">
 <style>
-  body { padding: 0; width: 380px; height: 260px; }
-  .nowin { padding: 18px 20px; height: 100%; display: flex; flex-direction: column; gap: 6px; position: relative; }
+  html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: transparent; }
+  .nowin { position: absolute; inset: 0; box-sizing: border-box; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
   .hdr { display: flex; align-items: center; justify-content: space-between; }
   .hdr .caps .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 6px; animation: pulse 2s ease-in-out infinite; vertical-align: middle; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
@@ -44,6 +50,7 @@
     <span class="caps mono" id="tz-short">—</span>
   </div>
   <h2 class="serif"><em id="place">…</em></h2>
+  <select id="city-picker" style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-faint);background:transparent;border:none;border-bottom:1px dashed var(--line);padding:1px 2px;cursor:pointer;margin-top:-4px;width:auto;max-width:100%;"></select>
 
   <div class="big-row">
     <div class="cell">
@@ -66,8 +73,104 @@
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
 
-  // Map Open-Meteo WMO weather codes to short human labels
-  // https://open-meteo.com/en/docs
+  // ── Major world cities (G20 capitals + major travel hubs) ───────────
+  const CITIES = [
+    // Asia-Pacific
+    {name:"Bangkok",      country:"TH", lat:13.75, lon:100.52, tz:"Asia/Bangkok"},
+    {name:"Denpasar",     country:"ID", lat:-8.65,  lon:115.22, tz:"Asia/Makassar"},
+    {name:"Tokyo",        country:"JP", lat:35.68,  lon:139.69, tz:"Asia/Tokyo"},
+    {name:"Seoul",        country:"KR", lat:37.57,  lon:126.98, tz:"Asia/Seoul"},
+    {name:"Singapore",    country:"SG", lat:1.35,   lon:103.82, tz:"Asia/Singapore"},
+    {name:"Hong Kong",    country:"HK", lat:22.28,  lon:114.16, tz:"Asia/Hong_Kong"},
+    {name:"Taipei",       country:"TW", lat:25.04,  lon:121.56, tz:"Asia/Taipei"},
+    {name:"Kuala Lumpur", country:"MY", lat:3.14,   lon:101.69, tz:"Asia/Kuala_Lumpur"},
+    {name:"Ho Chi Minh",  country:"VN", lat:10.82,  lon:106.63, tz:"Asia/Ho_Chi_Minh"},
+    {name:"Hanoi",        country:"VN", lat:21.03,  lon:105.83, tz:"Asia/Bangkok"},
+    {name:"Manila",       country:"PH", lat:14.60,  lon:120.98, tz:"Asia/Manila"},
+    {name:"Jakarta",      country:"ID", lat:-6.21,  lon:106.85, tz:"Asia/Jakarta"},
+    {name:"Osaka",        country:"JP", lat:34.69,  lon:135.50, tz:"Asia/Tokyo"},
+    {name:"Kyoto",        country:"JP", lat:35.01,  lon:135.77, tz:"Asia/Tokyo"},
+    {name:"Beijing",      country:"CN", lat:39.90,  lon:116.41, tz:"Asia/Shanghai"},
+    {name:"Shanghai",     country:"CN", lat:31.23,  lon:121.47, tz:"Asia/Shanghai"},
+    {name:"Chiang Mai",   country:"TH", lat:18.79,  lon:98.99,  tz:"Asia/Bangkok"},
+    {name:"Phuket",       country:"TH", lat:7.95,   lon:98.34,  tz:"Asia/Bangkok"},
+    {name:"Sydney",       country:"AU", lat:-33.87, lon:151.21, tz:"Australia/Sydney"},
+    {name:"Melbourne",    country:"AU", lat:-37.81, lon:144.96, tz:"Australia/Melbourne"},
+    {name:"Auckland",     country:"NZ", lat:-36.87, lon:174.77, tz:"Pacific/Auckland"},
+    // South Asia
+    {name:"Mumbai",       country:"IN", lat:19.08,  lon:72.88,  tz:"Asia/Kolkata"},
+    {name:"Delhi",        country:"IN", lat:28.61,  lon:77.21,  tz:"Asia/Kolkata"},
+    {name:"Dhaka",        country:"BD", lat:23.72,  lon:90.41,  tz:"Asia/Dhaka"},
+    // Middle East & Africa
+    {name:"Dubai",        country:"AE", lat:25.20,  lon:55.27,  tz:"Asia/Dubai"},
+    {name:"Riyadh",       country:"SA", lat:24.69,  lon:46.72,  tz:"Asia/Riyadh"},
+    {name:"Istanbul",     country:"TR", lat:41.01,  lon:28.95,  tz:"Europe/Istanbul"},
+    {name:"Ankara",       country:"TR", lat:39.93,  lon:32.86,  tz:"Europe/Istanbul"},
+    {name:"Cairo",        country:"EG", lat:30.04,  lon:31.24,  tz:"Africa/Cairo"},
+    {name:"Nairobi",      country:"KE", lat:-1.29,  lon:36.82,  tz:"Africa/Nairobi"},
+    {name:"Cape Town",    country:"ZA", lat:-33.93, lon:18.42,  tz:"Africa/Johannesburg"},
+    {name:"Johannesburg", country:"ZA", lat:-26.20, lon:28.04,  tz:"Africa/Johannesburg"},
+    {name:"Lagos",        country:"NG", lat:6.45,   lon:3.40,   tz:"Africa/Lagos"},
+    {name:"Addis Ababa",  country:"ET", lat:9.03,   lon:38.74,  tz:"Africa/Addis_Ababa"},
+    // Europe
+    {name:"London",       country:"GB", lat:51.51,  lon:-0.13,  tz:"Europe/London"},
+    {name:"Paris",        country:"FR", lat:48.85,  lon:2.35,   tz:"Europe/Paris"},
+    {name:"Amsterdam",    country:"NL", lat:52.37,  lon:4.90,   tz:"Europe/Amsterdam"},
+    {name:"Berlin",       country:"DE", lat:52.52,  lon:13.40,  tz:"Europe/Berlin"},
+    {name:"Rome",         country:"IT", lat:41.90,  lon:12.50,  tz:"Europe/Rome"},
+    {name:"Madrid",       country:"ES", lat:40.42,  lon:-3.70,  tz:"Europe/Madrid"},
+    {name:"Barcelona",    country:"ES", lat:41.39,  lon:2.15,   tz:"Europe/Madrid"},
+    {name:"Lisbon",       country:"PT", lat:38.72,  lon:-9.14,  tz:"Europe/Lisbon"},
+    {name:"Athens",       country:"GR", lat:37.98,  lon:23.73,  tz:"Europe/Athens"},
+    {name:"Vienna",       country:"AT", lat:48.21,  lon:16.37,  tz:"Europe/Vienna"},
+    {name:"Prague",       country:"CZ", lat:50.07,  lon:14.43,  tz:"Europe/Prague"},
+    {name:"Warsaw",       country:"PL", lat:52.23,  lon:21.01,  tz:"Europe/Warsaw"},
+    {name:"Stockholm",    country:"SE", lat:59.33,  lon:18.07,  tz:"Europe/Stockholm"},
+    {name:"Copenhagen",   country:"DK", lat:55.68,  lon:12.57,  tz:"Europe/Copenhagen"},
+    {name:"Oslo",         country:"NO", lat:59.91,  lon:10.75,  tz:"Europe/Oslo"},
+    {name:"Helsinki",     country:"FI", lat:60.17,  lon:24.94,  tz:"Europe/Helsinki"},
+    {name:"Moscow",       country:"RU", lat:55.75,  lon:37.62,  tz:"Europe/Moscow"},
+    {name:"Brussels",     country:"BE", lat:50.85,  lon:4.35,   tz:"Europe/Brussels"},
+    {name:"Zurich",       country:"CH", lat:47.38,  lon:8.54,   tz:"Europe/Zurich"},
+    // Americas
+    {name:"New York",     country:"US", lat:40.71,  lon:-74.01, tz:"America/New_York"},
+    {name:"Los Angeles",  country:"US", lat:34.05,  lon:-118.24,tz:"America/Los_Angeles"},
+    {name:"San Francisco",country:"US", lat:37.77,  lon:-122.42,tz:"America/Los_Angeles"},
+    {name:"Chicago",      country:"US", lat:41.85,  lon:-87.65, tz:"America/Chicago"},
+    {name:"Miami",        country:"US", lat:25.77,  lon:-80.19, tz:"America/New_York"},
+    {name:"Washington DC",country:"US", lat:38.91,  lon:-77.04, tz:"America/New_York"},
+    {name:"Toronto",      country:"CA", lat:43.65,  lon:-79.38, tz:"America/Toronto"},
+    {name:"Vancouver",    country:"CA", lat:49.25,  lon:-123.12,tz:"America/Vancouver"},
+    {name:"Ottawa",       country:"CA", lat:45.42,  lon:-75.70, tz:"America/Toronto"},
+    {name:"Mexico City",  country:"MX", lat:19.43,  lon:-99.13, tz:"America/Mexico_City"},
+    {name:"São Paulo",    country:"BR", lat:-23.55, lon:-46.63, tz:"America/Sao_Paulo"},
+    {name:"Brasília",     country:"BR", lat:-15.78, lon:-47.93, tz:"America/Sao_Paulo"},
+    {name:"Buenos Aires", country:"AR", lat:-34.61, lon:-58.38, tz:"America/Argentina/Buenos_Aires"},
+    {name:"Rio de Janeiro",country:"BR",lat:-22.91, lon:-43.17, tz:"America/Sao_Paulo"},
+    {name:"Lima",         country:"PE", lat:-12.05, lon:-77.04, tz:"America/Lima"},
+    {name:"Bogotá",       country:"CO", lat:4.71,   lon:-74.07, tz:"America/Bogota"},
+    {name:"Santiago",     country:"CL", lat:-33.46, lon:-70.65, tz:"America/Santiago"},
+    {name:"Caracas",      country:"VE", lat:10.48,  lon:-66.88, tz:"America/Caracas"},
+  ];
+
+  // ── Haversine distance (km) between two {lat,lon} points ────────────
+  const haversine = (a, b) => {
+    const toRad = x => x * Math.PI / 180;
+    const R = 6371;
+    const dLat = toRad(b.lat - a.lat), dLon = toRad(b.lon - a.lon);
+    const x = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  };
+
+  const nearestCity = (lat, lon) => {
+    const pt = {lat, lon};
+    return CITIES.reduce((best, c) => {
+      const d = haversine(pt, c);
+      return d < best.d ? {city: c, d} : best;
+    }, {city: CITIES[0], d: Infinity}).city;
+  };
+
+  // ── WMO weather codes ────────────────────────────────────────────────
   const WMO = {
     0:"clear", 1:"mostly clear", 2:"partly cloudy", 3:"overcast",
     45:"fog", 48:"icy fog",
@@ -79,6 +182,8 @@
     85:"snow showers", 86:"snow showers",
     95:"thunderstorm", 96:"thunderstorm · hail", 99:"thunderstorm · hail",
   };
+
+  let clockInterval = null;
 
   const tickTime = (tz) => {
     const now = new Date();
@@ -99,43 +204,70 @@
     $("temp").textContent      = `${Math.round(c.temperature_2m)}°C`;
     $("condition").textContent = WMO[c.weather_code] || "—";
     $("humid").textContent     = `${c.relative_humidity_2m}%`;
-    const sunset = j.daily.sunset[0];  // "2026-04-20T18:14"
+    const sunset = j.daily.sunset[0];
     $("sunset").textContent = sunset.slice(11, 16);
   }
 
   async function resolveLocation() {
-    // 1) Explicit URL params (template buyer configured this widget)
+    // (a) Explicit lat+lon in URL
     if (params.get("lat") && params.get("lon")) {
       return {
         lat:   parseFloat(params.get("lat")),
         lon:   parseFloat(params.get("lon")),
-        tz:    params.get("tz")    || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        tz:    params.get("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone,
         place: params.get("place") || "your location",
       };
     }
-    // 2) Fallback — detect visitor's location via ipapi.co (free, no key)
+    // (b) ?place= name only — look up in CITIES list
+    const placeParam = params.get("place");
+    if (placeParam) {
+      const match = CITIES.find(c => c.name.toLowerCase() === placeParam.toLowerCase());
+      if (match) return {lat: match.lat, lon: match.lon, tz: match.tz, place: match.name};
+    }
+    // (c) IP geo → snap to nearest CITIES entry
     try {
-      const r = await fetch("https://ipapi.co/json/", { cache: "no-store" });
+      const r = await fetch("https://ipapi.co/json/", {cache: "no-store"});
       const j = await r.json();
       if (!j.latitude || !j.longitude) throw new Error("no geo");
-      return {
-        lat:   j.latitude,
-        lon:   j.longitude,
-        tz:    j.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-        place: j.city || j.region || j.country_name || "your location",
-      };
-    } catch (e) {
-      // 3) Last-resort fallback — browser timezone only
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      return { lat: null, lon: null, tz, place: tz.split("/").pop().replace(/_/g, " ") };
-    }
+      const city = nearestCity(j.latitude, j.longitude);
+      return {lat: city.lat, lon: city.lon, tz: city.tz, place: city.name};
+    } catch (e) { /* fall through */ }
+    // (d) Browser Intl timezone → match CITIES entry
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tzMatch = CITIES.find(c => c.tz === tz);
+    if (tzMatch) return {lat: tzMatch.lat, lon: tzMatch.lon, tz: tzMatch.tz, place: tzMatch.name};
+    return {lat: null, lon: null, tz, place: tz.split("/").pop().replace(/_/g, " ")};
   }
 
-  (async () => {
-    const loc = await resolveLocation();
+  // ── City picker: populate <select> and wire up change handler ───────
+  function buildPicker(activeName) {
+    const sel = $("city-picker");
+    sel.innerHTML = "";
+    const blank = document.createElement("option");
+    blank.value = ""; blank.textContent = "— change city —"; blank.disabled = true;
+    sel.appendChild(blank);
+    CITIES.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.name;
+      opt.textContent = `${c.name}, ${c.country}`;
+      if (c.name === activeName) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (!CITIES.find(c => c.name === activeName)) sel.value = "";
+    sel.addEventListener("change", async () => {
+      const city = CITIES.find(c => c.name === sel.value);
+      if (!city) return;
+      applyLocation({lat: city.lat, lon: city.lon, tz: city.tz, place: city.name});
+    });
+  }
+
+  async function applyLocation(loc) {
     $("place").textContent = loc.place;
+    if (clockInterval) clearInterval(clockInterval);
     tickTime(loc.tz);
-    setInterval(() => tickTime(loc.tz), 1000 * 15);
+    clockInterval = setInterval(() => tickTime(loc.tz), 1000 * 15);
+    $("temp").textContent = "--°"; $("condition").textContent = "loading";
+    $("sunset").textContent = "—"; $("humid").textContent = "—";
     if (loc.lat != null && loc.lon != null) {
       try { await loadWeather(loc.lat, loc.lon); }
       catch { $("condition").textContent = "weather unavailable"; }
@@ -143,6 +275,12 @@
       $("temp").textContent = "—";
       $("condition").textContent = "enable location";
     }
+  }
+
+  (async () => {
+    const loc = await resolveLocation();
+    buildPicker(loc.place);
+    await applyLocation(loc);
   })();
 </script>
 </body>
