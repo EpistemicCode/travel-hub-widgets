@@ -40,25 +40,25 @@
   .edit-btn:hover { color: var(--accent); }
 
   /* ── setup view ── */
-  #setup-view { position: absolute; inset: 0; box-sizing: border-box; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
-  #setup-view h2 { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--accent); margin: 0; line-height: 1.1; }
-  #setup-view .subtitle { margin: -8px 0 0; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  .field .caps { display: block; }
-  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #setup-view { position: absolute; inset: 0; box-sizing: border-box; padding: 12px 14px; display: flex; flex-direction: column; gap: 7px; overflow-y: auto; }
+  #setup-view h2 { font-family: var(--font-display); font-style: italic; font-size: 17px; color: var(--accent); margin: 0; line-height: 1.1; }
+  #setup-view .subtitle { margin: -4px 0 0; font-size: 9px; }
+  .field { display: flex; flex-direction: column; gap: 2px; }
+  .field .caps { display: block; font-size: 9px; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .field input {
     width: 100%; box-sizing: border-box;
     background: var(--card-2); border: 1px solid var(--hairline, var(--line));
-    border-radius: 5px; padding: 8px; font-size: 12px;
+    border-radius: 4px; padding: 5px 7px; font-size: 11px;
     color: var(--text); font-family: var(--font-sans, sans-serif);
     outline: none;
   }
   .field input:focus { border-color: var(--accent); }
   .field input::placeholder { color: var(--text-faint); }
-  .setup-actions { display: flex; gap: 8px; margin-top: auto; }
-  .btn-set { flex: 1; background: var(--accent); border: none; border-radius: 5px; padding: 9px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; cursor: pointer; font-family: var(--font-sans, sans-serif); }
+  .setup-actions { display: flex; gap: 6px; margin-top: 4px; }
+  .btn-set { flex: 1; background: var(--accent); border: none; border-radius: 4px; padding: 7px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; cursor: pointer; font-family: var(--font-sans, sans-serif); }
   .btn-set:hover { opacity: 0.88; }
-  .btn-cancel { background: none; border: 1px solid var(--line); border-radius: 5px; padding: 9px 12px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; font-family: var(--font-sans, sans-serif); }
+  .btn-cancel { background: none; border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; font-family: var(--font-sans, sans-serif); }
   .btn-cancel:hover { color: var(--text); }
 </style>
 </head>
