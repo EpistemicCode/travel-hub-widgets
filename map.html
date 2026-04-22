@@ -51,12 +51,35 @@
   .stays-row .stays-link em { font-style: normal; color: var(--accent); }
   .stays-row .stays-link:hover { color: var(--accent); }
   .stays-row .disclosure { color: var(--text-faint); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* ── edit button (top-left, mirrors countdown) ── */
+  .edit-btn { position: absolute; top: 8px; left: 10px; font-size: 10px; letter-spacing: 0.1em; color: var(--text-faint); cursor: pointer; background: none; border: none; padding: 2px 4px; z-index: 3; }
+  .edit-btn:hover { color: var(--accent); }
+
+  /* ── edit view ── */
+  #edit-view { position: absolute; inset: 0; box-sizing: border-box; padding: 12px 14px; display: none; flex-direction: column; gap: 8px; overflow-y: auto; background: var(--card); }
+  #edit-view.active { display: flex; }
+  #edit-view h3 { font-family: var(--font-display); font-style: italic; font-size: 17px; color: var(--accent); margin: 0; line-height: 1.1; }
+  #edit-view .subtitle { font-size: 9px; color: var(--text-faint); letter-spacing: 0.14em; text-transform: uppercase; margin-top: -4px; }
+  .stop-row { display: flex; gap: 6px; align-items: center; }
+  .stop-row input[type="text"] { flex: 1; min-width: 0; background: var(--card-2); border: 1px solid var(--hairline, var(--line)); border-radius: 4px; padding: 5px 7px; font-size: 11px; color: var(--text); outline: none; font-family: inherit; }
+  .stop-row input[type="radio"] { accent-color: var(--accent); }
+  .stop-row .rm { background: none; border: 1px solid var(--line); border-radius: 4px; padding: 3px 7px; font-size: 11px; color: var(--text-faint); cursor: pointer; }
+  .stop-row .rm:hover { color: #ff5a5a; border-color: #ff5a5a; }
+  .stop-row label { font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center; gap: 3px; }
+  #add-stop { background: none; border: 1px dashed var(--line); border-radius: 4px; padding: 6px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; }
+  #add-stop:hover { color: var(--accent); border-color: var(--accent-line); }
+  .edit-actions { display: flex; gap: 6px; margin-top: auto; }
+  .btn-apply { flex: 1; background: var(--accent); border: none; border-radius: 4px; padding: 7px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; cursor: pointer; font-family: inherit; }
+  .btn-apply:hover { opacity: 0.88; }
+  .btn-edit-cancel { background: none; border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; font-family: inherit; }
 </style>
 </head>
 <body>
 <div class="map card" id="map-card" role="link" tabindex="0" aria-label="Open route in Google Maps">
   <div class="grain"></div>
-  <div class="hdr">
+  <button class="edit-btn" id="edit-btn" title="Edit route">✎ Edit</button>
+  <div class="hdr" style="padding-left:48px">
     <h2 id="title">Route</h2>
     <span class="caps" id="stop-count">— stops</span>
   </div>
@@ -71,6 +94,19 @@
   <div class="stays-row">
     <a class="stays-link" id="stays-link" href="#" target="_blank" rel="noopener noreferrer sponsored">Find stays in <em id="stays-city">—</em> →</a>
     <small class="disclosure">affiliate</small>
+  </div>
+</div>
+
+<!-- ── EDIT VIEW ── -->
+<div id="edit-view" class="card">
+  <div class="grain"></div>
+  <h3>Edit route</h3>
+  <div class="subtitle">Drag is not supported — reorder by retyping</div>
+  <div id="stops-editor"></div>
+  <button id="add-stop">+ Add stop</button>
+  <div class="edit-actions">
+    <button class="btn-apply" id="btn-apply">Apply</button>
+    <button class="btn-edit-cancel" id="btn-edit-cancel">Cancel</button>
   </div>
 </div>
 
@@ -255,10 +291,120 @@
     const url = 'https://www.google.com/maps/dir/' + stopsRaw.map(encodeURIComponent).join('/');
     window.open(url, '_blank', 'noopener,noreferrer');
   }
-  $('map-card').addEventListener('click', openInMaps);
+  $('map-card').addEventListener('click', (e) => {
+    // Don't open Maps if the click was on Edit, the stays affiliate link, or any toast control
+    if (e.target.closest('.edit-btn') || e.target.closest('.stays-link') || e.target.closest('#notion-toast')) return;
+    openInMaps();
+  });
   $('map-card').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInMaps(); }
   });
+
+  // ── iframe detection ──────────────────────────────────────────────────
+  const inIframe = (() => { try { return window.self !== window.top; } catch { return true; } })();
+
+  // ── edit view ─────────────────────────────────────────────────────────
+  function renderEditor(stops, active) {
+    const ed = $('stops-editor');
+    ed.innerHTML = '';
+    stops.forEach((s, i) => {
+      const row = document.createElement('div');
+      row.className = 'stop-row';
+      row.innerHTML = `
+        <input type="text" value="${s.replace(/"/g, '&quot;')}" placeholder="City or region" data-i="${i}">
+        <label><input type="radio" name="active-stop" data-i="${i}" ${s.toLowerCase() === active.toLowerCase() ? 'checked' : ''}> active</label>
+        <button class="rm" data-i="${i}" title="Remove stop">×</button>
+      `;
+      ed.appendChild(row);
+    });
+    ed.querySelectorAll('.rm').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inputs = ed.querySelectorAll('input[type="text"]');
+        const vals = Array.from(inputs).map(x => x.value);
+        const idx = parseInt(btn.dataset.i, 10);
+        vals.splice(idx, 1);
+        const activeInput = ed.querySelector('input[type="radio"]:checked');
+        const newActive = activeInput ? vals[parseInt(activeInput.dataset.i, 10)] || vals[0] || '' : '';
+        renderEditor(vals.length ? vals : [''], newActive);
+      });
+    });
+  }
+
+  $('edit-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    renderEditor(stopsRaw.length ? stopsRaw : [''], activeName);
+    $('edit-view').classList.add('active');
+  });
+
+  $('add-stop').addEventListener('click', () => {
+    const inputs = $('stops-editor').querySelectorAll('input[type="text"]');
+    const vals = Array.from(inputs).map(x => x.value);
+    const activeInput = $('stops-editor').querySelector('input[type="radio"]:checked');
+    const cur = activeInput ? vals[parseInt(activeInput.dataset.i, 10)] || '' : '';
+    vals.push('');
+    renderEditor(vals, cur);
+  });
+
+  $('btn-edit-cancel').addEventListener('click', () => {
+    $('edit-view').classList.remove('active');
+  });
+
+  $('btn-apply').addEventListener('click', () => {
+    const inputs = $('stops-editor').querySelectorAll('input[type="text"]');
+    const newStops = Array.from(inputs).map(x => x.value.trim()).filter(Boolean);
+    if (!newStops.length) return;
+    const activeInput = $('stops-editor').querySelector('input[type="radio"]:checked');
+    const idx = activeInput ? parseInt(activeInput.dataset.i, 10) : 0;
+    const newActive = newStops[idx] || newStops[0];
+
+    const newUrl = location.origin + location.pathname
+      + '?stops=' + newStops.map(encodeURIComponent).join(',')
+      + '&active=' + encodeURIComponent(newActive);
+
+    if (inIframe) {
+      // Show the copy-URL toast, same pattern as countdown.html
+      showCopyToast(newUrl);
+      $('edit-view').classList.remove('active');
+    } else {
+      // Standalone: just navigate — URL drives the widget
+      location.href = newUrl;
+    }
+  });
+
+  function showCopyToast(shareUrl) {
+    const existing = document.getElementById('notion-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'notion-toast';
+    toast.style.cssText = [
+      'position:absolute','left:10px','right:10px','bottom:10px',
+      'background:var(--card-2)','border:1px solid var(--line)','border-radius:6px',
+      'padding:8px 10px','font-size:10px','color:var(--text-dim)','line-height:1.35',
+      'display:flex','flex-direction:column','gap:6px','z-index:5',
+      'box-shadow:0 4px 16px rgba(0,0,0,0.35)',
+    ].join(';');
+    toast.innerHTML = `
+      <div>Notion won't remember this on refresh. Copy URL → paste in /embed block to save the new route.</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input id="toast-url" readonly value="${shareUrl.replace(/"/g, '&quot;')}" style="flex:1;min-width:0;box-sizing:border-box;background:var(--card-2);border:1px solid var(--hairline,var(--line));border-radius:4px;padding:4px 6px;font-size:9px;font-family:var(--font-mono,monospace);color:var(--text);outline:none;">
+        <button id="toast-copy" style="background:var(--accent);border:none;border-radius:4px;padding:5px 9px;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#fff;cursor:pointer">Copy</button>
+        <button id="toast-close" style="background:none;border:1px solid var(--line);border-radius:4px;padding:5px 7px;font-size:10px;color:var(--text-dim);cursor:pointer">×</button>
+      </div>`;
+    document.body.appendChild(toast);
+    document.getElementById('toast-copy').addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        const btn = document.getElementById('toast-copy');
+        btn.textContent = '✓'; setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+      }).catch(() => {
+        const i = document.getElementById('toast-url');
+        i.select(); i.setSelectionRange(0, 99999);
+      });
+    });
+    document.getElementById('toast-close').addEventListener('click', (e) => {
+      e.stopPropagation(); toast.remove();
+    });
+  }
 
   // ── init ───────────────────────────────────────────────────────────────
   (async () => {
