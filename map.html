@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="widget-version" content="1.4.0">
+<title>Route map</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-D8GYSB22FR', { anonymize_ip: true, send_page_view: false });
+</script>
+<!--
+  map.html — Stylized route map · 480 × 320 (fluid)
+  Query params (all optional):
+    ?stops=Canggu,Ubud,Nusa+Penida,Ceningan&active=Ubud
+
+  Behavior:
+    - Geocodes each stop via Open-Meteo (free, no auth) → projects lat/lon onto SVG canvas
+    - Dashed coral polyline connects stops in order
+    - Pulsing accent dot marks the active stop
+    - Tap the map → opens the route in Google Maps (new tab)
+    - Small "Find stays in {active}" link → Trip.com with affiliate ID
+
+  GA events: widget_view, map_open (route→Google Maps), stays_from_map
+-->
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: transparent; }
+  .map { position: absolute; inset: 0; box-sizing: border-box; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+  .hdr { display: flex; justify-content: space-between; align-items: baseline; }
+  .hdr h2 { font-family: var(--font-display); font-size: 18px; font-style: italic; color: var(--accent); margin: 0; line-height: 1.1; }
+  .hdr .caps { font-size: 9px; color: var(--text-faint); }
+  .canvas { flex: 1; min-height: 0; position: relative; background: var(--card-2); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .canvas svg { display: block; width: 100%; height: 100%; }
+  .canvas .loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); }
+  .route-line { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; opacity: 0.75; }
+  .pin { fill: var(--card); stroke: var(--accent); stroke-width: 1.5; }
+  .pin-active { fill: var(--accent); }
+  .pin-pulse { fill: var(--accent); opacity: 0.45; transform-origin: center; animation: pulse 1.8s ease-out infinite; }
+  @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(3.2); opacity: 0; } }
+  .label { font-family: var(--font-sans, sans-serif); font-size: 10px; fill: var(--text-dim); letter-spacing: 0.02em; }
+  .label-active { fill: var(--accent); font-weight: 500; }
+  .ft { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
+  .ft .cta { color: var(--text-dim); }
+  .map:hover .ft .cta { color: var(--accent); }
+  .stays-row { display: flex; justify-content: space-between; align-items: center; font-size: 10px; padding-top: 6px; border-top: 1px dashed var(--line); }
+  .stays-row .stays-link { color: var(--text-dim); text-decoration: none; letter-spacing: 0.04em; }
+  .stays-row .stays-link em { font-style: normal; color: var(--accent); }
+  .stays-row .stays-link:hover { color: var(--accent); }
+  .stays-row .disclosure { color: var(--text-faint); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="map card" id="map-card" role="link" tabindex="0" aria-label="Open route in Google Maps">
+  <div class="grain"></div>
+  <div class="hdr">
+    <h2 id="title">Route</h2>
+    <span class="caps" id="stop-count">— stops</span>
+  </div>
+  <div class="canvas" id="canvas">
+    <div class="loading" id="loading">Plotting route…</div>
+    <svg id="svg" viewBox="0 0 480 220" preserveAspectRatio="xMidYMid meet" style="display:none"></svg>
+  </div>
+  <div class="ft">
+    <span id="stops-list">—</span>
+    <span class="cta">Tap map → Google Maps</span>
+  </div>
+  <div class="stays-row">
+    <a class="stays-link" id="stays-link" href="#" target="_blank" rel="noopener noreferrer sponsored">Find stays in <em id="stays-city">—</em> →</a>
+    <small class="disclosure">affiliate</small>
+  </div>
+</div>
+
+<script>
+  // ── error boundary (scoped to this widget file only) ───────────────────
+  const OWN_FILE = location.pathname.split('/').pop() || 'widget.html';
+  window.addEventListener('error', (e) => {
+    if (!e.error) return;
+    if (!e.filename || !e.filename.includes(OWN_FILE)) return;
+    showOfflineCard('script');
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    const reason = e.reason;
+    const msg = String(reason && (reason.message || reason));
+    const stack = String(reason && reason.stack || '');
+    if (!stack.includes(OWN_FILE)) return;
+    if (/fetch|network|failed|abort/i.test(msg)) showOfflineCard('network');
+  });
+  function showOfflineCard(code) {
+    document.body.innerHTML = `
+      <div class="card" style="position:absolute;inset:0;display:flex;flex-direction:column;
+           justify-content:center;align-items:center;padding:24px;text-align:center;gap:10px;">
+        <div class="grain"></div>
+        <div class="caps" style="color:var(--text-faint)">Widget unavailable</div>
+        <div class="serif" style="font-size:20px">Couldn't plot the route</div>
+        <div style="color:var(--text-dim);font-size:12px;max-width:280px">
+          Check your connection or disable any script-blocking extension for this page.
+        </div>
+        <button onclick="location.reload()" class="btn-ghost" style="margin-top:6px">Retry</button>
+        <div class="caps mono" style="color:var(--text-faint);font-size:9px">code · ${code}</div>
+      </div>`;
+  }
+
+  // ── config ─────────────────────────────────────────────────────────────
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const stopsRaw = (params.get('stops') || 'Canggu,Ubud,Nusa Penida,Ceningan').split(',')
+    .map(s => s.trim()).filter(Boolean);
+  const activeName = (params.get('active') || stopsRaw[Math.floor(stopsRaw.length / 2)] || '').trim();
+
+  // Trip.com affiliate config (same IDs as stays.html)
+  const AFF = {
+    allianceId: "8106827",
+    sid:        "307071563",
+    sub1:       "Widget",
+    sub3:       "D15855548",
+  };
+
+  $('stop-count').textContent = stopsRaw.length + ' stops';
+  $('stops-list').textContent = stopsRaw.join(' · ');
+  // Route title = first → last
+  if (stopsRaw.length >= 2) $('title').textContent = stopsRaw[0] + ' → ' + stopsRaw[stopsRaw.length - 1];
+  else if (stopsRaw.length === 1) $('title').textContent = stopsRaw[0];
+
+  // Stays affiliate link targets the active stop (fall back to first stop)
+  const staysCity = activeName || stopsRaw[0] || '';
+  $('stays-city').textContent = staysCity || 'your next stop';
+  function buildStaysUrl(city) {
+    const q = new URLSearchParams({
+      Allianceid:  AFF.allianceId,
+      SID:         AFF.sid,
+      trip_sub1:   AFF.sub1,
+      trip_sub3:   AFF.sub3,
+      trip_sub2:   'map_' + (city || '').toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'').slice(0,40),
+      locale:      'en-XX',
+      curr:        'USD',
+      barCurr:     'USD',
+    });
+    if (city) {
+      q.set('searchWord', city);
+      q.set('cityName',   city);
+      q.set('searchType', 'CT');
+    }
+    return 'https://www.trip.com/hotels/list?' + q.toString();
+  }
+  $('stays-link').href = staysCity ? buildStaysUrl(staysCity) : '#';
+  $('stays-link').addEventListener('click', (e) => {
+    e.stopPropagation(); // don't also trigger the map's tap-to-Maps handler
+    if (!staysCity) { e.preventDefault(); return; }
+    try { if (window.gtag) gtag('event', 'stays_from_map', { widget: 'map', destination: staysCity }); } catch(_){}
+  });
+
+  // Fire widget_view once on load
+  try { if (window.gtag) gtag('event', 'widget_view', { widget: 'map', stop_count: stopsRaw.length }); } catch(_){}
+
+  // ── geocode each stop ──────────────────────────────────────────────────
+  // Open-Meteo geocoding is free, no-auth, CORS-enabled.
+  async function geocode(name) {
+    const url = 'https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&format=json&name='
+      + encodeURIComponent(name);
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 4500);
+    try {
+      const res = await fetch(url, { signal: ctrl.signal });
+      if (!res.ok) throw new Error('geocode ' + res.status);
+      const json = await res.json();
+      const r = json.results && json.results[0];
+      if (!r) return null;
+      return { name, lat: r.latitude, lon: r.longitude };
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  // ── project lat/lon onto the SVG canvas with padding ───────────────────
+  function project(points, w, h, pad) {
+    if (!points.length) return [];
+    const lats = points.map(p => p.lat);
+    const lons = points.map(p => p.lon);
+    let minLat = Math.min(...lats), maxLat = Math.max(...lats);
+    let minLon = Math.min(...lons), maxLon = Math.max(...lons);
+    // Degenerate: single point or all identical → center it
+    if (minLat === maxLat) { minLat -= 0.05; maxLat += 0.05; }
+    if (minLon === maxLon) { minLon -= 0.05; maxLon += 0.05; }
+    // Keep aspect reasonable — expand the smaller span so the route doesn't
+    // degenerate into a near-straight line across the whole canvas.
+    const latSpan = maxLat - minLat;
+    const lonSpan = maxLon - minLon;
+    const targetAspect = (w - 2 * pad) / (h - 2 * pad);
+    const currentAspect = lonSpan / latSpan;
+    if (currentAspect < targetAspect) {
+      const need = latSpan * targetAspect - lonSpan;
+      minLon -= need / 2; maxLon += need / 2;
+    } else {
+      const need = lonSpan / targetAspect - latSpan;
+      minLat -= need / 2; maxLat += need / 2;
+    }
+    return points.map(p => ({
+      name: p.name,
+      x: pad + (p.lon - minLon) / (maxLon - minLon) * (w - 2 * pad),
+      // SVG y is top-down; lat is south-to-north, so invert
+      y: pad + (maxLat - p.lat) / (maxLat - minLat) * (h - 2 * pad),
+    }));
+  }
+
+  // ── render SVG ─────────────────────────────────────────────────────────
+  function render(projected) {
+    const svg = $('svg');
+    const W = 480, H = 220;
+    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // Dashed route polyline
+    const path = projected.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ');
+    let out = '';
+    if (projected.length >= 2) out += `<path class="route-line" d="${path}"/>`;
+
+    // Pins + labels
+    projected.forEach((p, i) => {
+      const isActive = p.name.toLowerCase() === activeName.toLowerCase();
+      if (isActive) {
+        out += `<circle class="pin-pulse" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5"/>`;
+        out += `<circle class="pin pin-active" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5"/>`;
+      } else {
+        out += `<circle class="pin" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5"/>`;
+      }
+      // Label placement: above pin unless too close to top edge
+      const labelY = p.y < 24 ? p.y + 16 : p.y - 9;
+      // Horizontal: center on pin, but clamp within canvas
+      let anchor = 'middle';
+      let labelX = p.x;
+      if (p.x < 40) { anchor = 'start'; labelX = p.x + 7; }
+      else if (p.x > W - 40) { anchor = 'end'; labelX = p.x - 7; }
+      out += `<text class="label ${isActive ? 'label-active' : ''}" x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anchor}">${esc(p.name)}</text>`;
+    });
+
+    svg.innerHTML = out;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.style.display = 'block';
+    $('loading').style.display = 'none';
+  }
+
+  function showEmpty(msg) {
+    $('loading').textContent = msg || 'No stops to show';
+    $('loading').style.color = 'var(--text-faint)';
+  }
+
+  // ── open Google Maps directions ────────────────────────────────────────
+  function openInMaps() {
+    if (!stopsRaw.length) return;
+    try { if (window.gtag) gtag('event', 'map_open', { widget: 'map', stop_count: stopsRaw.length, destination: staysCity }); } catch(_){}
+    // Directions URL: /maps/dir/<stop1>/<stop2>/...
+    const url = 'https://www.google.com/maps/dir/' + stopsRaw.map(encodeURIComponent).join('/');
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+  $('map-card').addEventListener('click', openInMaps);
+  $('map-card').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInMaps(); }
+  });
+
+  // ── init ───────────────────────────────────────────────────────────────
+  (async () => {
+    if (!stopsRaw.length) { showEmpty('Add ?stops=City,City to plot a route'); return; }
+    try {
+      const results = await Promise.all(stopsRaw.map((s) => geocode(s).catch(() => null)));
+      const points = results.filter(Boolean);
+      if (!points.length) { showEmpty('Couldn\'t locate any stops'); return; }
+      const projected = project(points, 480, 220, 24);
+      render(projected);
+    } catch (err) {
+      console.warn('map render failed:', err);
+      showEmpty('Couldn\'t plot the route');
+    }
+  })();
+</script>
+</body>
+</html>

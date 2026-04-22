@@ -5,6 +5,23 @@ Version is embedded as `<meta name="widget-version">` in each HTML file so you
 can curl any widget and verify which release is live.
 
 ## [Unreleased]
+
+## [1.4.0] — 2026-04-22
+### Added
+- **map.html** — stylized route-map widget (480×320, fluid). Geocodes stops via Open-Meteo, renders dashed coral polyline + pulsing dot on active stop, tap opens Google Maps directions. Includes "Find stays in {active}" Trip.com affiliate link with `trip_sub2=map_<slug>` attribution.
+- GA4 events on map: `widget_view`, `map_open`, `stays_from_map`. New custom dimension: `stop_count`.
+- countdown: empty-state error line (`#set-err`) replaces `alert()` — Notion's iframe sandbox silently blocks modals.
+- countdown: past-date validation with `min` attribute + inline red error.
+
+### Changed
+- countdown: setup form compacted (fits inside native 260px iframe without clipping the Set-trip button), `overflow-y:auto` safety net.
+- countdown: immediate view transition on Set trip — previously the iframe banner blocked the transition inside Notion. Now a dismissable copy-URL toast overlays the countdown.
+- countdown: ✎ Edit button moved to top-left to avoid Notion's comment button in the top-right corner.
+- countdown: TIERS mood array hoisted above init to fix TDZ ReferenceError when loading from URL params.
+- Error boundary scoped to `OWN_FILE` only — no longer triggers on gtag/extension/third-party noise.
+
+## [1.3.0] — 2026-04-21
+### Added
 - GA4 events across revenue widgets (stays/flights/countdown): widget_view, search_intent, affiliate_click, trip_set
 - trip_sub2 encoding on outbound Trip.com URLs — enables per-destination revenue breakdown in Trip.com dashboard
 - countdown: "Copy for Notion" banner in iframe contexts (honest fix for Notion's sandbox-storage limitation)

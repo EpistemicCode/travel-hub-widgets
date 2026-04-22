@@ -239,18 +239,33 @@
       </details>
     </article>
 
-    <!-- Coming soon: map -->
+    <!-- map.html -->
     <article class="widget">
       <div class="grain"></div>
       <div class="meta">
         <h2>Route <em>map</em></h2>
-        <div class="badges"><span class="badge soon">Coming</span></div>
+        <div class="badges">
+          <span class="badge live">Live</span>
+          <span class="badge aff">Affiliate</span>
+        </div>
       </div>
-      <p class="desc">Stylized SVG map with dashed route and pulsing "you are here" pin. Great for multi-stop itineraries.</p>
-      <div class="preview soon">in progress</div>
+      <p class="desc">Stylized SVG route with dashed coral path and a pulsing dot on the active stop. Tap to open the full route in Google Maps. Small "Find stays" link kicks over to Trip.com.</p>
+      <div class="preview">
+        <iframe src="./map.html?stops=Canggu,Ubud,Nusa+Penida,Ceningan&active=Ubud" width="480" height="320" loading="lazy" title="Route map widget preview"></iframe>
+      </div>
+      <div class="url-row">
+        <input type="text" readonly value="https://epistemiccode.github.io/travel-hub-widgets/map.html" aria-label="Embed URL for map widget">
+        <button class="copy-btn" data-url="https://epistemiccode.github.io/travel-hub-widgets/map.html">Copy</button>
+      </div>
       <div class="specs">
         <span><strong>Size:</strong> 480 × 320</span>
+        <span><strong>Data:</strong> Open-Meteo geocoding</span>
       </div>
+      <details class="params">
+        <summary>Pre-configure with URL params</summary>
+        <code>?stops=Canggu,Ubud,Nusa+Penida,Ceningan</code>
+        <code>&amp;active=Ubud</code>
+      </details>
     </article>
 
     <!-- quote.html -->
