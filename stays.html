@@ -137,9 +137,19 @@
 </div>
 
 <script>
-  window.addEventListener('error', (e) => { if (e.error) showOfflineCard('script'); });
+  // Scope errors to THIS widget only. Ignores gtag/js, extensions, browser noise.
+  const OWN_FILE = location.pathname.split('/').pop() || 'widget.html';
+  window.addEventListener('error', (e) => {
+    if (!e.error) return;                                 // resource/load error — ignore
+    if (!e.filename || !e.filename.includes(OWN_FILE)) return;  // not our file — ignore
+    showOfflineCard('script');
+  });
   window.addEventListener('unhandledrejection', (e) => {
-    const msg = String(e.reason && (e.reason.message || e.reason));
+    const reason = e.reason;
+    const msg = String(reason && (reason.message || reason));
+    // Only show offline card if the rejection came from OUR fetch calls (ipapi/open-meteo)
+    const stack = String(reason && reason.stack || '');
+    if (!stack.includes(OWN_FILE)) return;
     if (/fetch|network|failed|abort/i.test(msg)) showOfflineCard('network');
   });
   if (window.gtag) gtag('event', 'widget_view', { widget: 'stays' });
