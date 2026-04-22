@@ -96,6 +96,7 @@
     <button class="btn-set" id="btn-set">Set trip</button>
     <button class="btn-cancel" id="btn-cancel" style="display:none">Cancel</button>
   </div>
+  <div id="set-err" style="display:none;color:#ff5a5a;font-size:11px;margin-top:6px;text-align:center"></div>
 </div>
 
 <!-- ── COUNTDOWN VIEW ── -->
@@ -319,8 +320,15 @@
     const destVal   = $('inp-dest').value.trim();
     const flightVal = $('inp-flight').value.trim();
 
-    if (!dateVal)  { $('inp-date').focus(); return; }
-    if (!destVal)  { $('inp-dest').focus(); return; }
+    const showErr = (msg) => {
+      const el = $('set-err');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 3500);
+    };
+
+    if (!dateVal)  { $('inp-date').focus(); showErr('Pick a date first.'); return; }
+    if (!destVal)  { $('inp-dest').focus(); showErr('Where are you headed?'); return; }
 
     // Combine into local ISO (no Z — browser treats as local TZ)
     const toISO = dateVal + 'T' + timeVal;
@@ -331,7 +339,7 @@
     if (tripDate <= now) {
       $('inp-date').focus();
       $('inp-date').style.borderColor = '#ff5a5a';
-      alert('Trip date must be in the future.');
+      showErr('Trip date must be in the future.');
       setTimeout(() => { $('inp-date').style.borderColor = ''; }, 2500);
       return;
     }
