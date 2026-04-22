@@ -74,7 +74,7 @@
   <div class="row-2">
     <div class="field">
       <span class="caps">Date</span>
-      <input type="date" id="inp-date" required>
+      <input type="date" id="inp-date" required min="">
     </div>
     <div class="field">
       <span class="caps">Time (optional)</span>
@@ -133,7 +133,7 @@
     const msg = String(e.reason && (e.reason.message || e.reason));
     if (/fetch|network|failed|abort/i.test(msg)) showOfflineCard('network');
   });
-  if (window.gtag) gtag('event', 'widget_view', { widget: 'countdown' });
+  try { if (window.gtag) gtag('event', 'widget_view', { widget: 'countdown' }); } catch(_){}
   function showOfflineCard(code) {
     document.body.innerHTML = `
       <div class="card" style="position:absolute;inset:0;display:flex;flex-direction:column;
@@ -168,30 +168,36 @@
   // ── resolve on load ────────────────────────────────────────────────────
   const params = new URLSearchParams(location.search);
 
-  if (params.get('to')) {
-    // Priority 1: URL params (Notion embed flow)
-    const candidate = {
-      to:     params.get('to'),
-      dest:   params.get('dest')   || '',
-      flight: params.get('flight') || '',
-    };
-    if (isValidTrip(candidate)) { trip = candidate; showCountdown(); }
-    else                         { showSetup(false); }  // bad URL — fall through to form
-  } else {
-    // Priority 2: localStorage (validated — corrupt entries are discarded)
-    try {
-      const saved = localStorage.getItem(LS_KEY);
-      if (saved) {
-        const candidate = JSON.parse(saved);
-        if (isValidTrip(candidate)) { trip = candidate; showCountdown(); }
-        else { try { localStorage.removeItem(LS_KEY); } catch(_){} showSetup(false); }
-      } else {
+  try {
+    if (params.get('to')) {
+      // Priority 1: URL params (Notion embed flow)
+      const candidate = {
+        to:     params.get('to'),
+        dest:   params.get('dest')   || '',
+        flight: params.get('flight') || '',
+      };
+      if (isValidTrip(candidate)) { trip = candidate; showCountdown(); }
+      else                         { showSetup(false); }  // bad URL — fall through to form
+    } else {
+      // Priority 2: localStorage (validated — corrupt entries are discarded)
+      try {
+        const saved = localStorage.getItem(LS_KEY);
+        if (saved) {
+          const candidate = JSON.parse(saved);
+          if (isValidTrip(candidate)) { trip = candidate; showCountdown(); }
+          else { try { localStorage.removeItem(LS_KEY); } catch(_){} showSetup(false); }
+        } else {
+          showSetup(false);
+        }
+      } catch (_) {
+        try { localStorage.removeItem(LS_KEY); } catch(_){}
         showSetup(false);
       }
-    } catch (_) {
-      try { localStorage.removeItem(LS_KEY); } catch(_){}
-      showSetup(false);
     }
+  } catch (err) {
+    console.warn('countdown init failed:', err);
+    try { localStorage.removeItem(LS_KEY); } catch(_){}
+    try { showSetup(false); } catch(_){}
   }
 
   // ── views ──────────────────────────────────────────────────────────────
@@ -309,6 +315,17 @@
     // Combine into local ISO (no Z — browser treats as local TZ)
     const toISO = dateVal + 'T' + timeVal;
 
+    // Block past dates
+    const tripDate = new Date(toISO);
+    const now = new Date();
+    if (tripDate <= now) {
+      $('inp-date').focus();
+      $('inp-date').style.borderColor = '#ff5a5a';
+      alert('Trip date must be in the future.');
+      setTimeout(() => { $('inp-date').style.borderColor = ''; }, 2500);
+      return;
+    }
+
     trip = { to: toISO, dest: destVal, flight: flightVal };
 
     try { localStorage.setItem(LS_KEY, JSON.stringify(trip)); } catch (_) {}
@@ -319,15 +336,18 @@
       (flightVal ? '&flight=' + encodeURIComponent(flightVal) : '')
     );
 
-    if (window.gtag) {
-      const dayMs = 864e5;
-      const daysAhead = Math.round((new Date(toISO) - new Date()) / dayMs);
-      gtag('event', 'trip_set', {
-        widget: 'countdown',
-        destination: destVal,
-        days_ahead: daysAhead,
-      });
-    }
+    try {
+      if (window.gtag) {
+        const dayMs = 864e5;
+        const daysAhead = Math.round((new Date(toISO) - new Date()) / dayMs);
+        gtag('event', 'trip_set', {
+          widget: 'countdown',
+          destination: destVal,
+          days_ahead: daysAhead,
+        });
+      }
+    } catch(_){}
+
 
     lastTierText = null; // force mood re-render
 
@@ -389,6 +409,13 @@
   // ── edit / cancel ──────────────────────────────────────────────────────
   $('edit-btn').addEventListener('click', () => showSetup(true));
   $('btn-cancel').addEventListener('click', () => showCountdown());
+
+  // Set min date to today — blocks past-date selection in browser UI
+  try {
+    const t = new Date();
+    const iso = t.getFullYear() + '-' + pad(t.getMonth()+1) + '-' + pad(t.getDate());
+    $('inp-date').min = iso;
+  } catch(_) {}
 </script>
 </body>
 </html>
