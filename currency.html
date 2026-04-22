@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.1.0">
+<meta name="widget-version" content="1.2.0">
 <meta name="widget" content="currency">
 <!--
-  currency.html — Wise Currency Comparison Widget · v1.1.0
-  Embeds cleanly in Notion. Uses Wise JS-injected comparison widget (not iframe).
-  Shows Wise vs other providers — real mid-market rate, all fees visible.
+  currency.html — Wise Currency Converter Widget · v1.2.0
+  Embeds cleanly in Notion. Uses Wise iframe converter (gb/es/fr/jp/hk/kr locale paths).
+  Shows live mid-market rates via Wise iframe.
+  Compare CTA opens wise.com/compare/ deep-link in a new tab.
 
   !! AFFILIATE CODE — swap before launch !!
-  data-affiliate-link on .tw-comparison anchor uses code "EPISTEMIC"
+  Footer CTA referral link uses code "EPISTEMIC".
   Replace "EPISTEMIC" in AFFILIATE_CODE const below with your real Wise referral code.
 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
@@ -21,7 +22,7 @@
   gtag('js', new Date());
   gtag('config', 'G-D8GYSB22FR', { anonymize_ip: true, send_page_view: false });
 </script>
-<title>Currency Comparison</title>
+<title>Currency Converter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&display=swap" rel="stylesheet">
@@ -52,8 +53,7 @@
   html, body {
     width: 100%; height: 100%;
     margin: 0; padding: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
     background: transparent;
     color: var(--text);
     font-family: var(--font-ui);
@@ -71,15 +71,14 @@
     z-index: 0;
   }
 
-  /* ── Widget shell ── */
+  /* ── Widget shell — iframe-safe fixed shell (v1.0.0 layout) ── */
   .currency-widget {
-    min-height: 100vh;
+    position: absolute; inset: 0;
+    overflow: hidden;
     display: flex; flex-direction: column;
     background: linear-gradient(160deg, var(--bg-start) 0%, var(--bg-end) 100%);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    overflow: hidden;
-    position: relative;
   }
 
   /* ── Language pill row (exact quote.html pattern) ── */
@@ -205,40 +204,47 @@
     background: var(--accent-soft);
   }
 
-  /* ── Wise comparison widget container ── */
+  /* ── Wise iframe wrap ── */
   .wise-wrap {
     position: relative; z-index: 5;
-    flex: 1;
-    padding: 6px 16px 0;
-    min-width: 0;
-  }
-
-  /* Wise injects a div wrapping the anchor — let it fill width */
-  .wise-wrap > div,
-  #wise-compare-container {
-    width: 100%;
-    min-width: 480px;
-  }
-
-  /* Override Wise widget to respect dark bg where possible */
-  #wise-compare-container a.tw-comparison {
-    display: none; /* hidden while loading — Wise replaces it */
-  }
-
-  /* ── Language fallback note (ja/zh/ko) ── */
-  .lang-fallback-note {
-    display: none;
-    position: relative; z-index: 5;
-    padding: 6px 18px 2px;
-    font-family: var(--font-ui);
-    font-size: 10px;
-    color: var(--text-faint);
-    letter-spacing: 0.05em;
-    font-style: italic;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 4px 16px 0;
     flex-shrink: 0;
   }
-  .lang-fallback-note.visible {
+
+  .wise-iframe {
+    width: 340px; height: 490px;
+    border: none;
     display: block;
+    opacity: 1;
+    transition: opacity var(--transition);
+    border-radius: 6px;
+  }
+  .wise-iframe.fading { opacity: 0.4; }
+
+  /* ── Compare CTA (deep-link, distinct from footer referral CTA) ── */
+  .compare-cta {
+    display: block;
+    width: 100%;
+    max-width: 340px;
+    margin: 10px 0 0;
+    padding: 10px 14px;
+    text-align: center;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid rgba(212,175,154,0.35);
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .compare-cta:hover {
+    background: rgba(212,175,154,0.08);
+    border-color: rgba(212,175,154,0.65);
   }
 
   /* ── Fallback error message ── */
@@ -246,10 +252,9 @@
     display: none;
     padding: 32px 20px;
     text-align: center;
+    width: 340px;
   }
-  .wise-fallback.visible {
-    display: block;
-  }
+  .wise-fallback.visible { display: block; }
   .wise-fallback-title {
     font-family: var(--font-serif);
     font-style: italic;
@@ -265,12 +270,13 @@
     text-underline-offset: 3px;
   }
 
-  /* ── Footer CTA ── */
+  /* ── Footer CTA — referral (send money), visually distinct from compare CTA) ── */
   .widget-footer {
     position: relative; z-index: 10;
     display: flex; justify-content: center; align-items: center;
-    padding: 12px 16px 12px;
+    padding: 10px 16px 12px;
     flex-shrink: 0;
+    margin-top: auto;
   }
   .footer-cta {
     font-family: var(--font-serif);
@@ -292,8 +298,8 @@
   /* ── Responsive ── */
   @media (max-width: 520px) {
     .chip { font-size: 9px; padding: 3px 8px; }
-    .wise-wrap > div,
-    #wise-compare-container { min-width: 320px; }
+    .wise-iframe { width: 300px; }
+    .compare-cta { max-width: 300px; }
   }
   @media (min-width: 600px) {
     .chip-row { gap: 7px; }
@@ -322,18 +328,18 @@
   </div>
 
   <!-- Subtitle (serif italic, muted) -->
-  <div class="widget-subtitle" id="subtitle">Compare Wise vs other providers &mdash; real cost, real rates</div>
+  <div class="widget-subtitle" id="subtitle">Live mid-market rates by Wise &mdash; what you&rsquo;d actually pay</div>
 
   <!-- Quick-pick chip row -->
   <div class="chip-row" id="chip-row">
-    <button class="chip active" data-from="USD" data-to="EUR">USD → EUR</button>
-    <button class="chip" data-from="USD" data-to="JPY">USD → JPY</button>
-    <button class="chip" data-from="USD" data-to="THB">USD → THB</button>
-    <button class="chip" data-from="EUR" data-to="GBP">EUR → GBP</button>
-    <button class="chip" data-from="GBP" data-to="JPY">GBP → JPY</button>
-    <button class="chip" data-from="AUD" data-to="IDR">AUD → IDR</button>
-    <button class="chip" data-from="USD" data-to="KRW">USD → KRW</button>
-    <button class="chip" data-from="EUR" data-to="TRY">EUR → TRY</button>
+    <button class="chip active" data-from="USD" data-to="EUR">USD &rarr; EUR</button>
+    <button class="chip" data-from="USD" data-to="JPY">USD &rarr; JPY</button>
+    <button class="chip" data-from="USD" data-to="THB">USD &rarr; THB</button>
+    <button class="chip" data-from="EUR" data-to="GBP">EUR &rarr; GBP</button>
+    <button class="chip" data-from="GBP" data-to="JPY">GBP &rarr; JPY</button>
+    <button class="chip" data-from="AUD" data-to="IDR">AUD &rarr; IDR</button>
+    <button class="chip" data-from="USD" data-to="KRW">USD &rarr; KRW</button>
+    <button class="chip" data-from="EUR" data-to="TRY">EUR &rarr; TRY</button>
   </div>
 
   <!-- Amount toggle (sendAmount pills) -->
@@ -345,33 +351,34 @@
     <button class="amount-chip" data-amount="5000">5 000</button>
   </div>
 
-  <!-- Language fallback note (ja/zh/ko only) -->
-  <div class="lang-fallback-note" id="lang-fallback-note"></div>
-
-  <!-- Wise comparison widget renders here -->
+  <!-- Wise iframe converter + Compare CTA -->
   <div class="wise-wrap" id="wise-wrap">
-    <div id="wise-compare-container">
-      <!-- Wise JS will replace this anchor with a comparison table -->
-      <a class="tw-comparison"
-         id="wise-compare-anchor"
-         href="https://wise.com/gb/compare/?sendAmount=1000&sourceCurrency=USD&targetCurrency=EUR"
-         data-lang="en"
-         data-max-visible-providers="3"
-         data-affiliate-link="https://wise.com/invite/dic/EPISTEMIC?utm_source=travel-hub&utm_medium=widget&utm_campaign=currency_compare">
-        The true cost of sending USD to EUR
+    <iframe
+      id="wise-iframe"
+      class="wise-iframe"
+      title="Wise FX"
+      src="https://wise.com/gb/currency-converter/fx-widget/converter?sourceCurrency=USD&targetCurrency=EUR"
+      width="340" height="490"
+      frameborder="0"
+      allowtransparency="true"
+      loading="lazy">
+    </iframe>
+
+    <!-- Fallback shown if iframe fails (5s health check) -->
+    <div class="wise-fallback" id="wise-fallback" role="alert">
+      <div class="wise-fallback-title">Converter unavailable &mdash; check your connection.</div>
+      <a class="wise-fallback-link" href="https://wise.com/currency-converter/" target="_blank" rel="noopener noreferrer">
+        Open Wise Converter &rarr;
       </a>
     </div>
 
-    <!-- Fallback shown if Wise script fails to load -->
-    <div class="wise-fallback" id="wise-fallback" role="alert">
-      <div class="wise-fallback-title">Currency comparison unavailable &mdash; check your connection.</div>
-      <a class="wise-fallback-link" href="https://wise.com/compare/" target="_blank" rel="noopener noreferrer">
-        Open Wise Compare &rarr;
-      </a>
-    </div>
+    <!-- Compare CTA — deep-link to wise.com/compare (NOT the referral signup) -->
+    <a class="compare-cta" id="compare-cta" href="#" target="_blank" rel="noopener">
+      &#x21c4; Compare with other providers &rarr;
+    </a>
   </div>
 
-  <!-- Footer CTA -->
+  <!-- Footer CTA — referral link (send money signup) -->
   <div class="widget-footer">
     <a class="footer-cta" id="footer-cta"
        href="https://wise.com/invite/dic/EPISTEMIC?utm_source=travel-hub&utm_medium=widget&utm_campaign=currency_compare"
@@ -400,11 +407,11 @@ function showFallback(code) {
         <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.14em;
              text-transform:uppercase;color:var(--text-faint)">Widget unavailable</div>
         <div style="font-family:var(--font-serif);font-style:italic;font-size:20px;color:var(--text)">
-          Currency comparison unavailable \u2014 check your connection.
+          Converter unavailable \u2014 check your connection.
         </div>
-        <a href="https://wise.com/compare/" target="_blank" rel="noopener noreferrer"
+        <a href="https://wise.com/currency-converter/" target="_blank" rel="noopener noreferrer"
            style="font-family:var(--font-ui);font-size:12px;color:var(--accent);text-decoration:underline">
-          Open Wise Compare \u2192
+          Open Wise Converter \u2192
         </a>
         <div style="font-size:11px;color:var(--text-faint);font-family:var(--font-ui)">code \u00b7 ${code || 'unknown'}</div>
       </div>`;
@@ -421,26 +428,34 @@ const LS_LANG_KEY   = 'quote-lang';      // shared with quote.html so language s
 const LS_PAIR_KEY   = 'currency-pair';   // persist last selected pair
 const LS_AMOUNT_KEY = 'currency-amount'; // persist last selected amount
 
-// Wise compare lang mapping (widget only supports en/es/pt/fr/de/ru)
-const WISE_LANG_MAP = {
-  en: 'en',
+// Wise iframe locale paths
+// en→gb, es→es, fr→fr, ja→jp, zh→hk, ko→kr
+const WISE_LOCALE_MAP = {
+  en: 'gb',
   es: 'es',
   fr: 'fr',
-  ja: 'en', // fallback to English; our chrome stays in Japanese
-  zh: 'en', // fallback to English; our chrome stays in Chinese
-  ko: 'en', // fallback to English; our chrome stays in Korean
+  ja: 'jp',
+  zh: 'hk',
+  ko: 'kr',
 };
-const LANG_NEEDS_FALLBACK_NOTE = new Set(['ja', 'zh', 'ko']);
 
 // ── Strings (all 6 languages) ──────────────────────────────────────────────────
 const STRINGS = {
   subtitle: {
-    en: 'Compare Wise vs other providers \u2014 real cost, real rates',
-    es: 'Compara Wise con otros servicios \u2014 costo real, tipos reales',
-    fr: 'Comparez Wise aux autres services \u2014 co\u00fbts r\u00e9els, taux r\u00e9els',
-    ja: 'Wise\u3068\u4ed6\u793e\u3092\u6bd4\u8f03 \u2014 \u5b9f\u969b\u306e\u30b3\u30b9\u30c8\u3068\u30ec\u30fc\u30c8',
-    zh: 'Wise vs \u5176\u4ed6\u5e73\u53f0 \u2014 \u771f\u5b9e\u8d39\u7528\uff0c\u771f\u5b9e\u6c47\u7387',
-    ko: 'Wise vs \ub2e4\ub978 \uc11c\ube44\uc2a4 \u2014 \uc2e4\uc81c \ube44\uc6a9, \uc2e4\uc81c \ud658\uc728',
+    en: 'Live mid-market rates by Wise \u2014 what you\u2019d actually pay',
+    es: 'Tipos en vivo por Wise \u2014 lo que realmente pagar\u00edas',
+    fr: 'Taux en direct par Wise \u2014 ce que vous paieriez vraiment',
+    ja: 'Wise\u306e\u30ea\u30a2\u30eb\u30bf\u30a4\u30e0\u70ba\u66ff \u2014 \u5b9f\u969b\u306b\u652f\u6255\u3046\u91d1\u984d',
+    zh: 'Wise \u5b9e\u65f6\u6c47\u7387 \u2014 \u4f60\u5b9e\u9645\u652f\u4ed8\u7684\u4ef7\u683c',
+    ko: 'Wise \uc2e4\uc2dc\uac04 \ud658\uc728 \u2014 \uc2e4\uc81c\ub85c \uc9c0\ubd88\ud558\ub294 \uae08\uc561',
+  },
+  compareCta: {
+    en: '\u21c4 Compare with other providers \u2192',
+    es: '\u21c4 Comparar con otros servicios \u2192',
+    fr: '\u21c4 Comparer avec d\u2019autres services \u2192',
+    ja: '\u21c4 \u4ed6\u793e\u3068\u6bd4\u8f03\u3059\u308b \u2192',
+    zh: '\u21c4 \u4e0e\u5176\u4ed6\u5e73\u53f0\u6bd4\u8f03 \u2192',
+    ko: '\u21c4 \ub2e4\ub978 \uc11c\ube44\uc2a4\uc640 \ube44\uad50 \u2192',
   },
   cta: {
     en: '\u2726 Send money abroad with Wise \u2192',
@@ -456,12 +471,7 @@ const STRINGS = {
     fr: 'Montant',
     ja: '\u91d1\u984d',
     zh: '\u91d1\u989d',
-    ko: '\u ae08\uc561',
-  },
-  langFallbackNote: {
-    ja: '\u6bd4\u8f03\u8868\u306f\u82f1\u8a9e\u3067\u8868\u793a\u3055\u308c\u307e\u3059',
-    zh: '\u6bd4\u8f83\u8868\u4ee5\u82f1\u6587\u663e\u793a',
-    ko: '\ube44\uad50\ud45c\ub294 \uc601\uc5b4\ub85c \ud45c\uc2dc\ub429\ub2c8\ub2e4',
+    ko: '\uae08\uc561',
   },
 };
 
@@ -470,18 +480,17 @@ let currentLang   = 'en';
 let currentFrom   = 'USD';
 let currentTo     = 'EUR';
 let currentAmount = 1000;
-let wiseScriptLoading = false;
 
 // ── DOM refs ───────────────────────────────────────────────────────────────────
-const langBar         = document.getElementById('lang-bar');
-const chipRow         = document.getElementById('chip-row');
-const amountRow       = document.getElementById('amount-row');
-const subtitleEl      = document.getElementById('subtitle');
-const amountLabelEl   = document.getElementById('amount-label');
-const footerCta       = document.getElementById('footer-cta');
-const wiseContainer   = document.getElementById('wise-compare-container');
-const wiseFallback    = document.getElementById('wise-fallback');
-const langFallbackNote = document.getElementById('lang-fallback-note');
+const langBar      = document.getElementById('lang-bar');
+const chipRow      = document.getElementById('chip-row');
+const amountRow    = document.getElementById('amount-row');
+const subtitleEl   = document.getElementById('subtitle');
+const amountLabelEl = document.getElementById('amount-label');
+const footerCta    = document.getElementById('footer-cta');
+const wiseIframe   = document.getElementById('wise-iframe');
+const wiseFallback = document.getElementById('wise-fallback');
+const compareCta   = document.getElementById('compare-cta');
 
 // ── GA4 helper ─────────────────────────────────────────────────────────────────
 function gaEvent(name, params) {
@@ -490,121 +499,82 @@ function gaEvent(name, params) {
   }
 }
 
-// ── Build Wise compare href ────────────────────────────────────────────────────
-function buildWiseHref(from, to, amount, wiseLang) {
-  // Wise compare URL uses gb as default locale base
-  return `https://wise.com/gb/compare/?sendAmount=${amount}&sourceCurrency=${from}&targetCurrency=${to}`;
+// ── Build iframe src ───────────────────────────────────────────────────────────
+function buildIframeSrc(from, to, lang) {
+  const locale = WISE_LOCALE_MAP[lang] || 'gb';
+  return `https://wise.com/${locale}/currency-converter/fx-widget/converter?sourceCurrency=${from}&targetCurrency=${to}`;
+}
+
+// ── Build compare href (just-in-time — always fresh on click) ──────────────────
+function buildCompareHref() {
+  const locale = WISE_LOCALE_MAP[currentLang] || 'gb';
+  return `https://wise.com/${locale}/compare/?sourceCurrency=${currentFrom}&targetCurrency=${currentTo}&sendAmount=${currentAmount}`;
 }
 
 // ── Render strings ─────────────────────────────────────────────────────────────
 function renderStrings() {
-  subtitleEl.textContent     = STRINGS.subtitle[currentLang]    || STRINGS.subtitle.en;
-  footerCta.textContent      = STRINGS.cta[currentLang]         || STRINGS.cta.en;
-  amountLabelEl.textContent  = STRINGS.amountLabel[currentLang] || STRINGS.amountLabel.en;
-
-  // Language fallback note for ja/zh/ko
-  if (LANG_NEEDS_FALLBACK_NOTE.has(currentLang)) {
-    langFallbackNote.textContent = STRINGS.langFallbackNote[currentLang] || '';
-    langFallbackNote.classList.add('visible');
-  } else {
-    langFallbackNote.classList.remove('visible');
-    langFallbackNote.textContent = '';
-  }
+  subtitleEl.textContent    = STRINGS.subtitle[currentLang]    || STRINGS.subtitle.en;
+  compareCta.textContent    = STRINGS.compareCta[currentLang]  || STRINGS.compareCta.en;
+  footerCta.textContent     = STRINGS.cta[currentLang]         || STRINGS.cta.en;
+  amountLabelEl.textContent = STRINGS.amountLabel[currentLang] || STRINGS.amountLabel.en;
 }
 
-// ── Wise widget render / re-render ─────────────────────────────────────────────
-//
-// Strategy: DOM swap + script re-inject.
-// Wise widgets.js renders once on load by scanning for .tw-comparison anchors.
-// To re-render with new params:
-//   1. Remove the existing Wise script tag (by id "transferwise-wjs")
-//   2. Clear any rendered output from the container (Wise wraps anchor in divs)
-//   3. Insert a fresh <a class="tw-comparison"> with updated data attrs
-//   4. Re-inject widgets.js — it re-scans and renders again
-//
-// If script inject fails (onerror), shows fallback message.
-
-function buildAnchorHtml(from, to, amount, wiseLang) {
-  const href = buildWiseHref(from, to, amount, wiseLang);
-  return `<a class="tw-comparison"
-     id="wise-compare-anchor"
-     href="${href}"
-     data-lang="${wiseLang}"
-     data-max-visible-providers="3"
-     data-affiliate-link="${AFFILIATE_BASE}">The true cost of sending ${from} to ${to}</a>`;
-}
-
-function injectWiseScript() {
-  return new Promise((resolve, reject) => {
-    try {
-      // Remove any prior script tag
-      const old = document.getElementById('transferwise-wjs');
-      if (old) old.parentNode.removeChild(old);
-
-      const js = document.createElement('script');
-      js.id  = 'transferwise-wjs';
-      js.src = 'https://widgets.wise.com/widgets.js';
-
-      js.onload  = () => resolve();
-      js.onerror = () => reject(new Error('Wise script failed to load'));
-
-      const fjs = document.getElementsByTagName('script')[0];
-      fjs.parentNode.insertBefore(js, fjs);
-    } catch (err) {
-      reject(err);
-    }
-  });
-}
-
-function renderWiseWidget() {
+// ── Update iframe src with fade transition ─────────────────────────────────────
+function updateIframe() {
   try {
-    const wiseLang = WISE_LANG_MAP[currentLang] || 'en';
-
-    // 1. Reset container — remove any previously rendered Wise output
-    wiseContainer.innerHTML = buildAnchorHtml(currentFrom, currentTo, currentAmount, wiseLang);
-
-    // 2. Re-inject Wise script
-    wiseScriptLoading = true;
-    injectWiseScript()
-      .then(() => {
-        wiseScriptLoading = false;
-        wiseFallback.classList.remove('visible');
-      })
-      .catch((err) => {
-        wiseScriptLoading = false;
-        console.warn('[currency widget] Wise script error:', err);
-        wiseContainer.innerHTML = '';
-        wiseFallback.classList.add('visible');
-      });
-
+    wiseIframe.classList.add('fading');
+    setTimeout(() => {
+      wiseIframe.src = buildIframeSrc(currentFrom, currentTo, currentLang);
+      wiseIframe.classList.remove('fading');
+    }, 300);
   } catch (err) {
-    console.warn('[currency widget] renderWiseWidget error:', err);
+    console.warn('[currency widget] updateIframe error:', err);
     wiseFallback.classList.add('visible');
   }
 }
+
+// ── 5s health check — if iframe never loaded show fallback ─────────────────────
+let iframeHealthTimer = null;
+function startIframeHealthCheck() {
+  clearTimeout(iframeHealthTimer);
+  iframeHealthTimer = setTimeout(() => {
+    try {
+      const doc = wiseIframe.contentDocument || wiseIframe.contentWindow.document;
+      if (!doc || doc.readyState === 'loading') {
+        wiseFallback.classList.add('visible');
+      }
+    } catch (_) {
+      // cross-origin: we can't read contentDocument — this is expected and fine
+      // If wise is loading cross-origin, it's actually working; suppress fallback
+    }
+  }, 5000);
+}
+
+wiseIframe.addEventListener('load', () => {
+  clearTimeout(iframeHealthTimer);
+  wiseFallback.classList.remove('visible');
+});
+wiseIframe.addEventListener('error', () => {
+  wiseFallback.classList.add('visible');
+});
 
 // ── Chip selection ─────────────────────────────────────────────────────────────
 function selectChip(chipEl) {
   chipRow.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   chipEl.classList.add('active');
-
   currentFrom = chipEl.dataset.from;
   currentTo   = chipEl.dataset.to;
-
   try { localStorage.setItem(LS_PAIR_KEY, JSON.stringify({ from: currentFrom, to: currentTo })); } catch(_) {}
-
-  renderWiseWidget();
+  updateIframe();
 }
 
 // ── Amount selection ───────────────────────────────────────────────────────────
 function selectAmount(amountChipEl) {
   amountRow.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('active'));
   amountChipEl.classList.add('active');
-
   currentAmount = parseInt(amountChipEl.dataset.amount, 10);
   try { localStorage.setItem(LS_AMOUNT_KEY, String(currentAmount)); } catch(_) {}
-
-  renderWiseWidget();
+  // iframe doesn't use amount — no reload needed; compare href updates just-in-time
 }
 
 // ── Language switch ────────────────────────────────────────────────────────────
@@ -612,16 +582,11 @@ function setLanguage(lang, fromChange) {
   const prev = currentLang;
   currentLang = lang;
   try { localStorage.setItem('quote-lang', lang); } catch(_) {}
-
   langBar.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
-
   renderStrings();
-
-  // Re-render Wise widget with new language mapping
-  renderWiseWidget();
-
+  updateIframe();
   if (fromChange && prev !== lang) {
     gaEvent('language_change', { from: prev, to: lang });
   }
@@ -630,14 +595,10 @@ function setLanguage(lang, fromChange) {
 // ── Event handlers ─────────────────────────────────────────────────────────────
 chipRow.addEventListener('click', (e) => {
   const chip = e.target.closest('.chip');
-  if (!chip) return;
-  if (chip.classList.contains('active')) return;
-
+  if (!chip || chip.classList.contains('active')) return;
   const from = chip.dataset.from;
   const to   = chip.dataset.to;
-
   selectChip(chip);
-
   gaEvent('currency_pair_change', {
     from_currency: from,
     to_currency:   to,
@@ -648,13 +609,9 @@ chipRow.addEventListener('click', (e) => {
 
 amountRow.addEventListener('click', (e) => {
   const chip = e.target.closest('.amount-chip');
-  if (!chip) return;
-  if (chip.classList.contains('active')) return;
-
+  if (!chip || chip.classList.contains('active')) return;
   const amount = parseInt(chip.dataset.amount, 10);
-
   selectAmount(chip);
-
   gaEvent('currency_amount_change', {
     from_currency: currentFrom,
     to_currency:   currentTo,
@@ -671,6 +628,17 @@ langBar.addEventListener('click', (e) => {
 
 footerCta.addEventListener('click', () => {
   gaEvent('currency_cta_click', {
+    from_currency: currentFrom,
+    to_currency:   currentTo,
+    amount:        currentAmount,
+    language:      currentLang,
+  });
+});
+
+// Compare CTA — build href just-in-time, then fire GA4
+compareCta.addEventListener('click', (e) => {
+  compareCta.href = buildCompareHref();
+  gaEvent('currency_compare_click', {
     from_currency: currentFrom,
     to_currency:   currentTo,
     amount:        currentAmount,
@@ -699,8 +667,7 @@ try {
       if ([100, 500, 1000, 5000].includes(parsed)) {
         currentAmount = parsed;
         amountRow.querySelectorAll('.amount-chip').forEach(chip => {
-          const isActive = parseInt(chip.dataset.amount, 10) === currentAmount;
-          chip.classList.toggle('active', isActive);
+          chip.classList.toggle('active', parseInt(chip.dataset.amount, 10) === currentAmount);
         });
       }
     }
@@ -716,9 +683,7 @@ try {
         currentFrom = from;
         currentTo   = to;
         chipRow.querySelectorAll('.chip').forEach(chip => {
-          if (chip.dataset.from === from && chip.dataset.to === to) {
-            restoredChip = chip;
-          }
+          if (chip.dataset.from === from && chip.dataset.to === to) restoredChip = chip;
         });
       }
     }
@@ -730,30 +695,19 @@ try {
     restoredChip.classList.add('active');
   }
 
-  // 5. Render strings
+  // 5. Render all strings (subtitle, compare CTA label, footer CTA, amount label)
   renderStrings();
 
-  // 6. Update footer CTA href with affiliate link
+  // 6. Set footer CTA href
   footerCta.href = AFFILIATE_BASE;
 
-  // 7. Initial Wise widget render (called via window.onload to ensure DOM ready)
-  window.onload = (function(d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) return;
-    js = d.createElement(s); js.id = id;
-    js.src = 'https://widgets.wise.com/widgets.js';
-    js.onerror = function() {
-      wiseContainer.innerHTML = '';
-      wiseFallback.classList.add('visible');
-    };
-    fjs.parentNode.insertBefore(js, fjs);
-  }(document, 'script', 'transferwise-wjs'));
+  // 7. Set initial iframe src (may differ from HTML default if language/pair restored)
+  wiseIframe.src = buildIframeSrc(currentFrom, currentTo, currentLang);
 
-  // Update the initial anchor to match restored state (before script loads)
-  const wiseLangInit = WISE_LANG_MAP[currentLang] || 'en';
-  wiseContainer.innerHTML = buildAnchorHtml(currentFrom, currentTo, currentAmount, wiseLangInit);
+  // 8. Start health check
+  startIframeHealthCheck();
 
-  // 8. GA4 widget_view
+  // 9. GA4 widget_view
   gaEvent('widget_view', { widget: 'currency', language: currentLang });
 
 } catch(err) {
