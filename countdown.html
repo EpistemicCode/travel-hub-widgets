@@ -36,9 +36,8 @@
   .cells .l { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-faint); margin-top: 4px; }
   .ft { margin-top: auto; font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; }
   .done { font-family: var(--font-display); font-style: italic; font-size: 20px; color: var(--good); text-align: center; margin-top: 18px; }
-  .edit-btn { font-size: 10px; letter-spacing: 0.1em; color: var(--text-dim); text-decoration: none; cursor: pointer; background: none; border: none; padding: 0; }
+  .edit-btn { position: absolute; top: 8px; left: 10px; font-size: 10px; letter-spacing: 0.1em; color: var(--text-faint); text-decoration: none; cursor: pointer; background: none; border: none; padding: 2px 4px; z-index: 2; }
   .edit-btn:hover { color: var(--accent); }
-  .cd-top-row { display: flex; justify-content: space-between; align-items: flex-start; }
 
   /* ── setup view ── */
   #setup-view { position: absolute; inset: 0; box-sizing: border-box; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
@@ -103,13 +102,11 @@
 <div id="countdown-view" class="card cd" style="display:none">
   <div class="grain"></div>
 
-  <div class="cd-top-row">
-    <div class="hdr">
-      <span class="caps">Countdown · wheels up in</span>
-      <div class="mood" id="mood"></div>
-      <div class="dest" id="dest">your next trip</div>
-    </div>
-    <button class="edit-btn" id="edit-btn" title="Edit trip">✎ Edit</button>
+  <button class="edit-btn" id="edit-btn" title="Edit trip">✎ Edit</button>
+  <div class="hdr" style="padding-top:4px;text-align:right">
+    <span class="caps">Countdown · wheels up in</span>
+    <div class="mood" id="mood"></div>
+    <div class="dest" id="dest">your next trip</div>
   </div>
 
   <div class="cells" id="cells">
@@ -368,58 +365,50 @@
 
     lastTierText = null; // force mood re-render
 
+    // Transition immediately in all contexts (iframe or standalone)
+    showCountdown();
+
     if (inIframe) {
-      // Notion's sandbox blocks localStorage/history persistence — show copy-URL banner
+      // Notion's sandbox blocks localStorage/history persistence — show compact
+      // copy-URL toast over the countdown so the user can paste it into /embed.
       const shareUrl = window.location.origin + window.location.pathname
         + '?to='   + encodeURIComponent(toISO)
         + '&dest=' + encodeURIComponent(destVal)
         + (flightVal ? '&flight=' + encodeURIComponent(flightVal) : '');
 
-      // Remove any existing banner
-      const existing = document.getElementById('notion-banner');
+      const existing = document.getElementById('notion-toast');
       if (existing) existing.remove();
 
-      const banner = document.createElement('div');
-      banner.id = 'notion-banner';
-      banner.style.cssText = [
-        'background:var(--card-2)',
-        'border:1px solid var(--line)',
-        'border-radius:6px',
-        'padding:12px',
-        'display:flex',
-        'flex-direction:column',
-        'gap:8px',
-        'margin-top:8px',
-        'font-size:11px',
-        'color:var(--text-dim)',
-        'line-height:1.4',
+      const toast = document.createElement('div');
+      toast.id = 'notion-toast';
+      toast.style.cssText = [
+        'position:absolute','left:10px','right:10px','bottom:10px',
+        'background:var(--card-2)','border:1px solid var(--line)','border-radius:6px',
+        'padding:8px 10px','font-size:10px','color:var(--text-dim)','line-height:1.35',
+        'display:flex','flex-direction:column','gap:6px','z-index:3',
+        'box-shadow:0 4px 16px rgba(0,0,0,0.35)',
       ].join(';');
+      toast.innerHTML = `
+        <div>Notion won't remember this on refresh. Copy URL → paste in /embed block.</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="toast-url" readonly value="${shareUrl.replace(/"/g, '&quot;')}" style="flex:1;min-width:0;box-sizing:border-box;background:var(--card-2);border:1px solid var(--hairline,var(--line));border-radius:4px;padding:4px 6px;font-size:9px;font-family:var(--font-mono,monospace);color:var(--text);outline:none;">
+          <button id="toast-copy" style="background:var(--accent);border:none;border-radius:4px;padding:5px 9px;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#fff;cursor:pointer">Copy</button>
+          <button id="toast-close" style="background:none;border:1px solid var(--line);border-radius:4px;padding:5px 7px;font-size:10px;color:var(--text-dim);cursor:pointer">×</button>
+        </div>`;
+      $('countdown-view').appendChild(toast);
 
-      banner.innerHTML = `
-        <div>To save this trip inside Notion, copy this URL and paste it in your /embed block. In-widget setup is a preview only — Notion won't remember it on refresh.</div>
-        <input id="notion-url" readonly value="${shareUrl.replace(/"/g, '&quot;')}" style="width:100%;box-sizing:border-box;background:var(--card-2);border:1px solid var(--hairline,var(--line));border-radius:4px;padding:6px 8px;font-size:10px;font-family:var(--font-mono,monospace);color:var(--text);outline:none;">
-        <div style="display:flex;gap:8px;margin-top:2px;">
-          <button id="banner-copy" class="btn-set" style="flex:1;padding:7px;font-size:10px;">Copy URL</button>
-          <button id="banner-continue" class="btn-cancel" style="padding:7px 10px;font-size:10px;">Continue preview</button>
-        </div>
-      `;
-
-      $('setup-view').appendChild(banner);
-
-      document.getElementById('banner-copy').addEventListener('click', () => {
+      document.getElementById('toast-copy').addEventListener('click', () => {
         navigator.clipboard.writeText(shareUrl).then(() => {
-          const btn = document.getElementById('banner-copy');
-          btn.textContent = '✓ Copied';
-          setTimeout(() => { btn.textContent = 'Copy URL'; }, 2000);
+          const btn = document.getElementById('toast-copy');
+          btn.textContent = '✓';
+          setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+        }).catch(() => {
+          // Fallback: select the input so user can Ctrl+C
+          const i = document.getElementById('toast-url');
+          i.select(); i.setSelectionRange(0, 99999);
         });
       });
-
-      document.getElementById('banner-continue').addEventListener('click', () => {
-        banner.remove();
-        showCountdown();
-      });
-    } else {
-      showCountdown();
+      document.getElementById('toast-close').addEventListener('click', () => toast.remove());
     }
   });
 
