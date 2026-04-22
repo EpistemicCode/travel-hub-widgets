@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="widget-version" content="1.0.0">
+<meta name="widget" content="currency">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-D8GYSB22FR', { anonymize_ip: true, send_page_view: false });
+</script>
+<title>Currency Converter</title>
+<!--
+  currency.html — Wise Currency Converter Widget · fluid (fills any iframe size)
+  Embeds cleanly in Notion. No external dependencies except Google Fonts.
+  Affiliate: Wise referral via wise.com/invite/dic/EPISTEMIC (swap code before launch)
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-start:       #0d1117;
+    --bg-end:         #0f1114;
+    --card:           #1a1e24;
+    --line:           rgba(255,255,255,0.07);
+    --text:           #ededea;
+    --text-dim:       #9a9a94;
+    --text-faint:     #646460;
+    --accent:         #d4af9a;
+    --accent-soft:    rgba(212,175,154,0.12);
+    --accent-line:    rgba(212,175,154,0.3);
+    --accent-glow:    rgba(212,175,154,0.08);
+    --glyph:          rgba(212,175,154,0.18);
+    --pink:           #c97a6a;
+    --font-serif:     "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --font-ui:        system-ui, -apple-system, sans-serif;
+    --radius:         10px;
+    --transition:     300ms ease;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    margin: 0; padding: 0;
+    overflow: hidden;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── Grain overlay (matches quote.html) ── */
+  .grain {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 0.045;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/></svg>");
+    z-index: 0;
+  }
+
+  /* ── Widget shell (iframe-safe: position absolute) ── */
+  .currency-widget {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    background: linear-gradient(160deg, var(--bg-start) 0%, var(--bg-end) 100%);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  /* ── Language pill row (exact quote.html pattern) ── */
+  .lang-bar {
+    position: relative; z-index: 10;
+    display: flex; justify-content: flex-end; align-items: center;
+    padding: 10px 14px 0;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .lang-btn {
+    background: none; border: none; border-radius: 20px;
+    padding: 3px 8px;
+    font-family: var(--font-ui);
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .lang-btn:hover { color: var(--text-dim); background: rgba(255,255,255,0.05); }
+  .lang-btn.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* ── Header row ── */
+  .widget-header {
+    position: relative; z-index: 5;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 18px 0;
+    flex-shrink: 0;
+  }
+  .header-dash {
+    display: inline-block;
+    width: 18px; height: 1px;
+    background: var(--pink);
+    flex-shrink: 0;
+  }
+  .header-title {
+    font-family: var(--font-ui);
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--text-dim);
+    font-variant: small-caps;
+  }
+
+  /* ── Subtitle ── */
+  .widget-subtitle {
+    position: relative; z-index: 5;
+    padding: 4px 18px 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text-faint);
+    letter-spacing: 0.01em;
+    flex-shrink: 0;
+  }
+
+  /* ── Chip row ── */
+  .chip-row {
+    position: relative; z-index: 5;
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 10px 16px 6px;
+    flex-shrink: 0;
+  }
+  .chip {
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-family: var(--font-ui);
+    font-size: 10px; letter-spacing: 0.08em;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, box-shadow 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+  .chip:hover {
+    border-color: var(--accent-line);
+    color: var(--text);
+    background: var(--accent-glow);
+  }
+  .chip.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+
+  /* ── Iframe frame ── */
+  .iframe-wrap {
+    position: relative; z-index: 5;
+    flex: 1;
+    display: flex; justify-content: center; align-items: center;
+    padding: 6px 16px 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .iframe-shell {
+    border: 1px solid rgba(212,175,154,0.12);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 12px rgba(0,0,0,0.35);
+    flex-shrink: 0;
+    position: relative;
+  }
+  #wise-iframe {
+    display: block;
+    width: 340px;
+    height: 490px;
+    border: none;
+    border-radius: 7px;
+    transition: opacity var(--transition);
+  }
+
+  /* ── Fallback message ── */
+  .iframe-fallback {
+    display: none;
+    width: 340px;
+    height: 490px;
+    align-items: center; justify-content: center;
+    text-align: center;
+    font-family: var(--font-serif); font-style: italic;
+    font-size: 15px; color: var(--text-dim);
+    padding: 24px;
+    line-height: 1.6;
+  }
+
+  /* ── Footer CTA ── */
+  .widget-footer {
+    position: relative; z-index: 10;
+    display: flex; justify-content: center; align-items: center;
+    padding: 8px 16px 10px;
+    flex-shrink: 0;
+  }
+  .footer-cta {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+    display: inline-block;
+  }
+  .footer-cta:hover {
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 380px) {
+    .chip { font-size: 9px; padding: 3px 8px; }
+    #wise-iframe { width: 310px; }
+    .iframe-fallback { width: 310px; }
+  }
+  @media (min-width: 600px) {
+    .chip-row { gap: 7px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="currency-widget" id="widget">
+  <div class="grain"></div>
+
+  <!-- Language selector (matches quote.html) -->
+  <div class="lang-bar" id="lang-bar">
+    <button class="lang-btn active" data-lang="en">EN</button>
+    <button class="lang-btn" data-lang="es">ES</button>
+    <button class="lang-btn" data-lang="fr">FR</button>
+    <button class="lang-btn" data-lang="ja">JA</button>
+    <button class="lang-btn" data-lang="zh">中文</button>
+    <button class="lang-btn" data-lang="ko">한국어</button>
+  </div>
+
+  <!-- Header: dash + small caps title -->
+  <div class="widget-header">
+    <span class="header-dash"></span>
+    <span class="header-title">Currency</span>
+  </div>
+
+  <!-- Subtitle (serif italic, muted) -->
+  <div class="widget-subtitle" id="subtitle">Live rates by Wise — what you&rsquo;d actually pay</div>
+
+  <!-- Quick-pick chip row -->
+  <div class="chip-row" id="chip-row">
+    <button class="chip active" data-from="USD" data-to="EUR">USD → EUR</button>
+    <button class="chip" data-from="USD" data-to="JPY">USD → JPY</button>
+    <button class="chip" data-from="USD" data-to="THB">USD → THB</button>
+    <button class="chip" data-from="EUR" data-to="GBP">EUR → GBP</button>
+    <button class="chip" data-from="GBP" data-to="JPY">GBP → JPY</button>
+    <button class="chip" data-from="AUD" data-to="IDR">AUD → IDR</button>
+    <button class="chip" data-from="USD" data-to="KRW">USD → KRW</button>
+    <button class="chip" data-from="EUR" data-to="TRY">EUR → TRY</button>
+  </div>
+
+  <!-- Wise iframe in elegant frame -->
+  <div class="iframe-wrap">
+    <div class="iframe-shell">
+      <iframe
+        id="wise-iframe"
+        src=""
+        frameborder="0"
+        allowtransparency="true"
+        title="Wise Currency Converter"
+        loading="lazy"
+      ></iframe>
+      <div class="iframe-fallback" id="iframe-fallback" role="alert">
+        Currency converter unavailable — check your connection.
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer CTA -->
+  <div class="widget-footer">
+    <a class="footer-cta" id="footer-cta" href="#" target="_blank" rel="noopener noreferrer sponsored">
+      ✦ Send money abroad with Wise →
+    </a>
+  </div>
+</div>
+
+<script>
+// ── Error boundary ────────────────────────────────────────────────────────────
+window.addEventListener('error', (e) => {
+  if (e.error) showFallback('script');
+});
+window.addEventListener('unhandledrejection', (e) => {
+  const msg = String(e.reason && (e.reason.message || e.reason));
+  if (/fetch|network|failed|abort/i.test(msg)) showFallback('network');
+});
+
+function showFallback(code) {
+  try {
+    document.getElementById('widget').innerHTML = `
+      <div class="grain"></div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;
+           justify-content:center;align-items:center;padding:32px;text-align:center;gap:12px;">
+        <div style="font-family:var(--font-ui);font-size:10px;letter-spacing:0.14em;
+             text-transform:uppercase;color:var(--text-faint)">Widget unavailable</div>
+        <div style="font-family:var(--font-serif);font-style:italic;font-size:20px;color:var(--text)">
+          Currency converter unavailable — check your connection.
+        </div>
+        <div style="font-size:11px;color:var(--text-faint);font-family:var(--font-ui)">code · ${code || 'unknown'}</div>
+      </div>`;
+  } catch(_) {}
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
+const REFERRAL_CODE = 'EPISTEMIC'; // swap before launch
+
+// Wise locale path map (locale → wise subdomain path)
+const WISE_LOCALE = {
+  en: 'gb',
+  es: 'es',
+  fr: 'fr',
+  ja: 'jp',
+  zh: 'hk',
+  ko: 'kr',
+};
+
+// LocalStorage keys
+const LS_LANG_KEY = 'quote-lang';     // shared with quote.html so language syncs
+const LS_PAIR_KEY = 'currency-pair';  // persist last selected pair
+
+// ── Strings (all 6 languages) ─────────────────────────────────────────────────
+const STRINGS = {
+  subtitle: {
+    en: 'Live rates by Wise \u2014 what you\u2019d actually pay',
+    es: 'Tipos en vivo por Wise \u2014 lo que realmente pagar\u00edas',
+    fr: 'Taux en direct par Wise \u2014 ce que vous paieriez vraiment',
+    ja: 'Wise\u306e\u30ea\u30a2\u30eb\u30bf\u30a4\u30e0\u70ba\u66ff \u2014 \u5b9f\u969b\u306b\u652f\u6255\u3046\u91d1\u984d',
+    zh: 'Wise \u5b9e\u65f6\u6c47\u7387 \u2014 \u4f60\u5b9e\u9645\u652f\u4ed8\u7684\u4ef7\u683c',
+    ko: 'Wise \uc2e4\uc2dc\uac04 \ud658\uc728 \u2014 \uc2e4\uc81c\ub85c \uc9c0\ubd88\ud558\ub294 \uae08\uc561',
+  },
+  cta: {
+    en: '\u2726 Send money abroad with Wise \u2192',
+    es: '\u2726 Env\u00eda dinero al extranjero con Wise \u2192',
+    fr: '\u2726 Envoyez de l\u2019argent \u00e0 l\u2019\u00e9tranger avec Wise \u2192',
+    ja: '\u2726 Wise\u3067\u6d77\u5916\u9001\u91d1 \u2192',
+    zh: '\u2726 \u7528 Wise \u8de8\u5883\u6c47\u6b3e \u2192',
+    ko: '\u2726 Wise\ub85c \ud574\uc678\uc1a1\uae08 \u2192',
+  },
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentLang = 'en';
+let currentFrom = 'USD';
+let currentTo   = 'EUR';
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const langBar      = document.getElementById('lang-bar');
+const chipRow      = document.getElementById('chip-row');
+const subtitleEl   = document.getElementById('subtitle');
+const footerCta    = document.getElementById('footer-cta');
+const wiseIframe   = document.getElementById('wise-iframe');
+const iframeFallback = document.getElementById('iframe-fallback');
+
+// ── GA4 helper ────────────────────────────────────────────────────────────────
+function gaEvent(name, params) {
+  if (window.gtag) {
+    gtag('event', name, Object.assign({ widget: 'currency' }, params));
+  }
+}
+
+// ── URL builders ──────────────────────────────────────────────────────────────
+function buildWiseIframeSrc(from, to, lang) {
+  const locale = WISE_LOCALE[lang] || 'gb';
+  return `https://wise.com/${locale}/currency-converter/fx-widget/converter?sourceCurrency=${from}&targetCurrency=${to}`;
+}
+
+function buildWiseReferralUrl(lang) {
+  const locale = WISE_LOCALE[lang] || 'gb';
+  return `https://wise.com/${locale}/invite/dic/${REFERRAL_CODE}?utm_source=travel-hub&utm_medium=widget&utm_campaign=currency`;
+}
+
+// ── Render strings ────────────────────────────────────────────────────────────
+function renderStrings() {
+  subtitleEl.textContent = STRINGS.subtitle[currentLang] || STRINGS.subtitle.en;
+  footerCta.textContent  = STRINGS.cta[currentLang] || STRINGS.cta.en;
+  footerCta.href         = buildWiseReferralUrl(currentLang);
+}
+
+// ── Iframe swap with fade ─────────────────────────────────────────────────────
+let iframeSwapTimeout = null;
+
+function swapIframe(from, to, skipFade) {
+  const newSrc = buildWiseIframeSrc(from, to, currentLang);
+
+  if (skipFade) {
+    wiseIframe.src = newSrc;
+    return;
+  }
+
+  // Fade out
+  wiseIframe.style.opacity = '0.4';
+
+  if (iframeSwapTimeout) clearTimeout(iframeSwapTimeout);
+  iframeSwapTimeout = setTimeout(() => {
+    wiseIframe.src = newSrc;
+    // Fade in after minimal delay to allow src change
+    setTimeout(() => {
+      wiseIframe.style.opacity = '1';
+    }, 80);
+  }, 300);
+}
+
+// ── Chip selection ────────────────────────────────────────────────────────────
+function selectChip(chipEl, skipFade) {
+  // Update active state
+  chipRow.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chipEl.classList.add('active');
+
+  const from = chipEl.dataset.from;
+  const to   = chipEl.dataset.to;
+
+  currentFrom = from;
+  currentTo   = to;
+
+  try { localStorage.setItem(LS_PAIR_KEY, JSON.stringify({ from, to })); } catch(_) {}
+
+  swapIframe(from, to, skipFade);
+}
+
+// ── Language switch ───────────────────────────────────────────────────────────
+function setLanguage(lang, fromChange) {
+  const prev = currentLang;
+  currentLang = lang;
+  try { localStorage.setItem(LS_LANG_KEY, lang); } catch(_) {}
+
+  // Update pill buttons
+  langBar.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  // Update all UI strings
+  renderStrings();
+
+  // Rebuild iframe src with new locale (no fade — locale change, not pair change)
+  wiseIframe.src = buildWiseIframeSrc(currentFrom, currentTo, currentLang);
+
+  if (fromChange && prev !== lang) {
+    gaEvent('language_change', { from: prev, to: lang });
+  }
+}
+
+// ── Chip click handler ────────────────────────────────────────────────────────
+chipRow.addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  if (chip.classList.contains('active')) return; // already selected
+
+  const from = chip.dataset.from;
+  const to   = chip.dataset.to;
+
+  selectChip(chip, false);
+
+  gaEvent('currency_pair_change', {
+    from_currency: from,
+    to_currency:   to,
+    language:      currentLang,
+  });
+});
+
+// ── Language bar click handler ────────────────────────────────────────────────
+langBar.addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-btn');
+  if (!btn) return;
+  setLanguage(btn.dataset.lang, true);
+});
+
+// ── Footer CTA click handler ──────────────────────────────────────────────────
+footerCta.addEventListener('click', () => {
+  gaEvent('currency_cta_click', {
+    from_currency: currentFrom,
+    to_currency:   currentTo,
+    language:      currentLang,
+  });
+});
+
+// ── Error boundary: iframe load check (5s, cross-origin limited) ──────────────
+function scheduleIframeCheck() {
+  setTimeout(() => {
+    try {
+      // Cross-origin: can't read contentDocument. Check iframe element presence.
+      if (!wiseIframe || !wiseIframe.isConnected) {
+        showIframeFallback();
+      }
+      // If src is still empty (shouldn't happen after init), also fallback
+      if (!wiseIframe.src || wiseIframe.src === window.location.href) {
+        showIframeFallback();
+      }
+    } catch(_) {
+      // SecurityError from cross-origin access is expected — iframe is fine
+    }
+  }, 5000);
+}
+
+function showIframeFallback() {
+  wiseIframe.style.display = 'none';
+  iframeFallback.style.display = 'flex';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+try {
+  // 1. Restore language (shared key with quote.html)
+  try {
+    const savedLang = localStorage.getItem(LS_LANG_KEY);
+    if (savedLang && ['en','es','fr','ja','zh','ko'].includes(savedLang)) {
+      currentLang = savedLang;
+      langBar.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === currentLang);
+      });
+    }
+  } catch(_) {}
+
+  // 2. Restore last currency pair
+  let restoredChip = null;
+  try {
+    const savedPair = localStorage.getItem(LS_PAIR_KEY);
+    if (savedPair) {
+      const { from, to } = JSON.parse(savedPair);
+      if (from && to) {
+        currentFrom = from;
+        currentTo   = to;
+        // Find matching chip
+        chipRow.querySelectorAll('.chip').forEach(chip => {
+          if (chip.dataset.from === from && chip.dataset.to === to) {
+            restoredChip = chip;
+          }
+        });
+      }
+    }
+  } catch(_) {}
+
+  // 3. Mark active chip
+  if (restoredChip) {
+    chipRow.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    restoredChip.classList.add('active');
+  }
+
+  // 4. Render strings
+  renderStrings();
+
+  // 5. Load initial iframe (no fade on first load)
+  swapIframe(currentFrom, currentTo, true);
+
+  // 6. GA4 widget_view
+  gaEvent('widget_view', { widget: 'currency', language: currentLang });
+
+  // 7. Schedule iframe health check
+  scheduleIframeCheck();
+
+} catch(err) {
+  showFallback('init');
+}
+</script>
+</body>
+</html>

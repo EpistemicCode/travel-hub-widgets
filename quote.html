@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.0.1">
+<meta name="widget-version" content="1.0.2">
 <meta name="widget" content="quote">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
@@ -363,9 +363,21 @@ const CONFIG = {
   sub3:       "D15855548",
 };
 
+// Trip.com locale codes keyed by widget language code
+const TRIP_LOCALES = {
+  en: 'en-US',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  ja: 'ja-JP',
+  zh: 'zh-CN',
+  ko: 'ko-KR',
+};
+
 function buildTripUrl(slug) {
+  const locale = TRIP_LOCALES[currentLang] || 'en-US';
   return `https://www.trip.com/?Allianceid=${CONFIG.allianceId}&SID=${CONFIG.sid}` +
-    `&trip_sub1=${CONFIG.sub1}&trip_sub2=${encodeURIComponent(slug)}&trip_sub3=${CONFIG.sub3}`;
+    `&trip_sub1=${CONFIG.sub1}&trip_sub2=${encodeURIComponent(slug)}&trip_sub3=${CONFIG.sub3}` +
+    `&locale=${locale}`;
 }
 
 // ── Quote data — 50 curated quotes ───────────────────────────────────────────
@@ -1076,6 +1088,37 @@ const DEST_LABELS = {
   patagonia:  "Patagonia",
 };
 
+// ── CTA translation maps ──────────────────────────────────────────────────────
+const CTA_FOOTER = {
+  en: '✦ Plan your next trip →',
+  es: '✦ Planea tu próximo viaje →',
+  fr: '✦ Planifiez votre prochain voyage →',
+  ja: '✦ 次の旅を計画する →',
+  zh: '✦ 规划你的下一次旅行 →',
+  ko: '✦ 다음 여행을 계획하세요 →',
+};
+
+// {destination} is a placeholder replaced at render time with the destination name
+const CTA_DESTINATION = {
+  en: '✦ Discover {destination} →',
+  es: '✦ Descubre {destination} →',
+  fr: '✦ Découvrir {destination} →',
+  ja: '✦ {destination} を旅する →',
+  zh: '✦ 探索{destination} →',
+  ko: '✦ {destination} 떠나기 →',
+};
+
+function getCtaText(ctaMap, substitutions) {
+  const lang   = currentLang in ctaMap ? currentLang : 'en';
+  let   text   = ctaMap[lang];
+  if (substitutions) {
+    Object.keys(substitutions).forEach(k => {
+      text = text.replace(`{${k}}`, substitutions[k]);
+    });
+  }
+  return text;
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 const LS_LANG_KEY = 'quote-widget:lang';
 const ROTATION_MS = 12000;
@@ -1213,12 +1256,12 @@ function renderQuoteContent(quote, fireGA) {
     const label = DEST_LABELS[quote.destinationSlug] || quote.destination;
     const url   = buildTripUrl(`quote_${quote.destinationSlug}`);
     ctaEl.href        = url;
-    ctaEl.textContent = `✦ Discover ${label} →`;
+    ctaEl.textContent = getCtaText(CTA_DESTINATION, { destination: label });
     ctaEl.dataset.ctaType = 'destination';
     ctaEl.style.display = '';
   } else {
     ctaEl.href        = buildTripUrl('quote_widget_cta');
-    ctaEl.textContent = '✦ Plan your next trip →';
+    ctaEl.textContent = getCtaText(CTA_FOOTER);
     ctaEl.dataset.ctaType = 'footer';
     ctaEl.style.display = '';
   }
@@ -1269,14 +1312,24 @@ function advance(dir) {
   goTo(currentIndex + dir, false);
 }
 
-// ── CTA click GA ─────────────────────────────────────────────────────────────
+// ── CTA click GA + just-in-time URL rebuild ───────────────────────────────────
 ctaEl.addEventListener('click', (e) => {
   e.stopPropagation(); // don't trigger stage click
   const quote = QUOTES[currentIndex];
+
+  // Rebuild URL at click time so it always reflects the CURRENT language,
+  // regardless of which language was active when the quote was rendered.
+  if (quote.destination && quote.destinationSlug) {
+    ctaEl.href = buildTripUrl(`quote_${quote.destinationSlug}`);
+  } else {
+    ctaEl.href = buildTripUrl('quote_widget_cta');
+  }
+
   gaEvent('quote_cta_click', {
     quote_id:    quote.id,
     destination: quote.destinationSlug || null,
     cta_type:    ctaEl.dataset.ctaType || 'footer',
+    language:    currentLang,
   });
 });
 
