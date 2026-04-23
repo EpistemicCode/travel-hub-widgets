@@ -6,6 +6,21 @@ can curl any widget and verify which release is live.
 
 ## [Unreleased]
 
+## [1.5.1] — 2026-04-23
+### Fixed
+- **flights.html + stays.html:** Expedia deep-links were routed through `prf.hn/click/camref:.../destination:...` (generic Partnerize), which redirected to Expedia's homepage instead of the search page. Switched to Expedia Group Creator Network's native endpoint: `https://expedia.com/affiliate?siteid=1&landingPage=<encoded-target>&camref=1100l5Jqrn`. Verified from EG widget's own output format.
+- **flights.html:** Expedia Flights-Search was concatenating adults + children counts (e.g. 6 adults + 1 child → 16 adults). Root cause: Expedia's `passengers` parser accepts `children:N` (count) OR `children:age,age` (ages list) ambiguously — when `,adults:6` followed `children:1`, the parser read `1,adults:6` as an ages list and folded values into adults. Fix: drop `children` from the Expedia URL entirely; send `adults:N,infantinlap:N` only. Trip.com URL still honors children cleanly. Children label in UI gets an asterisk tooltip explaining the limitation.
+- **flights.html:** Restored `fromType:AIRPORT,toType:AIRPORT` in leg segments — required for Expedia to resolve bare IATA codes. An earlier iteration removed them on a false hypothesis.
+- **flights.html:** Param order in Flights-Search URL matched to verified working reference: leg1, leg2, options, fromDate, toDate, d1, d2, passengers.
+
+### Added
+- **test-flight.html** — local-only side-by-side comparison page. Embeds EG's official search widget alongside the custom flights widget so URL output can be diffed against ground truth. Not linked from index.html, not for public use.
+- Console log on Expedia button clicks (`[stays→expedia]`, `[flights→expedia]`) — kept in as a permanent diagnostic; no PII, helps future debugging without a rebuild.
+
+### Notes
+- Affiliate attribution now routes through creator.expediagroup.com (EG Creator Network), not Partnerize. `camref=1100l5Jqrn` is the correct credential for this account.
+- `pubref` dropped — EG Creator's `/affiliate` endpoint uses `camref` alone. Per-destination reporting will need to come from `creativeref`/`adref` in a future iteration once those IDs are issued from the EG dashboard.
+
 ## [1.5.0] — 2026-04-22
 ### Added
 - **stays.html + flights.html:** Expedia (Partnerize) added as the primary affiliate — user clicks the accent "Search on Expedia →" button, falls back to secondary "or try Trip.com →" button. Two revenue streams from one form.

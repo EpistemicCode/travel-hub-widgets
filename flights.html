@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.5.0">
+<meta name="widget-version" content="1.5.1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -144,7 +144,7 @@
       </select>
     </div>
     <div class="field">
-      <label for="children">Children</label>
+      <label for="children" title="Children count is sent to Trip.com. For Expedia, add children on their page after landing.">Children *</label>
       <select id="children">
         <option selected>0</option><option>1</option><option>2</option><option>3</option>
       </select>
@@ -318,11 +318,14 @@
     const rExp = isRT && ret ? toExpDate(ret) : '';
     const kids = parseInt($("children").value, 10) || 0;
 
-    // Passengers: adults:N[,children:10,10,...],infantinlap:N
-    // (matches working reference URL format verified 2026-04-23)
-    let pax = `adults:${$("adults").value}`;
-    if (kids > 0) pax += ',children:' + Array(kids).fill('10').join(',');
-    pax += ',infantinlap:N';
+    // Passengers — adults only. We deliberately DON'T send children to
+    // Expedia because its parser accepts both `children:N` (count) and
+    // `children:age,age` (ages list) — when our URL has `children:1,adults:6`,
+    // Expedia reads `1,adults:6` as an ages list and concatenates values into
+    // adults=16. Users can add kids on Expedia's page after landing.
+    // The widget's `children` input is still honored for Trip.com (clean param).
+    const adults = parseInt($("adults").value, 10) || 1;
+    const pax = `adults:${adults},infantinlap:N`;
 
     // Keep fromType:AIRPORT/toType:AIRPORT — working reference URL uses them.
     const leg1 = `from:${from},to:${to},departure:${dExp}TANYT,fromType:AIRPORT,toType:AIRPORT`;
