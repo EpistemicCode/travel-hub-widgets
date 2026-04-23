@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.3.0">
+<meta name="widget-version" content="1.5.0">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -42,6 +42,8 @@
   .type-row label.radio { font-size: 11px; letter-spacing: 0.08em; color: var(--text-dim); display: flex; align-items: center; gap: 4px; cursor: pointer; margin: 0; text-transform: uppercase; }
   .type-row input[type=radio] { accent-color: var(--accent); width: auto; }
   .search-btn { width: 100%; font-weight: 500; margin-top: 2px; }
+  .btn-secondary { width: 100%; background: transparent; border: 1px solid var(--line); color: var(--text-dim); padding: 9px; border-radius: 5px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; font-family: inherit; margin-top: 4px; }
+  .btn-secondary:hover { color: var(--accent); border-color: var(--accent-line); }
   .ft { display: flex; justify-content: space-between; align-items: center; margin-top: auto; font-size: 11px; }
   .ft small.disclosure { margin: 0; }
   .hidden { display: none !important; }
@@ -149,10 +151,11 @@
     </div>
   </div>
 
-  <button class="search-btn" id="search">Search flights on Trip.com →</button>
+  <button class="search-btn" id="search-expedia">Search on Expedia →</button>
+  <button class="btn-secondary" id="search-tripcom">or try Trip.com →</button>
 
   <div class="ft">
-    <small style="color:var(--text-faint)">Flights via Trip.com global inventory</small>
+    <small style="color:var(--text-faint)">Expedia + Trip.com global inventory</small>
     <small class="disclosure">affiliate</small>
   </div>
 </div>
@@ -214,6 +217,16 @@
     YVR: "Vancouver", YYZ: "Toronto",
     SYD: "Sydney", MEL: "Melbourne", AKL: "Auckland",
   };
+
+  // Expedia affiliate deep-link — uses Expedia's own /affiliate endpoint,
+  // NOT Partnerize's prf.hn redirect (that one drops query params and lands
+  // on Expedia homepage). Verified from working EG-widget output 2026-04-23.
+  const EXPEDIA = {
+    camref: "1100l5Jqrn",
+    base:   "https://expedia.com/affiliate",
+  };
+  // Expedia cabin-class token mapping (differs from Trip.com's Y/S/C/F codes)
+  const EXP_CABIN = { Y: "economy", S: "premiumeconomy", C: "business", F: "first" };
   // ────────────────────────────────────────────────────────────────────
 
   const $ = (id) => document.getElementById(id);
@@ -287,21 +300,89 @@
     return `https://www.trip.com${path}?${q.toString()}`;
   }
 
-  $("search").addEventListener("click", () => {
+  // Build Expedia flight-search URL wrapped in Partnerize click tracking.
+  // Expedia's flight deep-link is fragile — it needs MM/DD/YYYY dates, fromType/toType
+  // hints so IATA codes resolve, AND several redundant date params (fromDate/toDate/d1/d2).
+  // Without fromType:AIRPORT, Expedia may drop the query and land on the homepage.
+  // Reference URL pattern from user's working search link (captured 2026-04-22).
+  const toExpDate = (iso) => { const [y, m, d] = iso.split('-'); return `${+m}/${+d}/${y}`; };
+  function buildExpediaUrl() {
+    const from = ($("from").value || "").toUpperCase().trim();
+    const to   = ($("to").value   || "").toUpperCase().trim();
+    const type = document.querySelector("input[name=type]:checked").value; // S or RT
+    const isRT = type === 'RT';
+    const cabin = EXP_CABIN[$("cabin").value] || "economy";
+    const depart = $("depart").value;   // YYYY-MM-DD
+    const ret    = $("return").value;
+    const dExp = toExpDate(depart);     // M/D/YYYY for Expedia
+    const rExp = isRT && ret ? toExpDate(ret) : '';
+    const kids = parseInt($("children").value, 10) || 0;
+
+    // Passengers: adults:N[,children:10,10,...],infantinlap:N
+    // (matches working reference URL format verified 2026-04-23)
+    let pax = `adults:${$("adults").value}`;
+    if (kids > 0) pax += ',children:' + Array(kids).fill('10').join(',');
+    pax += ',infantinlap:N';
+
+    // Keep fromType:AIRPORT/toType:AIRPORT — working reference URL uses them.
+    const leg1 = `from:${from},to:${to},departure:${dExp}TANYT,fromType:AIRPORT,toType:AIRPORT`;
+    const parts = [
+      'flight-type=on',
+      'mode=search',
+      `trip=${isRT ? 'roundtrip' : 'oneway'}`,
+      `leg1=${encodeURIComponent(leg1)}`,
+    ];
+    if (isRT) {
+      const leg2 = `from:${to},to:${from},departure:${rExp}TANYT,fromType:AIRPORT,toType:AIRPORT`;
+      parts.push(`leg2=${encodeURIComponent(leg2)}`);
+    }
+    // Param order matches working reference URL (2026-04-23):
+    // options, fromDate, toDate, d1, d2, passengers
+    parts.push(`options=${encodeURIComponent('cabinclass:' + cabin)}`);
+    parts.push(`fromDate=${encodeURIComponent(dExp)}`);
+    if (isRT) parts.push(`toDate=${encodeURIComponent(rExp)}`);
+    parts.push(`d1=${depart}`);
+    if (isRT) parts.push(`d2=${ret}`);
+    parts.push(`passengers=${encodeURIComponent(pax)}`);
+
+    const target = `https://www.expedia.com/Flights-Search?${parts.join('&')}`;
+    // Expedia's own /affiliate endpoint wraps clicks — NOT prf.hn (homepage bounce).
+    const aff = new URLSearchParams({
+      siteid: '1',
+      landingPage: target,
+      camref: EXPEDIA.camref,
+    });
+    return `${EXPEDIA.base}?${aff.toString()}`;
+  }
+
+  function validateRoute() {
     const fromVal = $("from").value.trim().toUpperCase();
     const toVal   = $("to").value.trim().toUpperCase();
     if (!fromVal || !toVal || fromVal.length !== 3 || toVal.length !== 3) {
       alert("Please enter valid 3-letter airport codes (e.g. SHA, DPS).");
-      return;
+      return null;
     }
-    const route = fromVal + '-' + toVal;
+    return { fromVal, toVal, route: fromVal + '-' + toVal };
+  }
 
-    if (window.gtag) {
-      gtag('event', 'search_intent', { widget: 'flights', route });
-      gtag('event', 'affiliate_click', { widget: 'flights', route });
-    }
+  function fireIntent(provider, route) {
+    if (!window.gtag) return;
+    gtag('event', 'search_intent',   { widget: 'flights', provider, route });
+    gtag('event', 'affiliate_click', { widget: 'flights', provider, route });
+  }
 
-    const sub2 = 'flights_' + fromVal + '-' + toVal;
+  $("search-expedia").addEventListener("click", () => {
+    const v = validateRoute(); if (!v) return;
+    fireIntent('expedia', v.route);
+    const u = buildExpediaUrl();
+    console.log('[flights→expedia]', u);
+    window.open(u, "_blank", "noopener,noreferrer");
+  });
+
+  $("search-tripcom").addEventListener("click", () => {
+    const v = validateRoute(); if (!v) return;
+    fireIntent('tripcom', v.route);
+    const sub2 = 'flights_' + v.fromVal + '-' + v.toVal;
     const url = buildTripUrl();
     window.open(url + '&trip_sub2=' + encodeURIComponent(sub2), "_blank", "noopener,noreferrer");
   });

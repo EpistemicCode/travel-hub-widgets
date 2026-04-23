@@ -6,6 +6,16 @@ can curl any widget and verify which release is live.
 
 ## [Unreleased]
 
+## [1.5.0] — 2026-04-22
+### Added
+- **stays.html + flights.html:** Expedia (Partnerize) added as the primary affiliate — user clicks the accent "Search on Expedia →" button, falls back to secondary "or try Trip.com →" button. Two revenue streams from one form.
+- New GA param `provider` on `search_intent` and `affiliate_click` events (`'expedia'` or `'tripcom'`) — lets you A/B-compare which affiliate converts per destination in GA4 Explore.
+- Expedia deep-links wrapped in Partnerize click tracking: `https://prf.hn/click/camref:1100l5Jqrn/pubref:<slug>/destination:<encoded-target>`
+- Agoda partner verification meta tag in `index.html` (pending site verification from Agoda dashboard).
+
+### Changed
+- Custom dimension registration: add `provider` to GA4 Admin custom-dimensions list.
+
 ## [1.4.0] — 2026-04-22
 ### Added
 - **map.html** — stylized route-map widget (480×320, fluid). Geocodes stops via Open-Meteo, renders dashed coral polyline + pulsing dot on active stop, tap opens Google Maps directions. Includes "Find stays in {active}" Trip.com affiliate link with `trip_sub2=map_<slug>` attribution.

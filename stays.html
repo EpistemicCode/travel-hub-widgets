@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.3.0">
+<meta name="widget-version" content="1.5.0">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -38,6 +38,8 @@
   .field label { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 3px; }
   .field input, .field select { width: 100%; }
   .search-btn { width: 100%; font-weight: 500; margin-top: 2px; }
+  .btn-secondary { width: 100%; background: transparent; border: 1px solid var(--line); color: var(--text-dim); padding: 9px; border-radius: 5px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; font-family: inherit; margin-top: 4px; }
+  .btn-secondary:hover { color: var(--accent); border-color: var(--accent-line); }
   .ft { display: flex; justify-content: space-between; align-items: center; margin-top: auto; font-size: 11px; }
   .ft a { color: var(--text-dim); text-decoration: none; border-bottom: 1px dashed var(--line); padding-bottom: 1px; }
   .ft a:hover { color: var(--accent); border-color: var(--accent-line); }
@@ -128,7 +130,8 @@
     </div>
   </div>
 
-  <button class="search-btn" id="search">Search stays on Trip.com →</button>
+  <button class="search-btn" id="search-expedia">Search on Expedia →</button>
+  <button class="btn-secondary" id="search-tripcom">or try Trip.com →</button>
 
   <div class="ft">
     <a href="#" id="browse" target="_blank" rel="noopener noreferrer sponsored">Browse all destinations →</a>
@@ -184,6 +187,14 @@
   const CITY_IDS = {
     "Bali": "17",
     "Shanghai": "2",
+  };
+
+  // Expedia affiliate deep-link — uses Expedia's own /affiliate endpoint,
+  // NOT Partnerize's prf.hn redirect (that one drops query params and lands
+  // on Expedia homepage). Verified from working EG deep-link 2026-04-23.
+  const EXPEDIA = {
+    camref: "1100l5Jqrn",
+    base:   "https://expedia.com/affiliate",
   };
   // ────────────────────────────────────────────────────────────────────
 
@@ -248,38 +259,65 @@
     return `https://www.trip.com/hotels/list?${q.toString()}`;
   }
 
-  $("search").addEventListener("click", () => {
+  // Build Expedia hotel-search URL wrapped in Partnerize click tracking.
+  // Destination URL format: /Hotel-Search?destination=<city>&startDate=<iso>&endDate=<iso>
+  //   &adults=<n>&rooms=<n>&children=<n> (optional)
+  function buildExpediaUrl() {
+    const city  = $("city").value.trim();
+    const curr  = $("currency").value;
+    const kids  = parseInt($("children").value, 10) || 0;
+    const exp = new URLSearchParams({
+      destination: city,
+      startDate:   $("checkin").value,
+      endDate:     $("checkout").value,
+      adults:      $("adults").value,
+      rooms:       $("rooms").value,
+      currency:    curr,
+    });
+    // Expedia's `children` param is a comma-separated ages list, not a count.
+    // Default each child to age 10 (same convention as Trip.com's `ages` param).
+    if (kids > 0) exp.set("children", Array(kids).fill("10").join(","));
+    const target = `https://www.expedia.com/Hotel-Search?${exp.toString()}`;
+    // Expedia's own /affiliate endpoint (NOT prf.hn — that lands on homepage).
+    const aff = new URLSearchParams({
+      siteid: '1',
+      landingPage: target,
+      camref: EXPEDIA.camref,
+    });
+    return `${EXPEDIA.base}?${aff.toString()}`;
+  }
+
+  function slugifyDest() {
+    return 'stays_' + $("city").value.trim().toLowerCase()
+      .replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 40);
+  }
+
+  function fireIntent(provider) {
     const cityVal   = $("city").value.trim();
     const checkinRaw  = $("checkin").value;
     const checkoutRaw = $("checkout").value;
     const adultsVal = parseInt($("adults").value, 10) || 2;
-    const daysAhead = checkinRaw
-      ? Math.round((new Date(checkinRaw) - new Date()) / 864e5)
-      : 0;
-    const tripLen = (checkinRaw && checkoutRaw)
-      ? Math.round((new Date(checkoutRaw) - new Date(checkinRaw)) / 864e5)
-      : 0;
-
+    const daysAhead = checkinRaw ? Math.round((new Date(checkinRaw) - new Date()) / 864e5) : 0;
+    const tripLen   = (checkinRaw && checkoutRaw) ? Math.round((new Date(checkoutRaw) - new Date(checkinRaw)) / 864e5) : 0;
     if (window.gtag) {
-      gtag('event', 'search_intent', {
-        widget: 'stays',
-        destination: cityVal,
-        days_ahead: daysAhead,
-        trip_length: tripLen,
-        adults: adultsVal,
-      });
-      gtag('event', 'affiliate_click', { widget: 'stays', destination: cityVal });
+      gtag('event', 'search_intent',   { widget: 'stays', provider, destination: cityVal, days_ahead: daysAhead, trip_length: tripLen, adults: adultsVal });
+      gtag('event', 'affiliate_click', { widget: 'stays', provider, destination: cityVal });
     }
+  }
 
-    // trip_sub2: slugify destination as stays_<cityname>
-    const slug = 'stays_' + cityVal.toLowerCase()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_]/g, '')
-      .slice(0, 40);
-
-    const url = buildTripUrl();
-    window.open(url + '&trip_sub2=' + encodeURIComponent(slug), "_blank", "noopener,noreferrer");
+  $("search-expedia").addEventListener("click", () => {
+    fireIntent('expedia');
+    const u = buildExpediaUrl();
+    console.log('[stays→expedia]', u);
+    window.open(u, "_blank", "noopener,noreferrer");
   });
+
+  $("search-tripcom").addEventListener("click", () => {
+    fireIntent('tripcom');
+    const url = buildTripUrl();
+    window.open(url + '&trip_sub2=' + encodeURIComponent(slugifyDest()), "_blank", "noopener,noreferrer");
+  });
+
   $("browse").addEventListener("click", (e) => {
     e.preventDefault();
     window.open(buildTripUrl({ browseAll: true }), "_blank", "noopener,noreferrer");
