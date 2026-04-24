@@ -266,25 +266,8 @@
         if (match) return {lat: match.lat, lon: match.lon, tz: match.tz, place: match.name};
       }
     } catch (e) { /* sandbox */ }
-    // (c) IP geo → snap to nearest CITIES entry (3s timeout so blocked/slow connections fall through fast)
-    try {
-      const ac = new AbortController();
-      const t = setTimeout(() => ac.abort(), 3000);
-      try {
-        const r = await fetch("https://ipapi.co/json/", { cache: "no-store", signal: ac.signal });
-        const j = await r.json();
-        if (!j.latitude || !j.longitude) throw new Error("no geo");
-        const city = nearestCity(j.latitude, j.longitude);
-        return {lat: city.lat, lon: city.lon, tz: city.tz, place: city.name};
-      } finally {
-        clearTimeout(t);
-      }
-    } catch (e) { /* fall through */ }
-    // (d) Browser Intl timezone → match CITIES entry
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const tzMatch = CITIES.find(c => c.tz === tz);
-    if (tzMatch) return {lat: tzMatch.lat, lon: tzMatch.lon, tz: tzMatch.tz, place: tzMatch.name};
-    return {lat: null, lon: null, tz, place: tz.split("/").pop().replace(/_/g, " ")};
+    // No preset — user must pick a city from the dropdown.
+    return null;
   }
 
   // ── City picker: populate <select> and wire up change handler ───────
@@ -313,9 +296,20 @@
       history.replaceState(null, '', location.pathname);
       try { localStorage.removeItem('nowin:place'); } catch (e) { /* sandbox */ }
       const loc = await resolveLocation();
-      buildPicker(loc.place);
-      await applyLocation(loc);
+      if (loc) { buildPicker(loc.place); await applyLocation(loc); }
+      else     { buildPicker(""); showEmpty(); }
     });
+  }
+
+  function showEmpty() {
+    $("place").textContent = "pick a city";
+    $("time").textContent = "--:--";
+    $("tz-short").textContent = "—";
+    $("temp").textContent = "--°";
+    $("condition").textContent = "select below";
+    $("sunset").textContent = "—";
+    $("humid").textContent  = "—";
+    if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
   }
 
   async function applyLocation(loc) {
@@ -336,8 +330,8 @@
 
   (async () => {
     const loc = await resolveLocation();
-    buildPicker(loc.place);
-    await applyLocation(loc);
+    if (loc) { buildPicker(loc.place); await applyLocation(loc); }
+    else     { buildPicker(""); showEmpty(); }
   })();
 </script>
 </body>

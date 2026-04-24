@@ -239,6 +239,14 @@
   if (params.get("to"))     $("to").value     = params.get("to").toUpperCase();
   if (params.get("depart")) $("depart").value = params.get("depart");
   if (params.get("return")) $("return").value = params.get("return");
+
+  // Block past dates in the native picker
+  const todayISO = today.toISOString().slice(0, 10);
+  $("depart").min = todayISO;
+  $("return").min = todayISO;
+  $("depart").addEventListener("change", () => {
+    if ($("depart").value) $("return").min = $("depart").value;
+  });
   if (params.get("adults"))   $("adults").value   = params.get("adults");
   if (params.get("children")) $("children").value = params.get("children");
   if (params.get("type") === "S") {
@@ -364,6 +372,15 @@
     if (!fromVal || !toVal || fromVal.length !== 3 || toVal.length !== 3) {
       alert("Please enter valid 3-letter airport codes (e.g. SHA, DPS).");
       return null;
+    }
+    const dep = $("depart").value;
+    const ret = $("return").value;
+    const type = document.querySelector("input[name=type]:checked").value;
+    if (!dep) { alert("Please pick a departure date."); $("depart").focus(); return null; }
+    if (dep < todayISO) { alert("Departure can't be in the past."); $("depart").focus(); return null; }
+    if (type === "RT") {
+      if (!ret) { alert("Please pick a return date."); $("return").focus(); return null; }
+      if (ret < dep) { alert("Return must be on or after departure."); $("return").focus(); return null; }
     }
     return { fromVal, toVal, route: fromVal + '-' + toVal };
   }

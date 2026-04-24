@@ -207,6 +207,23 @@
   if (params.get("city"))     $("city").value     = params.get("city");
   if (params.get("checkin"))  $("checkin").value  = params.get("checkin");
   if (params.get("checkout")) $("checkout").value = params.get("checkout");
+
+  // Block past dates in the native picker
+  const todayISO = today.toISOString().slice(0, 10);
+  $("checkin").min  = todayISO;
+  $("checkout").min = todayISO;
+  $("checkin").addEventListener("change", () => {
+    // Checkout must be after checkin
+    if ($("checkin").value) $("checkout").min = $("checkin").value;
+  });
+
+  function validateDates() {
+    const ci = $("checkin").value, co = $("checkout").value;
+    if (!ci || !co) { alert("Please pick check-in and check-out dates."); return false; }
+    if (ci < todayISO) { alert("Check-in can't be in the past."); $("checkin").focus(); return false; }
+    if (co <= ci)      { alert("Check-out must be after check-in."); $("checkout").focus(); return false; }
+    return true;
+  }
   if (params.get("adults"))   $("adults").value   = params.get("adults");
   if (params.get("children")) $("children").value = params.get("children");
   if (params.get("rooms"))    $("rooms").value    = params.get("rooms");
@@ -306,6 +323,7 @@
   }
 
   $("search-expedia").addEventListener("click", () => {
+    if (!validateDates()) return;
     fireIntent('expedia');
     const u = buildExpediaUrl();
     console.log('[stays→expedia]', u);
@@ -313,6 +331,7 @@
   });
 
   $("search-tripcom").addEventListener("click", () => {
+    if (!validateDates()) return;
     fireIntent('tripcom');
     const url = buildTripUrl();
     window.open(url + '&trip_sub2=' + encodeURIComponent(slugifyDest()), "_blank", "noopener,noreferrer");
