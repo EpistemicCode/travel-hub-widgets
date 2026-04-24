@@ -203,10 +203,10 @@
   const today = new Date();
   const plus = (d) => new Date(today.getTime() + d * 864e5).toISOString().slice(0, 10);
 
-  // Pre-fill from URL or defaults
-  $("city").value     = params.get("city")     || "Bali";
-  $("checkin").value  = params.get("checkin")  || plus(30);
-  $("checkout").value = params.get("checkout") || plus(37);
+  // Pre-fill from URL params only — no hardcoded defaults (fields start blank)
+  if (params.get("city"))     $("city").value     = params.get("city");
+  if (params.get("checkin"))  $("checkin").value  = params.get("checkin");
+  if (params.get("checkout")) $("checkout").value = params.get("checkout");
   if (params.get("adults"))   $("adults").value   = params.get("adults");
   if (params.get("children")) $("children").value = params.get("children");
   if (params.get("rooms"))    $("rooms").value    = params.get("rooms");

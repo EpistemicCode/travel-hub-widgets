@@ -234,11 +234,11 @@
   const today = new Date();
   const plus = (d) => new Date(today.getTime() + d * 864e5).toISOString().slice(0, 10);
 
-  // Defaults from query params or sensible fallbacks (Shanghai → Bali, 30 days out)
-  $("from").value   = (params.get("from")   || "SHA").toUpperCase();
-  $("to").value     = (params.get("to")     || "DPS").toUpperCase();
-  $("depart").value = params.get("depart") || plus(30);
-  $("return").value = params.get("return") || plus(37);
+  // Pre-fill from URL params only — no hardcoded defaults (fields start blank)
+  if (params.get("from"))   $("from").value   = params.get("from").toUpperCase();
+  if (params.get("to"))     $("to").value     = params.get("to").toUpperCase();
+  if (params.get("depart")) $("depart").value = params.get("depart");
+  if (params.get("return")) $("return").value = params.get("return");
   if (params.get("adults"))   $("adults").value   = params.get("adults");
   if (params.get("children")) $("children").value = params.get("children");
   if (params.get("type") === "S") {
