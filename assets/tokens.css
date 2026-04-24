@@ -3,9 +3,9 @@
  * Matches the Bali-moody dark hub in Travel Hub.html
  */
 :root {
-  --bg: #0f1114;
-  --card: #1a1e24;
-  --card-2: #1f232a;
+  --bg: #2F3438;
+  --card: #2F3438;
+  --card-2: #2F3438;
   --line: rgba(255, 255, 255, 0.07);
   --text: #ededea;
   --text-dim: #9a9a94;
@@ -28,7 +28,7 @@
 
 body {
   margin: 0;
-  background: transparent;
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
   font-size: 14px;
