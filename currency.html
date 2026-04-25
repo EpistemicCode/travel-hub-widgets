@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.2.1">
+<meta name="widget-version" content="1.2.2">
 <meta name="widget" content="currency">
 <!--
   currency.html — Wise Currency Converter Widget · v1.2.0
@@ -353,7 +353,7 @@
       id="wise-iframe"
       class="wise-iframe"
       title="Wise FX"
-      src="https://wise.com/gb/currency-converter/fx-widget/converter?sourceCurrency=USD&targetCurrency=EUR"
+      src="https://wise.com/gb/currency-converter/fx-widget/converter?sourceCurrency=USD&targetCurrency=EUR&ctaVariant=CONVERT&ctaLink=https%3A%2F%2Fwise.prf.hn%2Fclick%2Fcamref%3A1110lELMy%2Fpubref%3AIframeCTA"
       width="340" height="490"
       frameborder="0"
       allowtransparency="true"
@@ -496,9 +496,12 @@ function gaEvent(name, params) {
 }
 
 // ── Build iframe src ───────────────────────────────────────────────────────────
+// ctaLink routes the iframe's internal "Convert" CTA through Partnerize for affiliate
+// tracking. pubref:IframeCTA distinguishes in-iframe clicks from footer-CTA clicks.
 function buildIframeSrc(from, to, lang) {
   const locale = WISE_LOCALE_MAP[lang] || 'gb';
-  return `https://wise.com/${locale}/currency-converter/fx-widget/converter?sourceCurrency=${from}&targetCurrency=${to}`;
+  const ctaLink = encodeURIComponent(`https://wise.prf.hn/click/camref:${AFFILIATE_CAMREF}/pubref:IframeCTA`);
+  return `https://wise.com/${locale}/currency-converter/fx-widget/converter?sourceCurrency=${from}&targetCurrency=${to}&ctaVariant=CONVERT&ctaLink=${ctaLink}`;
 }
 
 // ── Build compare href (just-in-time — always fresh on click) ──────────────────
