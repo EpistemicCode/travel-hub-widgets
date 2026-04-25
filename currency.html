@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.2.0">
+<meta name="widget-version" content="1.2.1">
 <meta name="widget" content="currency">
 <!--
   currency.html — Wise Currency Converter Widget · v1.2.0
@@ -11,9 +11,7 @@
   Shows live mid-market rates via Wise iframe.
   Compare CTA opens wise.com/compare/ deep-link in a new tab.
 
-  !! AFFILIATE CODE — swap before launch !!
-  Footer CTA referral link uses code "EPISTEMIC".
-  Replace "EPISTEMIC" in AFFILIATE_CODE const below with your real Wise referral code.
+  Affiliate: Wise via Partnerize (camref:1110lELMy). Footer CTA tracks via partnerize click URL.
 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
@@ -379,7 +377,7 @@
   <!-- Footer CTA — referral link (send money signup) -->
   <div class="widget-footer">
     <a class="footer-cta" id="footer-cta"
-       href="https://wise.com/invite/dic/EPISTEMIC?utm_source=travel-hub&utm_medium=widget&utm_campaign=currency_compare"
+       href="https://wise.prf.hn/click/camref:1110lELMy/pubref:CurrencyWidget"
        target="_blank" rel="noopener noreferrer sponsored">
       &#x2726; Send money abroad with Wise &rarr;
     </a>
@@ -417,9 +415,9 @@ function showFallback(code) {
 }
 
 // ── Config ─────────────────────────────────────────────────────────────────────
-// !! SWAP THIS before launch — replace EPISTEMIC with your real Wise referral code !!
-const AFFILIATE_CODE = 'EPISTEMIC';
-const AFFILIATE_BASE = `https://wise.com/invite/dic/${AFFILIATE_CODE}?utm_source=travel-hub&utm_medium=widget&utm_campaign=currency_compare`;
+// Wise affiliate via Partnerize. pubref distinguishes traffic sources for revenue attribution.
+const AFFILIATE_CAMREF = '1110lELMy';
+const AFFILIATE_BASE = `https://wise.prf.hn/click/camref:${AFFILIATE_CAMREF}/pubref:CurrencyWidget`;
 
 // LocalStorage keys
 const LS_LANG_KEY   = 'quote-lang';      // shared with quote.html so language syncs
