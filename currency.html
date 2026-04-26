@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.3.0">
+<meta name="widget-version" content="1.3.1">
 <meta name="widget" content="currency">
 <!--
   currency.html — Wise Currency Converter Widget · v1.2.0
@@ -74,7 +74,7 @@
     position: absolute; inset: 0;
     overflow: hidden;
     display: flex; flex-direction: column;
-    background: #2F3438;
+    background: #191919;
   }
 
   /* ── Language pill row (exact quote.html pattern) ── */
@@ -209,7 +209,8 @@
   }
 
   .wise-iframe {
-    width: 340px; height: 490px;
+    width: 100%; height: 490px;
+    max-width: 340px;
     border: none;
     display: block;
     opacity: 1;
@@ -381,8 +382,8 @@
       id="wise-iframe"
       class="wise-iframe"
       title="Wise FX"
-      src="https://wise.com/gb/currency-converter/fx-widget/converter?sourceCurrency=USD&targetCurrency=EUR&ctaVariant=CONVERT&ctaLink=https%3A%2F%2Fwise.prf.hn%2Fclick%2Fcamref%3A1110lELMy%2Fpubref%3AIframeCTA%2Far%3Atravelplan"
-      width="340" height="490"
+      src="https://wise.com/gb/currency-converter/fx-widget/converter?sourceCurrency=USD&targetCurrency=EUR&ctaVariant=GET_STARTED&ctaLink=https%3A%2F%2Fwise.prf.hn%2Fclick%2Fcamref%3A1110lELMy%2Fpubref%3Awidget%2Far%3Atravelplan"
+      width="100%" height="490"
       frameborder="0"
       allowtransparency="true"
       loading="lazy">
@@ -544,8 +545,8 @@ function gaEvent(name, params) {
 // tracking. pubref:IframeCTA distinguishes in-iframe clicks from footer-CTA clicks.
 function buildIframeSrc(from, to, lang) {
   const locale = WISE_LOCALE_MAP[lang] || 'gb';
-  const ctaLink = encodeURIComponent(`https://wise.prf.hn/click/camref:${AFFILIATE_CAMREF}/pubref:IframeCTA/ar:travelplan`);
-  return `https://wise.com/${locale}/currency-converter/fx-widget/converter?sourceCurrency=${from}&targetCurrency=${to}&ctaVariant=CONVERT&ctaLink=${ctaLink}`;
+  const ctaLink = encodeURIComponent(`https://wise.prf.hn/click/camref:${AFFILIATE_CAMREF}/pubref:widget/ar:travelplan`);
+  return `https://wise.com/${locale}/currency-converter/fx-widget/converter?sourceCurrency=${from}&targetCurrency=${to}&ctaVariant=GET_STARTED&ctaLink=${ctaLink}`;
 }
 
 // ── Build compare href (just-in-time — always fresh on click) ──────────────────
@@ -768,6 +769,16 @@ try {
 } catch(err) {
   showFallback('init');
 }
+
+// ── Wise postMessage auto-resize ────────────────────────────────────────────────
+const wiseFrame = document.getElementById('wise-iframe');
+window.addEventListener('message', (message) => {
+  if (!wiseFrame || message.source !== wiseFrame.contentWindow) return;
+  if (message.data && typeof message.data.height === 'number') {
+    wiseFrame.setAttribute('height', message.data.height);
+    wiseFrame.style.height = message.data.height + 'px';
+  }
+});
 </script>
 </body>
 </html>
