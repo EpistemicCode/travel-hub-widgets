@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.0.2">
+<meta name="widget-version" content="1.1.0">
 <meta name="widget" content="quote">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
@@ -71,6 +71,7 @@
     display: flex; flex-direction: column;
     background: #191919;
     overflow: hidden;
+    container-type: inline-size;
   }
 
   /* ── Language pill row ── */
@@ -101,7 +102,7 @@
     flex: 1; position: relative; z-index: 5;
     display: flex; flex-direction: column;
     justify-content: center; align-items: center;
-    padding: 20px 32px 8px;
+    padding: clamp(16px, 4cqi, 48px) clamp(16px, 4cqi, 48px) 8px;
     cursor: pointer;
     user-select: none;
     min-height: 0;
@@ -112,7 +113,7 @@
     position: absolute;
     top: 12px; left: 24px;
     font-family: var(--font-serif);
-    font-size: clamp(72px, 12vw, 110px);
+    font-size: clamp(60px, 18cqi, 160px);
     line-height: 1;
     color: var(--glyph);
     pointer-events: none;
@@ -126,7 +127,7 @@
     position: relative; z-index: 2;
     display: flex; flex-direction: column;
     align-items: center; text-align: center;
-    max-width: 600px; width: 100%;
+    max-width: clamp(280px, 80cqi, 700px); width: 100%;
     transition: opacity var(--transition), transform var(--transition);
   }
   .quote-card.fade-out {
@@ -142,7 +143,7 @@
   .quote-text {
     font-family: var(--font-serif);
     font-style: italic;
-    font-size: clamp(18px, 3.2vw, 24px);
+    font-size: clamp(16px, 4.5cqi, 36px);
     line-height: 1.62;
     color: var(--text);
     letter-spacing: 0.01em;
@@ -153,7 +154,7 @@
   .quote-author {
     display: flex; align-items: center; gap: 8px;
     font-family: var(--font-ui);
-    font-size: 11px;
+    font-size: clamp(9px, 1.4cqi, 14px);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--text-dim);
@@ -170,7 +171,7 @@
     margin-top: 16px;
     font-family: var(--font-serif);
     font-style: italic;
-    font-size: 13px;
+    font-size: clamp(11px, 1.8cqi, 16px);
     color: var(--accent);
     text-decoration: none;
     letter-spacing: 0.02em;
@@ -268,13 +269,10 @@
   }
 
   /* ── Responsive tweaks ── */
-  @media (max-width: 460px) {
-    .quote-stage { padding: 16px 20px 6px; }
-    .deco-glyph { font-size: 64px; top: 8px; left: 14px; }
-    .quote-text { font-size: 17px; }
-  }
-  @media (min-width: 800px) {
-    .quote-text { font-size: 24px; }
+  /* clamp()+cqi values above handle fluid scaling; only keep layout guards */
+  @media (max-width: 340px) {
+    .lang-bar { flex-wrap: wrap; padding: 6px 8px 0; }
+    .lang-btn { padding: 2px 5px; font-size: 9px; }
   }
 </style>
 </head>
