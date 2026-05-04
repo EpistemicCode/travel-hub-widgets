@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.5.1">
+<meta name="widget-version" content="1.6.0">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -13,7 +13,7 @@
 </script>
 <title>Find a stay</title>
 <!--
-  stays.html — Trip.com hotel search widget · 480 × 360
+  stays.html — Trip.com + Agoda hotel search widget · 480 × 360
   Query params (all optional):
     ?city=Bali&checkin=2026-05-01&checkout=2026-05-08&adults=2&children=0
 
@@ -23,6 +23,7 @@
   standard Trip.com search params.
 
   Affiliate tracking (Allianceid/SID/trip_sub1/trip_sub3) rides every URL.
+  Agoda affiliate via cid=1963851 (direct partner program).
 -->
 <link rel="stylesheet" href="assets/tokens.css">
 <style>
@@ -40,6 +41,8 @@
   .search-btn { width: 100%; font-weight: 500; margin-top: 2px; }
   .btn-secondary { width: 100%; background: transparent; border: 1px solid var(--line); color: var(--text-dim); padding: 9px; border-radius: 5px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; font-family: inherit; margin-top: 4px; }
   .btn-secondary:hover { color: var(--accent); border-color: var(--accent-line); }
+  .btn-agoda { width: 100%; background: transparent; border: 1px solid var(--accent-line); color: var(--accent); padding: 9px; border-radius: 5px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; font-family: inherit; margin-top: 4px; opacity: 0.8; }
+  .btn-agoda:hover { opacity: 1; }
   .ft { display: flex; justify-content: space-between; align-items: center; margin-top: auto; font-size: 11px; }
   .ft a { color: var(--text-dim); text-decoration: none; border-bottom: 1px dashed var(--line); padding-bottom: 1px; }
   .ft a:hover { color: var(--accent); border-color: var(--accent-line); }
@@ -132,6 +135,7 @@
 
   <button class="search-btn" id="search-expedia">Search on Expedia →</button>
   <button class="btn-secondary" id="search-tripcom">or try Trip.com →</button>
+  <button class="btn-agoda" id="search-agoda">Or compare on Agoda →</button>
 
   <div class="ft">
     <a href="#" id="browse" target="_blank" rel="noopener noreferrer sponsored">Browse all destinations →</a>
@@ -304,6 +308,24 @@
     return `${EXPEDIA.base}?${aff.toString()}`;
   }
 
+  function buildAgodaUrl() {
+    const city     = $("city").value.trim();
+    const curr     = $("currency").value;
+    const kids     = parseInt($("children").value, 10) || 0;
+    const q = new URLSearchParams({
+      cid:          "1963851",
+      pcs:          "1",
+      city:         city,
+      checkIn:      $("checkin").value,
+      checkOut:     $("checkout").value,
+      rooms:        $("rooms").value,
+      adults:       $("adults").value,
+      children:     String(kids),
+      currencyCode: curr,
+    });
+    return `https://www.agoda.com/partners/partnersearch.aspx?${q.toString()}`;
+  }
+
   function slugifyDest() {
     return 'stays_' + $("city").value.trim().toLowerCase()
       .replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 40);
@@ -333,8 +355,36 @@
   $("search-tripcom").addEventListener("click", () => {
     if (!validateDates()) return;
     fireIntent('tripcom');
+    if (window.gtag) {
+      gtag('event', 'tripcom_search', {
+        city:     $("city").value.trim(),
+        checkin:  $("checkin").value,
+        checkout: $("checkout").value,
+        adults:   $("adults").value,
+        children: $("children").value,
+        currency: $("currency").value,
+        source:   'tripcom',
+      });
+    }
     const url = buildTripUrl();
     window.open(url + '&trip_sub2=' + encodeURIComponent(slugifyDest()), "_blank", "noopener,noreferrer");
+  });
+
+  $("search-agoda").addEventListener("click", () => {
+    if (!validateDates()) return;
+    fireIntent('agoda');
+    if (window.gtag) {
+      gtag('event', 'agoda_search', {
+        city:     $("city").value.trim(),
+        checkin:  $("checkin").value,
+        checkout: $("checkout").value,
+        adults:   $("adults").value,
+        children: $("children").value,
+        currency: $("currency").value,
+        source:   'agoda',
+      });
+    }
+    window.open(buildAgodaUrl(), "_blank", "noopener,noreferrer");
   });
 
   $("browse").addEventListener("click", (e) => {

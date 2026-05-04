@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="widget-version" content="1.0.0">
+<title>Hotels on map</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-D8GYSB22FR', { anonymize_ip: true, send_page_view: false });
+</script>
+<!--
+  hotels-map.html — Agoda interactive hotels map · 480 × 540 (fluid)
+  Query params (all optional):
+    ?dest=Paris,France&lat=48.853495&lon=2.348392
+    &checkin=2026-05-05&checkout=2026-05-11
+    &adults=2&children=0&rooms=1&radius=5
+    &currency=USD&language=en-us&city=15470
+
+  Behavior:
+    - Renders Agoda's official interactive map widget (iframe) for the
+      given coordinates. Hotels are pin-marked; users can browse/book
+      directly on the map.
+    - Affiliate cid=1963851 rides every booking.
+    - Default = Paris if no params given.
+
+  GA events: widget_view, hotels_map_view
+-->
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: transparent; }
+  .wrap { position: absolute; inset: 0; box-sizing: border-box; padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 8px; background: var(--card); }
+  .hdr { display: flex; justify-content: space-between; align-items: baseline; }
+  .hdr h2 { font-family: var(--font-display); font-size: 17px; font-style: italic; color: var(--accent); margin: 0; line-height: 1.1; }
+  .hdr .caps { font-size: 9px; color: var(--text-faint); }
+  .map-host { flex: 1; min-height: 0; position: relative; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); background: var(--card-2); }
+  .map-host > div { width: 100% !important; height: 100% !important; }
+  .ft { display: flex; justify-content: space-between; align-items: center; font-size: 9px; }
+  .ft .meta { color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
+  .ft .disclosure { color: var(--text-faint); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="grain"></div>
+  <div class="hdr">
+    <h2 id="title">Hotels in Paris</h2>
+    <span class="caps" id="meta">— · —</span>
+  </div>
+  <div class="map-host">
+    <div id="agoda-map" style="width:100%;height:100%;"></div>
+  </div>
+  <div class="ft">
+    <span class="meta" id="radius-label">5 km radius</span>
+    <small class="disclosure">affiliate</small>
+  </div>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const get = (k, d) => params.get(k) || d;
+
+  const today = new Date();
+  const plus = (d) => new Date(today.getTime() + d * 864e5).toISOString().slice(0, 10);
+
+  // Static defaults (used if all detection fails)
+  const FALLBACK = { lat: 48.853495, lon: 2.348392, dest: 'Paris, France' };
+
+  const checkIn   = get('checkin',  plus(30));
+  const checkOut  = get('checkout', plus(35));
+  const adults    = parseInt(get('adults',   '2'), 10);
+  const children  = parseInt(get('children', '0'), 10);
+  const rooms     = parseInt(get('rooms',    '1'), 10);
+  const radius    = parseInt(get('radius',   '5'), 10);
+  const currency  = get('currency', 'USD');
+  const language  = get('language', 'en-us');
+  const cityId    = parseInt(get('city', '0'), 10) || undefined;
+
+  // Resolve location: explicit URL params > IP geolocation > Paris fallback
+  async function resolveLocation() {
+    const explicitLat = parseFloat(params.get('lat'));
+    const explicitLon = parseFloat(params.get('lon'));
+    const explicitDest = params.get('dest');
+    if (!isNaN(explicitLat) && !isNaN(explicitLon)) {
+      return { lat: explicitLat, lon: explicitLon, dest: explicitDest || 'your location' };
+    }
+    // IP geo via ipapi.co (free, no-auth, same source as nowin.html)
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 3500);
+      const r = await fetch('https://ipapi.co/json/', { signal: ctrl.signal });
+      clearTimeout(t);
+      if (r.ok) {
+        const j = await r.json();
+        if (j.latitude != null && j.longitude != null) {
+          const city = j.city || j.region || 'your area';
+          const country = j.country_name || '';
+          return {
+            lat:  j.latitude,
+            lon:  j.longitude,
+            dest: country ? `${city}, ${country}` : city,
+          };
+        }
+      }
+    } catch (_) { /* fall through */ }
+    return FALLBACK;
+  }
+
+  const nights = Math.max(1, Math.round((new Date(checkOut) - new Date(checkIn)) / 864e5));
+  $('meta').textContent = `${nights} night${nights === 1 ? '' : 's'} · ${adults} adult${adults === 1 ? '' : 's'}`;
+  $('radius-label').textContent = `${radius} km radius`;
+
+  // GA fire-and-forget
+  try {
+    if (window.gtag) gtag('event', 'widget_view', { widget: 'hotels-map' });
+  } catch(_) {}
+
+  (async () => {
+    const loc = await resolveLocation();
+    $('title').textContent = 'Hotels in ' + loc.dest.split(',')[0].trim();
+
+    try {
+      if (window.gtag) gtag('event', 'hotels_map_view', { widget: 'hotels-map', destination: loc.dest });
+    } catch(_) {}
+
+    // ── Agoda map widget config ─────────────────────────────────────
+    // refKey: per-widget reference key from Agoda's tool.
+    // cid=1963851: your affiliate ID — earns commission on bookings.
+    const settings = {
+      refKey:           'QivHIIaWdu/EtPeNHpATlA==',
+      cid:              1963851,
+      ver:              1,
+      latitude:         loc.lat,
+      longitude:        loc.lon,
+      destination:      loc.dest,
+      checkIn:          checkIn,
+      checkOut:         checkOut,
+      numberOfAdult:    adults,
+      numberOfChildren: children,
+      numberOfRoom:     rooms,
+      searchRadius:     radius,
+      currency:         currency,
+      language:         language,
+    };
+    if (cityId) settings.city = cityId;
+
+    const s = document.createElement('script');
+    s.src = '//cdn0.agoda.net/images/sherpa/js/sherpa_init_map_02.min.js';
+    s.async = true;
+    s.onload = () => {
+      try {
+        new AgdMaps('agoda-map', settings).render();
+      } catch (e) {
+        console.warn('Agoda map render failed:', e);
+        $('agoda-map').innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-faint);font-size:10px;letter-spacing:0.14em;text-transform:uppercase">Map unavailable</div>';
+      }
+    };
+    s.onerror = () => {
+      $('agoda-map').innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-faint);font-size:10px;letter-spacing:0.14em;text-transform:uppercase">Couldn\'t load map</div>';
+    };
+    document.head.appendChild(s);
+  })();
+</script>
+</body>
+</html>

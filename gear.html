@@ -1,0 +1,1436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="widget-version" content="1.0.0">
+<meta name="widget" content="gear">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-D8GYSB22FR', { anonymize_ip: true, send_page_view: false });
+</script>
+<title>Travel Gear</title>
+<!--
+  gear.html — Rotating Travel Gear Widget · fluid (fills any iframe size)
+  Embeds cleanly in Notion. No external dependencies except Google Fonts.
+  Amazon affiliate: fill AMAZON_LINK_PLACEHOLDER and AMAZON_FOOTER_PLACEHOLDER per item.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-start: #0d1117;
+    --bg-end:   #0f1114;
+    --card:     #1a1e24;
+    --line:     rgba(255,255,255,0.07);
+    --text:     #ededea;
+    --text-dim: #9a9a94;
+    --text-faint: #646460;
+    --accent:   #d4af9a;        /* muted warm gold/sand */
+    --accent-soft: rgba(212,175,154,0.12);
+    --accent-line: rgba(212,175,154,0.3);
+    --glyph:    rgba(212,175,154,0.18);
+    --pink:     #c97a6a;        /* accent line */
+    --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --font-ui:  system-ui, -apple-system, sans-serif;
+    --radius:   10px;
+    --transition: 600ms ease;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    margin: 0; padding: 0;
+    overflow: hidden;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── Grain overlay ── */
+  .grain {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 0.045;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/></svg>");
+    z-index: 0;
+  }
+
+  /* ── Widget shell ── */
+  .quote-widget {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    background: #191919;
+    overflow: hidden;
+    container-type: inline-size;
+  }
+
+  /* ── Language pill row ── */
+  .lang-bar {
+    position: relative; z-index: 10;
+    display: flex; justify-content: flex-end; align-items: center;
+    padding: 10px 14px 0;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .lang-btn {
+    background: none; border: none; border-radius: 20px;
+    padding: 3px 8px;
+    font-family: var(--font-ui);
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .lang-btn:hover { color: var(--text-dim); background: rgba(255,255,255,0.05); }
+  .lang-btn.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  /* ── Main stage — clicks here = next ── */
+  .quote-stage {
+    flex: 1; position: relative; z-index: 5;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: clamp(16px, 4cqi, 48px) clamp(16px, 4cqi, 48px) 8px;
+    cursor: pointer;
+    user-select: none;
+    min-height: 0;
+  }
+
+  /* ── Decorative glyph (✦ replaces the large " of quote widget) ── */
+  .deco-glyph {
+    position: absolute;
+    top: 12px; left: 24px;
+    font-family: var(--font-serif);
+    font-size: clamp(20px, 5cqi, 40px);
+    line-height: 1;
+    color: var(--accent);
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    font-style: normal;
+    opacity: 0.55;
+  }
+
+  /* ── Card (fade-able content) ── */
+  .quote-card {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+    max-width: clamp(280px, 80cqi, 700px); width: 100%;
+    transition: opacity var(--transition), transform var(--transition);
+  }
+  .quote-card.fade-out {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .quote-card.fade-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Category label (e.g. TECH · ITEM 14 / 50) ── */
+  .item-category {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-ui);
+    font-size: clamp(8px, 1.1cqi, 11px);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    font-variant: small-caps;
+  }
+  .category-dash {
+    display: inline-block;
+    width: 14px; height: 1px;
+    background: var(--pink);
+    flex-shrink: 0;
+  }
+
+  /* ── Item name (large serif italic — same scale as quote-text) ── */
+  .quote-text {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(16px, 4.5cqi, 36px);
+    line-height: 1.52;
+    color: var(--text);
+    letter-spacing: 0.01em;
+    margin-bottom: 16px;
+  }
+
+  /* ── Why-line (smaller, muted, italic — same scale as quote-author) ── */
+  .quote-author {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(10px, 1.6cqi, 15px);
+    letter-spacing: 0.03em;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  /* ── CTA button ── */
+  .quote-cta {
+    margin-top: 16px;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(11px, 1.8cqi, 16px);
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+    display: inline-block;
+    cursor: pointer;
+  }
+  .quote-cta:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
+  /* Pending state: placeholder not yet filled */
+  .quote-cta.cta-pending {
+    opacity: 0.35;
+    cursor: default;
+    text-decoration: none !important;
+    pointer-events: none;
+  }
+
+  /* ── Nav arrows ── */
+  .nav-arrows {
+    position: absolute; inset: 0; z-index: 8;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 8px;
+    pointer-events: none;
+  }
+  .nav-btn {
+    pointer-events: all;
+    background: none; border: none;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-faint);
+    font-size: 18px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.25s, background 0.15s, color 0.15s;
+  }
+  .quote-widget:hover .nav-btn { opacity: 1; }
+  .nav-btn:hover { background: rgba(255,255,255,0.07); color: var(--accent); }
+  .nav-btn { z-index: 9; }
+
+  /* ── Progress dots ── */
+  .progress-bar {
+    position: relative; z-index: 10;
+    display: flex; justify-content: center; align-items: center;
+    gap: 5px;
+    padding: 4px 14px 6px;
+    flex-shrink: 0;
+  }
+  .dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    transition: background 0.3s, transform 0.3s;
+    cursor: pointer;
+  }
+  .dot.active {
+    background: var(--accent);
+    transform: scale(1.5);
+  }
+
+  /* ── Timer bar ── */
+  .timer-track {
+    position: relative; z-index: 10;
+    height: 1px;
+    background: var(--line);
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .timer-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--pink), var(--accent));
+    transition: width linear;
+  }
+
+  /* ── Footer ── */
+  .widget-footer {
+    position: relative; z-index: 10;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 14px 8px;
+    flex-shrink: 0;
+  }
+  .footer-cta {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(9px, 1.4cqi, 13px);
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    cursor: pointer;
+  }
+  .footer-cta:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
+  .footer-cta.cta-pending {
+    opacity: 0.25;
+    cursor: default;
+    text-decoration: none !important;
+    pointer-events: none;
+  }
+  .disclosure {
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  /* ── Fallback / error state ── */
+  .fallback {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 32px; text-align: center; gap: 12px;
+  }
+  .fallback-text {
+    font-family: var(--font-serif); font-style: italic;
+    font-size: 20px; color: var(--text); line-height: 1.6;
+  }
+  .fallback-author {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ── Responsive tweaks ── */
+  @media (max-width: 340px) {
+    .lang-bar { flex-wrap: wrap; padding: 6px 8px 0; }
+    .lang-btn { padding: 2px 5px; font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="quote-widget" id="widget">
+  <div class="grain"></div>
+
+  <!-- Language selector -->
+  <div class="lang-bar" id="lang-bar">
+    <button class="lang-btn active" data-lang="en">EN</button>
+    <button class="lang-btn" data-lang="es">ES</button>
+    <button class="lang-btn" data-lang="fr">FR</button>
+    <button class="lang-btn" data-lang="ja">JA</button>
+    <button class="lang-btn" data-lang="zh">中文</button>
+    <button class="lang-btn" data-lang="ko">한국어</button>
+  </div>
+
+  <!-- Decorative glyph -->
+  <div class="deco-glyph" aria-hidden="true">✦</div>
+
+  <!-- Nav arrows (outside stage so clicks don't double-fire) -->
+  <div class="nav-arrows">
+    <button class="nav-btn" id="btn-prev" aria-label="Previous item">&#8249;</button>
+    <button class="nav-btn" id="btn-next" aria-label="Next item">&#8250;</button>
+  </div>
+
+  <!-- Item stage — click = next -->
+  <div class="quote-stage" id="quote-stage" role="region" aria-live="polite" aria-label="Travel gear item">
+    <div class="quote-card fade-in" id="quote-card">
+      <div class="item-category" id="item-category">
+        <span class="category-dash"></span>
+        <span id="category-label"></span>
+      </div>
+      <p class="quote-text" id="quote-text"></p>
+      <div class="quote-author" id="quote-author"></div>
+      <!-- Per-item CTA: shows disabled (cta-pending) when amazonUrl === 'AMAZON_LINK_PLACEHOLDER' -->
+      <a class="quote-cta" id="quote-cta" href="#" target="_blank" rel="noopener noreferrer sponsored"></a>
+    </div>
+  </div>
+
+  <!-- Progress dots -->
+  <div class="progress-bar" id="progress-bar"></div>
+
+  <!-- Timer bar -->
+  <div class="timer-track">
+    <div class="timer-fill" id="timer-fill"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="widget-footer">
+    <!-- Footer CTA: generic Amazon search link — fill AMAZON_FOOTER_PLACEHOLDER below -->
+    <a class="footer-cta" id="footer-cta" href="#" target="_blank" rel="noopener noreferrer sponsored"></a>
+    <span class="disclosure">affiliate</span>
+  </div>
+</div>
+
+<script>
+// ── Error boundary ────────────────────────────────────────────────────────────
+window.addEventListener('error', (e) => { if (e.error) showFallback(); });
+window.addEventListener('unhandledrejection', (e) => {
+  const msg = String(e.reason && (e.reason.message || e.reason));
+  if (/fetch|network|failed|abort/i.test(msg)) showFallback();
+});
+
+function showFallback() {
+  try {
+    document.getElementById('widget').innerHTML = `
+      <div class="grain"></div>
+      <div class="fallback">
+        <div class="deco-glyph" style="position:relative;top:auto;left:auto;font-size:32px;opacity:0.4;">✦</div>
+        <p class="fallback-text">Anker 737 Power Bank</p>
+        <div class="fallback-author">The battery pack that never lets you down</div>
+      </div>`;
+  } catch(_) {}
+}
+
+// ── Amazon footer URL — fill this once for a generic "travel gear" search ─────
+// User: replace 'AMAZON_FOOTER_PLACEHOLDER' with your affiliate search URL.
+const AMAZON_FOOTER_URL = 'AMAZON_FOOTER_PLACEHOLDER';
+
+// ── CTA translated strings ────────────────────────────────────────────────────
+const CTA_ITEM = {
+  en: '→ See on Amazon',
+  es: '→ Ver en Amazon',
+  fr: '→ Voir sur Amazon',
+  ja: '→ Amazonで見る',
+  zh: '→ 在亚马逊查看',
+  ko: '→ Amazon에서 보기',
+};
+
+const CTA_FOOTER = {
+  en: '✦ Shop travel gear →',
+  es: '✦ Comprar equipo de viaje →',
+  fr: '✦ Voir tout l\'équipement →',
+  ja: '✦ 旅行用品をすべて見る →',
+  zh: '✦ 浏览旅行装备 →',
+  ko: '✦ 여행용품 모두 보기 →',
+};
+
+// ── Gear data — 50 items ──────────────────────────────────────────────────────
+// amazonUrl: replace each 'AMAZON_LINK_PLACEHOLDER' with your affiliate link per item.
+const QUOTES = [
+  // ── Tech (1–10) ──────────────────────────────────────────────────────────────
+  {
+    id: 1,
+    category: 'Tech',
+    name: 'Anker 737 Power Bank (24K mAh, PD 140W)',
+    why: {
+      en: 'Charges a MacBook full twice and a phone six times — one brick to rule every device.',
+      es: 'Carga un MacBook dos veces completas y un teléfono seis veces: un solo bloque para todos tus dispositivos.',
+      fr: 'Recharge un MacBook deux fois et un téléphone six fois — une seule brique pour tout gérer.',
+      ja: 'MacBookを2回フル充電、スマホを6回充電できる——あらゆるデバイスを支える一台。',
+      zh: '能给MacBook充满两次电，手机充六次——一块砖搞定所有设备。',
+      ko: 'MacBook을 두 번 완충하고 스마트폰을 여섯 번 충전할 수 있는 — 모든 기기를 위한 단 하나의 보조배터리.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 2,
+    category: 'Tech',
+    name: 'EPICKA Universal Travel Adapter',
+    why: {
+      en: 'Works in 150+ countries with four USB ports built in — plug in anywhere without a second thought.',
+      es: 'Funciona en más de 150 países con cuatro puertos USB integrados: conéctate en cualquier lugar sin pensarlo.',
+      fr: 'Compatible avec plus de 150 pays et quatre ports USB intégrés — branchez n\'importe où sans y penser.',
+      ja: '150か国以上に対応、4つのUSBポート内蔵——どこでも迷わず差し込める。',
+      zh: '适用于150多个国家，内置四个USB接口——插上就走，无需多想。',
+      ko: '150개국 이상에서 사용 가능하고 USB 포트 4개 내장 — 어디서든 망설임 없이 꽂으면 된다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 3,
+    category: 'Tech',
+    name: 'Apple AirTag (4-pack)',
+    why: {
+      en: 'Slip one into every bag and never spend another layover haunting the baggage carousel.',
+      es: 'Pon uno en cada maleta y olvídate de pasarte la escala dando vueltas en la cinta de equipaje.',
+      fr: 'Glissez-en un dans chaque sac et ne perdez plus jamais votre temps à surveiller le tapis roulant.',
+      ja: 'バッグにひとつ入れておけば、乗り継ぎでバゲッジクレームをさまようことがなくなる。',
+      zh: '每个包里塞一个，从此告别在转机时守着行李传送带发呆的日子。',
+      ko: '가방마다 하나씩 넣어두면 환승 때 수하물 벨트 앞을 맴도는 시간이 사라진다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 4,
+    category: 'Tech',
+    name: 'Sony WH-1000XM5 Headphones',
+    why: {
+      en: 'Industry-leading noise cancellation turns a 14-hour flight into your own private quiet room.',
+      es: 'La cancelación de ruido líder del mercado convierte un vuelo de 14 horas en tu sala privada de silencio.',
+      fr: 'La meilleure réduction de bruit du marché transforme un vol de 14 heures en votre salon personnel.',
+      ja: '業界最高水準のノイキャンが、14時間のフライトをプライベートな静寂に変える。',
+      zh: '行业领先的主动降噪技术，把14小时的长途飞行变成你自己的私人静室。',
+      ko: '업계 최고 수준의 노이즈 캔슬링이 14시간 비행을 나만의 조용한 공간으로 바꿔준다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 5,
+    category: 'Tech',
+    name: 'Kindle Paperwhite (16GB)',
+    why: {
+      en: 'A thousand books in your pocket, weeks of battery life, readable in full equatorial sun.',
+      es: 'Mil libros en tu bolsillo, semanas de batería y legible bajo el sol ecuatorial más intenso.',
+      fr: 'Mille livres dans votre poche, des semaines d\'autonomie et lisible sous un soleil équatorial.',
+      ja: '1000冊をポケットに、数週間のバッテリー、赤道直下の太陽の下でも読める。',
+      zh: '口袋里装着一千本书，电量可用数周，赤道烈日下依然清晰可读。',
+      ko: '주머니 속에 천 권의 책, 몇 주에 달하는 배터리, 적도의 뙤약볕 아래서도 선명하게 읽힌다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 6,
+    category: 'Tech',
+    name: 'Samsung T7 Portable SSD (1TB)',
+    why: {
+      en: 'Pocket-sized, shockproof, fast enough to edit 4K footage on the road — your memories are safe.',
+      es: 'Compacto, resistente a golpes y lo suficientemente rápido para editar vídeo 4K en ruta: tus recuerdos están seguros.',
+      fr: 'Compact, résistant aux chocs et assez rapide pour monter des vidéos 4K en déplacement — vos souvenirs sont en sécurité.',
+      ja: 'ポケットサイズで耐衝撃性があり、移動中に4K映像を編集できる速度——あなたの思い出は安全だ。',
+      zh: '口袋大小，防震，速度足以在旅途中剪辑4K素材——你的回忆有了保障。',
+      ko: '주머니에 들어가는 크기, 충격에 강하며, 이동 중에도 4K 영상을 편집할 수 있는 속도 — 당신의 기억은 안전하다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 7,
+    category: 'Tech',
+    name: 'Joby GorillaPod 3K Tripod',
+    why: {
+      en: 'Wraps around railings, rocks, and tree branches — your camera is always at the right angle.',
+      es: 'Se enrolla en barandillas, rocas y ramas de árboles: tu cámara siempre está en el ángulo perfecto.',
+      fr: 'S\'enroule autour des rampes, des rochers et des branches — votre appareil est toujours au bon angle.',
+      ja: '手すり、岩、木の枝に巻きつけられる——カメラはいつもベストアングルに。',
+      zh: '能缠绕在栏杆、岩石和树枝上——相机永远处于最佳角度。',
+      ko: '난간, 바위, 나뭇가지에 감아 고정할 수 있어 — 카메라는 언제나 최적의 각도에 있다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 8,
+    category: 'Tech',
+    name: 'GoPro HERO12 Black',
+    why: {
+      en: 'Waterproof, stabilised, and small enough to forget it\'s there — until you replay the adventure.',
+      es: 'Resistente al agua, estabilizada y tan pequeña que olvidas que la llevas, hasta que revives la aventura.',
+      fr: 'Étanche, stabilisée et si petite qu\'on l\'oublie — jusqu\'à ce qu\'on repasse l\'aventure.',
+      ja: '防水、手ブレ補正、存在を忘れるほど小さい——冒険を再生するまでは。',
+      zh: '防水、防抖，小到让你忘记它的存在——直到回放那段冒险。',
+      ko: '방수, 손떨림 방지, 잊을 만큼 작은 크기 — 모험을 다시 재생하기 전까지는.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 9,
+    category: 'Tech',
+    name: 'Loop Quiet Earplugs',
+    why: {
+      en: 'Reusable, reticent, and remarkably effective — the civilised traveller\'s answer to hostel snorers.',
+      es: 'Reutilizables, discretos y sorprendentemente eficaces: la respuesta civilizada del viajero a los roncadores del hostal.',
+      fr: 'Réutilisables, discrets et remarquablement efficaces — la réponse civilisée aux ronfleurs d\'auberge.',
+      ja: '再利用可能で控えめ、驚くほど効果的——ホステルのいびきに対する文明的な答え。',
+      zh: '可重复使用、低调而有效——有教养的旅行者对付青旅鼾声的利器。',
+      ko: '재사용 가능하고, 눈에 띄지 않으며, 놀라울 만큼 효과적 — 게스트하우스 코골이에 대한 문명적인 해답.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 10,
+    category: 'Tech',
+    name: 'Bose Soundlink Flex Speaker',
+    why: {
+      en: 'Waterproof, floatable, and rich enough to make a camp beach feel like a proper party.',
+      es: 'Resistente al agua, flotante y con un sonido tan rico que convierte cualquier playa en fiesta.',
+      fr: 'Étanche, flottant et assez riche pour transformer une plage sauvage en vraie fête.',
+      ja: '防水・浮かぶ・音が豊か——キャンプの浜辺をパーティーに変えるスピーカー。',
+      zh: '防水、可漂浮，音质出众到能把一片野营沙滩变成派对现场。',
+      ko: '방수에 물에 뜨며, 소리가 풍부해서 소박한 해변을 진짜 파티처럼 만들어준다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  // ── Bags (11–20) ─────────────────────────────────────────────────────────────
+  {
+    id: 11,
+    category: 'Bags',
+    name: 'Nomatic 30L Travel Backpack',
+    why: {
+      en: 'Seventeen thoughtfully placed pockets and a clamshell opening that makes airport security a breeze.',
+      es: 'Diecisiete bolsillos inteligentemente colocados y una apertura tipo libro que convierte el control de seguridad en un paseo.',
+      fr: 'Dix-sept poches soigneusement placées et une ouverture à clapet qui facilite les contrôles de sécurité.',
+      ja: '17の工夫されたポケットと、空港のセキュリティを楽にするクラムシェル開口部。',
+      zh: '17个精心布局的口袋，加上贝壳式开口设计，让机场安检轻松愉快。',
+      ko: '정성껏 배치된 17개의 포켓과 클램셸 개구부 덕분에 공항 보안 검사가 수월해진다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 12,
+    category: 'Bags',
+    name: 'Eagle Creek Pack-It Cubes',
+    why: {
+      en: 'Transform suitcase chaos into a colour-coded order that survives even the roughest checked baggage handlers.',
+      es: 'Convierten el caos de la maleta en un orden por colores que sobrevive incluso al maletero más brusco.',
+      fr: 'Transforment le chaos d\'une valise en un ordre codé par couleur qui résiste aux bagagistes les plus brutaux.',
+      ja: 'スーツケースの混沌を色分けされた秩序に変え、荒っぽい手荷物取扱員にも負けない。',
+      zh: '把行李箱的混乱变成井然有序的彩色分区，哪怕是最粗暴的行李员也奈何不了。',
+      ko: '여행 가방의 혼돈을 색으로 구분된 질서로 바꿔주며, 아무리 거칠게 다뤄도 끄떡없다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 13,
+    category: 'Bags',
+    name: 'Pacsafe Citysafe CX Anti-Theft Crossbody',
+    why: {
+      en: 'Cut-resistant straps and RFID-blocking panels let you explore crowded markets without a second glance.',
+      es: 'Las correas resistentes al corte y los paneles de bloqueo RFID te permiten explorar mercados sin mirar atrás.',
+      fr: 'Sangles anti-coupe et panneaux anti-RFID pour explorer les marchés bondés sans arrière-pensée.',
+      ja: '耐切断ストラップとRFIDブロッキングで、混雑した市場も安心して歩ける。',
+      zh: '防割材质的背带搭配RFID屏蔽内层，让你在拥挤的市集中游逛，毫无后顾之忧。',
+      ko: '절단 방지 스트랩과 RFID 차단 패널 덕분에 붐비는 시장도 여유롭게 누빌 수 있다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 14,
+    category: 'Bags',
+    name: 'Bagsmart Hanging Toiletry Bag',
+    why: {
+      en: 'Hooks onto any door or rail; every product visible at once — no more rummaging in tiny bathroom shelves.',
+      es: 'Se cuelga en cualquier puerta o barra; todos los productos a la vista — nada de rebuscar en estantes diminutos.',
+      fr: 'Se suspend partout; tous les produits visibles d\'un coup — fini de fouiller dans de minuscules étagères.',
+      ja: 'どんなドアや棒にも掛けられ、全製品が一目で見える——小さな棚を探し回る必要なし。',
+      zh: '可以挂在任何门或挂杆上，所有物品一目了然——再也不用在狭小的浴室搁架上翻找了。',
+      ko: '어떤 문이나 봉에도 걸 수 있고, 모든 제품이 한눈에 보여 — 좁은 욕실 선반을 뒤질 필요가 없다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 15,
+    category: 'Bags',
+    name: 'TUMI Alpha Bravo Sling',
+    why: {
+      en: 'Slim enough for a day of galleries, sturdy enough to carry a laptop — the civilised urban companion.',
+      es: 'Suficientemente delgado para un día de galerías y resistente para llevar un portátil: el compañero urbano ideal.',
+      fr: 'Assez fin pour une journée de galeries, assez robuste pour un ordinateur — le compagnon urbain par excellence.',
+      ja: 'ギャラリー巡りの日にも薄く、ノートPCも運べるほど頑丈——洗練された都市のパートナー。',
+      zh: '薄到足以游览画廊一整天，又够结实地装下笔记本电脑——都市文明人的随行伴侣。',
+      ko: '갤러리 하루 일정을 소화할 만큼 슬림하고, 노트북을 들어도 거뜬한 내구성 — 세련된 도시 여행자의 동반자.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 16,
+    category: 'Bags',
+    name: 'Osprey Daylite Plus Daypack',
+    why: {
+      en: 'Featherlight when empty, a reliable workhorse when full — the daypack that earns its place on every trip.',
+      es: 'Ligero como una pluma cuando está vacío y un fiel compañero cuando está lleno: la mochila que se gana su lugar en cada viaje.',
+      fr: 'Léger comme une plume à vide, fiable comme un mulet chargé — le sac de jour qui mérite sa place dans chaque voyage.',
+      ja: '空のときは羽のように軽く、満杯でも頼りになる——あらゆる旅に欠かせないデイパック。',
+      zh: '空包轻如羽毛，装满后依然可靠稳当——每次旅行都当仁不让的日背包。',
+      ko: '비었을 땐 깃털처럼 가볍고, 가득 채워도 믿음직한 — 모든 여행에서 제 몫을 다하는 데이팩.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 17,
+    category: 'Bags',
+    name: 'Patagonia Black Hole Duffel 40L',
+    why: {
+      en: 'Made from recycled plastics, fits in overhead bins, and endures everything from mountain trails to beach taxis.',
+      es: 'Fabricado con plásticos reciclados, cabe en los compartimentos superiores y aguanta desde senderos de montaña hasta taxis de playa.',
+      fr: 'Fabriqué en plastique recyclé, tient dans les compartiments supérieurs et résiste à tout, des sentiers de montagne aux taxis de plage.',
+      ja: 'リサイクルプラスチック製で、頭上の収納にも入り、山のトレイルからビーチのタクシーまで何でもこなす。',
+      zh: '由回收塑料制成，能塞入头顶行李架，从山间小道到海边出租车，无所不能。',
+      ko: '재활용 플라스틱으로 제작되어 기내 선반에도 들어가며, 산악 트레일부터 해변 택시까지 모든 상황을 버텨낸다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 18,
+    category: 'Bags',
+    name: 'Peak Design Tech Pouch',
+    why: {
+      en: 'Accordion-style panels unfurl to show every cable and adapter at once — the end of the black-cable abyss.',
+      es: 'Los paneles en acordeón despliegan todos los cables y adaptadores a la vez: el fin del abismo de los cables negros.',
+      fr: 'Ses panneaux accordéon déploient chaque câble et adaptateur d\'un coup — la fin du gouffre des câbles noirs.',
+      ja: 'アコーディオン式パネルがすべてのケーブルとアダプタを一度に展開——黒いケーブルの深淵に別れを告げる。',
+      zh: '手风琴式面板一展开，所有线缆和适配器尽收眼底——告别黑线缆深渊的时代到了。',
+      ko: '아코디언 방식의 패널이 펼쳐지면 모든 케이블과 어댑터가 한눈에 — 검은 선 더미에서 허우적대는 시대는 끝났다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 19,
+    category: 'Bags',
+    name: 'Tortuga Outbreaker Carry-On',
+    why: {
+      en: 'Built for carry-on limits worldwide with a full-zip clamshell that makes packing as easy as using a dresser.',
+      es: 'Diseñado para los límites de mano en todo el mundo con una apertura total que hace que empacar sea tan fácil como usar un armario.',
+      fr: 'Conçu pour les restrictions cabine mondiales, avec une ouverture complète qui rend le rangement aussi simple qu\'une commode.',
+      ja: '世界中のキャリーオン制限に対応した全開クラムシェルで、荷造りがタンスの引き出しのように楽。',
+      zh: '专为全球随身行李限制而设计，全拉链贝壳式开口让收纳像整理抽屉一样轻松。',
+      ko: '전 세계 기내 수하물 규정에 맞게 설계되었으며, 완전 개방형 클램셸 덕분에 짐 싸기가 서랍 정리만큼 쉽다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 20,
+    category: 'Bags',
+    name: 'Bellroy Tokyo Tote Compact',
+    why: {
+      en: 'Looks like a style choice in the morning, functions like a laptop bag by noon — beauty that earns its keep.',
+      es: 'Parece una elección de estilo por la mañana y funciona como un maletín a mediodía: belleza que se paga sola.',
+      fr: 'Ressemble à un choix de style le matin, fonctionne comme un sac pour ordinateur à midi — une beauté utile.',
+      ja: '朝はスタイルの選択に見え、昼にはノートPCバッグとして機能する——美しさが価値を証明する。',
+      zh: '早晨看起来是时尚之选，到了中午就成了实用的电脑包——颜值自有其用处。',
+      ko: '아침엔 스타일로 보이고 낮엔 노트북 가방으로 기능한다 — 아름다움이 스스로의 가치를 증명하는 가방.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  // ── Comfort (21–30) ───────────────────────────────────────────────────────────
+  {
+    id: 21,
+    category: 'Comfort',
+    name: 'Trtl Travel Pillow',
+    why: {
+      en: 'A scarf with an internal support rib — arrives in Tokyo looking like you slept in business class.',
+      es: 'Una bufanda con soporte interno: llegas a Tokio con el aspecto de haber dormido en business.',
+      fr: 'Une écharpe avec une nervure de soutien interne — vous arrivez à Tokyo comme si vous aviez dormi en business.',
+      ja: '内部サポートリブ付きのスカーフ——ビジネスクラスで眠ったような顔で東京に着く。',
+      zh: '内置支撑肋的围巾——抵达东京时，看起来像是坐商务舱睡过来的。',
+      ko: '내부 지지대가 있는 스카프 형태 — 도쿄에 도착했을 때 비즈니스 클래스에서 잔 것처럼 보인다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 22,
+    category: 'Comfort',
+    name: 'Manta Sleep Mask',
+    why: {
+      en: 'Zero eye pressure, total blackout — the sleep mask that finally makes the red-eye worth surviving.',
+      es: 'Sin presión en los ojos, oscuridad total: el antifaz que por fin hace que el vuelo nocturno valga la pena.',
+      fr: 'Zéro pression sur les yeux, obscurité totale — le masque de sommeil qui rend enfin le vol de nuit supportable.',
+      ja: '眼への圧力ゼロ、完全遮光——夜間フライトをやっと乗り越える価値あるものにするアイマスク。',
+      zh: '眼部零压，完全遮光——这款睡眠眼罩终于让红眼航班变得值得熬过去。',
+      ko: '눈에 압박 없이 완전 암막 — 야간 비행을 버텨낼 가치 있게 만들어주는 수면 마스크.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 23,
+    category: 'Comfort',
+    name: 'Cabeau Memory Foam Evolution Pillow',
+    why: {
+      en: 'Memory foam that cups the neck without the dreaded chin-drop — long-haul comfort done properly.',
+      es: 'Espuma viscoelástica que sostiene el cuello sin el temido cabeceo: comodidad en vuelos largos como debe ser.',
+      fr: 'Mousse mémoire qui soutient la nuque sans l\'affreux claquement de menton — le confort longue distance bien fait.',
+      ja: '恐怖のあご落ちなしに首を包む低反発フォーム——長距離の快適さをきちんと実現。',
+      zh: '记忆棉完美托住颈部，不再有令人沮丧的低头耷脑——长途旅行的舒适感终于做对了。',
+      ko: '목을 감싸는 메모리폼으로 무서운 고개 떨굼 없이 — 장거리 편안함을 제대로 구현한 베개.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 24,
+    category: 'Comfort',
+    name: 'Sockwell Compression Socks',
+    why: {
+      en: 'Merino-blend socks that keep your legs fresh across time zones — arrive ready to explore, not to collapse.',
+      es: 'Calcetines de mezcla de merino que mantienen tus piernas frescas en todos los husos horarios: llega listo para explorar, no para derrumbarte.',
+      fr: 'Chaussettes mélange mérinos qui gardent vos jambes fraîches à travers les fuseaux — arrivez prêt à explorer.',
+      ja: 'メリノブレンドのソックスが時差を超えて脚を元気に保つ——倒れるためではなく、探検するために到着する。',
+      zh: '美利奴混纺袜，跨越时区依然保持双腿活力——抵达时是探索的状态，而不是崩溃的状态。',
+      ko: '메리노 혼방 양말이 시간대를 넘어도 다리를 상쾌하게 유지해줘 — 쓰러지러가 아니라 탐험하러 도착하게 된다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 25,
+    category: 'Comfort',
+    name: 'Therm-a-Rest Inflatable Foot Rest',
+    why: {
+      en: 'Tucks under the seat and inflates to elevate your feet — economy class\'s best-kept secret.',
+      es: 'Se guarda debajo del asiento y se infla para elevar los pies: el secreto mejor guardado de la clase turista.',
+      fr: 'Se glisse sous le siège et se gonfle pour surélever les pieds — le secret le mieux gardé de l\'économique.',
+      ja: 'シートの下に収納し、膨らませて足を高くする——エコノミークラス最大の秘密。',
+      zh: '塞在座椅下面，充气后撑起双脚——经济舱里藏得最深的秘密。',
+      ko: '좌석 아래에 넣었다가 부풀려 발을 올리면 — 이코노미 클래스의 가장 잘 알려지지 않은 비밀.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 26,
+    category: 'Comfort',
+    name: 'Cocoon CoolMax Travel Sheet',
+    why: {
+      en: 'A hygienic liner for hostels and guesthouses — sleep peacefully without pondering what came before.',
+      es: 'Un forro higiénico para albergues y pensiones: duerme tranquilo sin pensar en lo que pasó antes.',
+      fr: 'Une housse hygiénique pour auberges et pensions — dormez paisiblement sans vous demander ce qui est venu avant.',
+      ja: 'ホステルやゲストハウスのための衛生的なライナー——以前に何があったか考えずに安眠できる。',
+      zh: '宿舍和民宿的卫生内衬——安心入睡，无需细想床铺的前世今生。',
+      ko: '게스트하우스와 호스텔을 위한 위생 라이너 — 이전에 무엇이 있었는지 생각하지 않고 평온히 잠들 수 있다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 27,
+    category: 'Comfort',
+    name: 'BedJet Travel Blanket',
+    why: {
+      en: 'Compresses to a soda-can size but unfolds into genuine warmth — the blanket that earns its packing weight.',
+      es: 'Se comprime al tamaño de una lata de refresco pero se despliega en verdadero calor: la manta que justifica su peso en la maleta.',
+      fr: 'Se compresse à la taille d\'une canette mais offre une vraie chaleur — la couverture qui mérite son poids dans le sac.',
+      ja: '缶サイズに圧縮されるが、広げると本物の温もりになる——パッキング重量に見合う毛布。',
+      zh: '能压缩到一罐饮料的大小，展开却带来真实的温暖——值得占用行李重量的毯子。',
+      ko: '음료수 캔 크기로 압축되지만 펼치면 진짜 온기를 준다 — 짐 무게를 감당할 가치가 있는 담요.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 28,
+    category: 'Comfort',
+    name: 'LectroFan Micro2 White Noise Machine',
+    why: {
+      en: 'Clips to a headboard, drowns out traffic and thin walls — gives you your own acoustic bedroom anywhere.',
+      es: 'Se fija al cabecero, ahoga el tráfico y las paredes delgadas: te da tu propio dormitorio acústico en cualquier lugar.',
+      fr: 'S\'accroche à la tête de lit, noie la circulation et les fines cloisons — votre chambre acoustique personnelle partout.',
+      ja: 'ヘッドボードに取り付け、交通音や薄い壁を消す——どこでも自分だけの音響寝室を。',
+      zh: '夹在床头板上，淹没车流声和薄墙隔音——随时随地拥有属于自己的声学卧室。',
+      ko: '침대 헤드보드에 고정해 교통 소음과 얇은 벽을 차단 — 어디서든 나만의 음향 침실을 만들어준다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 29,
+    category: 'Comfort',
+    name: 'Bucky 40 Blinks Eye Mask',
+    why: {
+      en: 'Contoured cups that never touch your lashes — the budget classic that has outlasted trendier alternatives.',
+      es: 'Copas con contorno que nunca rozan las pestañas: el clásico económico que ha superado a alternativas más modernas.',
+      fr: 'Coques contournées qui ne touchent jamais vos cils — le classique abordable qui a survécu à des alternatives plus tendance.',
+      ja: 'まつ毛に触れない輪郭型カップ——より流行りの代替品より長持ちするバジェットクラシック。',
+      zh: '弧形眼罩从不触碰睫毛——这款平价经典比那些来了又去的网红款都更耐用。',
+      ko: '속눈썹에 닿지 않는 곡면 컵 디자인 — 유행하는 제품들을 모두 앞질러 살아남은 실속 클래식.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 30,
+    category: 'Comfort',
+    name: 'Lewis N. Clark Inflatable Lumbar Pillow',
+    why: {
+      en: 'Inflate it, tuck it behind your lower back, and remember what a spine is supposed to feel like mid-flight.',
+      es: 'Infla, colócalo en la zona lumbar y recuerda cómo se supone que debe sentirse tu columna a mitad del vuelo.',
+      fr: 'Gonflez-le, callez-le dans votre bas du dos et rappelez-vous comment une colonne vertébrale est censée se sentir en vol.',
+      ja: '膨らませ、腰の後ろに挟めば、飛行中に背骨本来の感覚を思い出せる。',
+      zh: '充气后垫在腰后，让你在飞行途中想起脊背本该有的感觉。',
+      ko: '부풀려 허리 뒤에 받치면 비행 중에 척추가 본래 어떤 느낌이어야 하는지 기억나게 된다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  // ── Hygiene (31–40) ───────────────────────────────────────────────────────────
+  {
+    id: 31,
+    category: 'Hygiene',
+    name: 'PackTowl Personal Quick-Dry Towel',
+    why: {
+      en: 'Absorbs more than cotton and dries in minutes — the towel that never overstays its welcome in your bag.',
+      es: 'Absorbe más que el algodón y se seca en minutos: la toalla que nunca abusa de su bienvenida en la mochila.',
+      fr: 'Absorbe plus que le coton et sèche en minutes — la serviette qui n\'abuse jamais de sa place dans votre sac.',
+      ja: 'コットンより吸収力が高く、数分で乾く——バッグの中で居場所を取りすぎないタオル。',
+      zh: '吸水性超过棉质毛巾，数分钟内晾干——从不在背包里赖着不走的毛巾。',
+      ko: '면보다 흡수력이 뛰어나고 몇 분 만에 마른다 — 가방 속에서 자리를 오래 차지하지 않는 수건.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 32,
+    category: 'Hygiene',
+    name: 'LifeStraw Personal Water Filter',
+    why: {
+      en: 'Filters 99.999% of bacteria and parasites directly from streams — drink freely where others hesitate.',
+      es: 'Filtra el 99,999% de bacterias y parásitos directamente de los arroyos: bebe libremente donde otros dudan.',
+      fr: 'Filtre 99,999% des bactéries et parasites directement dans les cours d\'eau — buvez librement là où d\'autres hésitent.',
+      ja: '小川から直接99.999%の細菌と寄生虫を除去——他の人が躊躇する場所でも自由に飲める。',
+      zh: '直接从溪流中过滤99.999%的细菌和寄生虫——在别人犹豫的地方，你可以自由饮水。',
+      ko: '강물에서 직접 박테리아와 기생충의 99.999%를 걸러준다 — 다른 이들이 주저하는 곳에서도 자유롭게 마실 수 있다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 33,
+    category: 'Hygiene',
+    name: 'Adventure Medical First Aid Kit (.7)',
+    why: {
+      en: 'Compact and comprehensive — the kit that handles everything from blisters to bleeding before help arrives.',
+      es: 'Compacto y completo: el kit que resuelve desde ampollas hasta hemorragias antes de que llegue la ayuda.',
+      fr: 'Compact et complet — le kit qui gère tout, des ampoules aux saignements, avant l\'arrivée des secours.',
+      ja: 'コンパクトで包括的——水ぶくれから出血まで、助けが来る前に対処するキット。',
+      zh: '紧凑而全面——从水泡到出血，在援助到来之前，这套急救包能处理一切。',
+      ko: '작고 완전한 구성 — 물집부터 출혈까지 도움이 오기 전에 모든 것을 처리하는 키트.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 34,
+    category: 'Hygiene',
+    name: 'Supergoop! Glowscreen Sunscreen Stick',
+    why: {
+      en: 'SPF 40 in a no-mess stick that doubles as a primer — sun protection with a finish worth keeping.',
+      es: 'SPF 40 en barra sin manchas que también funciona como base: protección solar con un acabado que vale la pena mantener.',
+      fr: 'SPF 40 en stick sans dégâts qui fait aussi office d\'apprêt — protection solaire avec un fini à conserver.',
+      ja: 'メス不要のスティックでSPF40、プライマーも兼ねる——保持する価値のある仕上がりの日焼け止め。',
+      zh: 'SPF40无痕护肤棒，兼具打底功能——提供防晒保护，呈现值得保留的完妆效果。',
+      ko: '지저분하지 않은 스틱 형태의 SPF 40로 프라이머 역할도 겸한다 — 유지할 가치 있는 마무리가 있는 자외선 차단제.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 35,
+    category: 'Hygiene',
+    name: 'Sawyer Picaridin Insect Repellent',
+    why: {
+      en: 'DEET-free formula that repels mosquitoes, ticks, and sandflies without dissolving your gear or your skin.',
+      es: 'Fórmula sin DEET que repele mosquitos, garrapatas y jejenes sin disolver tu equipo ni tu piel.',
+      fr: 'Formule sans DEET qui repousse moustiques, tiques et phlébotomes sans attaquer votre matériel ni votre peau.',
+      ja: 'DEETフリーで、蚊、ダニ、サシバエを撃退しながら装備も肌も傷めない。',
+      zh: '不含DEET，驱蚊、驱蜱、驱沙蚤，同时不腐蚀装备也不刺激皮肤。',
+      ko: 'DEET 무함유 포뮬라로 모기, 진드기, 모래파리를 쫓으면서도 장비와 피부를 손상시키지 않는다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 36,
+    category: 'Hygiene',
+    name: 'HydroFlask 32oz Wide-Mouth Bottle',
+    why: {
+      en: 'Keeps cold drinks cold for 24 hours and hot drinks hot for 12 — the bottle that pays for itself in airport water refills.',
+      es: 'Mantiene las bebidas frías 24 horas y las calientes 12: la botella que se paga sola recargando agua en el aeropuerto.',
+      fr: 'Garde les boissons froides 24 h et chaudes 12 h — la bouteille qui s\'amortit dès les premières recharges en aéroport.',
+      ja: '冷たい飲み物を24時間、熱い飲み物を12時間維持——空港の給水で元が取れるボトル。',
+      zh: '冷饮保冷24小时，热饮保温12小时——在机场免费接水就能让它物有所值。',
+      ko: '차가운 음료를 24시간, 뜨거운 음료를 12시간 유지 — 공항 물 리필만으로도 본전을 뽑는 보틀.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 37,
+    category: 'Hygiene',
+    name: 'Stojo Collapsible Cup (16oz)',
+    why: {
+      en: 'Collapses to the thickness of two fingers and takes any café coffee on the go without the disposable guilt.',
+      es: 'Se pliega al grosor de dos dedos y acepta cualquier café de cafetería sin la culpa del desechable.',
+      fr: 'Se replie sur l\'épaisseur de deux doigts et accueille n\'importe quel café sans la culpabilité du jetable.',
+      ja: '指2本の厚さに折り畳まれ、使い捨ての罪悪感なしにどこのカフェのコーヒーも持ち歩ける。',
+      zh: '折叠后薄如两指，随时接住任何咖啡馆的咖啡，还不用为一次性杯子内疚。',
+      ko: '손가락 두 개 두께로 접히며, 일회용 죄책감 없이 어떤 카페 커피든 테이크아웃할 수 있다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 38,
+    category: 'Hygiene',
+    name: 'Liquid I.V. Hydration Multiplier (Variety Pack)',
+    why: {
+      en: 'One stick in water replaces two to three standard glasses of hydration — the jet-lag antidote that actually works.',
+      es: 'Un sobre en agua reemplaza dos o tres vasos de hidratación estándar: el antídoto para el jet lag que realmente funciona.',
+      fr: 'Un sachet dans l\'eau remplace deux à trois verres d\'hydratation — l\'antidote au jet lag qui fonctionne vraiment.',
+      ja: '水1杯に1本で、通常の2〜3倍の水分補給——実際に効くジェットラグの特効薬。',
+      zh: '一包兑水，相当于两到三杯的正常补水量——这是真正有效的时差解药。',
+      ko: '물 한 잔에 한 스틱이면 일반 수분 보충의 2~3배 — 진짜 효과 있는 시차 극복 해독제.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 39,
+    category: 'Hygiene',
+    name: "Tom's of Maine Travel Toiletry Kit",
+    why: {
+      en: 'Natural ingredients in TSA-friendly sizes — the conscientious traveller\'s bathroom in a single pouch.',
+      es: 'Ingredientes naturales en tamaños aprobados por el TSA: el baño del viajero consciente en una sola bolsa.',
+      fr: 'Ingrédients naturels en formats acceptés — la salle de bain du voyageur consciencieux en une seule pochette.',
+      ja: 'TSA対応サイズの天然成分——良心的な旅行者の洗面台がひとつのポーチに。',
+      zh: '天然成分，符合TSA尺寸——有良知的旅行者的盥洗室，装进一个小袋子。',
+      ko: 'TSA 규정에 맞는 크기의 천연 성분 제품들 — 양심 있는 여행자의 욕실이 하나의 파우치에 담긴다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 40,
+    category: 'Hygiene',
+    name: 'Olight i3T EOS LED Flashlight',
+    why: {
+      en: 'Weighs 14 grams and clips to a keyring — the light that ends every "where did I put my room key?" moment.',
+      es: 'Pesa 14 gramos y se engancha al llavero: la luz que acaba con cada "¿dónde puse la llave de la habitación?".',
+      fr: 'Pèse 14 grammes et se clip au porte-clés — la lumière qui met fin aux "où ai-je mis ma clé de chambre ?".',
+      ja: '重さ14グラムでキーリングに取り付け可能——「部屋の鍵どこに置いたっけ？」を終わらせる光。',
+      zh: '重量仅14克，可夹在钥匙圈上——终结每一次"我把房卡放哪儿了？"的那束光。',
+      ko: '무게 14g에 열쇠고리에 달 수 있다 — "방 열쇠 어디 뒀지?"라는 순간을 영원히 끝내주는 불빛.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  // ── Style (41–50) ─────────────────────────────────────────────────────────────
+  {
+    id: 41,
+    category: 'Style',
+    name: 'Bellroy Travel Folio Passport Wallet',
+    why: {
+      en: 'Holds passport, cards, boarding pass, and pen — the single object that runs your entire travel day.',
+      es: 'Guarda pasaporte, tarjetas, tarjeta de embarque y bolígrafo: el objeto único que gestiona todo tu día de viaje.',
+      fr: 'Contient passeport, cartes, carte d\'embarquement et stylo — l\'objet unique qui gère toute votre journée de voyage.',
+      ja: 'パスポート、カード、搭乗券、ペンを収納——旅の一日全体を仕切るただひとつのアイテム。',
+      zh: '容纳护照、卡片、登机牌和笔——一个掌控你整个出行日的物件。',
+      ko: '여권, 카드, 탑승권, 펜을 모두 담는다 — 여행 하루 전체를 통솔하는 단 하나의 물건.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 42,
+    category: 'Style',
+    name: 'Smartwool Merino 150 Tee',
+    why: {
+      en: 'Odour-resistant merino that looks fine at a dinner table and dries overnight — the shirt you forget to pack extras of.',
+      es: 'Merino resistente a los olores que queda bien en una cena y se seca de noche: la camiseta de la que olvidas llevar recambios.',
+      fr: 'Mérinos anti-odeurs présentable à table et séchant du jour au lendemain — le tee-shirt dont on oublie d\'emporter des rechanges.',
+      ja: '消臭メリノ素材でディナーテーブルでも見栄えがよく、一晩で乾く——予備を忘れても大丈夫なシャツ。',
+      zh: '抗菌美利奴羊毛，晚餐桌上同样得体，一夜晾干——让你忘记多带备换的那件T恤。',
+      ko: '냄새에 강한 메리노 소재로 저녁 식사 자리에서도 단정하고 하루 밤이면 마른다 — 여분을 챙기는 것을 잊어버리게 되는 티셔츠.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 43,
+    category: 'Style',
+    name: 'KÜHL Renegade Convertible Pants',
+    why: {
+      en: 'Trail-ready by morning, zip-off shorts by noon, dinner-acceptable by evening — one garment for the full day.',
+      es: 'Listos para el sendero por la mañana, shorts desmontables al mediodía, aceptables para cenar por la tarde: una prenda para todo el día.',
+      fr: 'Prêt pour le sentier le matin, short démontable à midi, acceptable au restaurant le soir — un seul vêtement pour toute la journée.',
+      ja: '朝はトレイル対応、昼にジップオフショーツ、夜にはディナーOK——一着で一日が完結する。',
+      zh: '早晨可上山道，中午拉链变短裤，傍晚进餐厅也说得过去——一条裤子走完完整的一天。',
+      ko: '아침엔 트레일에서, 낮엔 지퍼 떼어 반바지로, 저녁엔 식당에서도 통하는 — 하루를 위한 단 한 벌의 옷.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 44,
+    category: 'Style',
+    name: 'Wallaroo Petite Scout Sun Hat',
+    why: {
+      en: 'UPF 50+ protection that packable and crushable — the hat that survives your bag without losing its shape.',
+      es: 'Protección UPF 50+ plegable y resistente a las arrugas: el sombrero que sobrevive a tu mochila sin perder la forma.',
+      fr: 'Protection UPF 50+ pliable et infroissable — le chapeau qui survit à votre sac sans perdre sa forme.',
+      ja: 'UPF50+保護性能でパッカブルかつクラッシャブル——型崩れせずバッグを生き抜く帽子。',
+      zh: 'UPF 50+防护，可折叠可揉捏——装进包里也不会变形的帽子。',
+      ko: 'UPF 50+ 차단 기능에 접을 수 있고 구겨도 괜찮은 — 가방 속에서도 모양을 잃지 않는 모자.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 45,
+    category: 'Style',
+    name: 'Ray-Ban Wayfarer Polarized Sunglasses',
+    why: {
+      en: 'Sixty-five years of cool that still works on every continent — the sunglass that never looks like a mistake.',
+      es: 'Sesenta y cinco años de estilo que funciona en todos los continentes: las gafas que nunca parecen un error.',
+      fr: 'Soixante-cinq ans de style qui fonctionne sur tous les continents — les lunettes qui ne passent jamais pour une erreur.',
+      ja: '65年のクールさが今も全大陸で通用する——間違いに見えないサングラス。',
+      zh: '六十五年的酷感在每块大陆依然奏效——永远不会显得突兀的太阳镜。',
+      ko: '65년의 멋이 지금도 모든 대륙에서 통한다 — 절대 어색해 보이지 않는 선글라스.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 46,
+    category: 'Style',
+    name: 'Buff Original Multifunctional Headwear',
+    why: {
+      en: 'Twelve ways to wear it — neck gaiter, beanie, headband, mask — for the weight of a folded napkin.',
+      es: 'Doce formas de llevarlo —cuello, gorro, cinta, mascarilla— con el peso de una servilleta doblada.',
+      fr: 'Douze façons de le porter — tour de cou, bonnet, bandeau, masque — pour le poids d\'une serviette pliée.',
+      ja: 'ネックゲーター、ビーニー、ヘッドバンド、マスクなど12通りの着方——折りたたんだナプキン程度の重さで。',
+      zh: '十二种佩戴方式——颈套、帽子、头带、口罩——重量却只有一张折叠纸巾。',
+      ko: '목 워머, 비니, 헤드밴드, 마스크 등 열두 가지 착용법 — 접힌 냅킨 하나의 무게로.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 47,
+    category: 'Style',
+    name: 'Allbirds Tree Runners Travel Sneakers',
+    why: {
+      en: 'Machine-washable eucalyptus fibre that breathes like a forest — the only shoes that land fresh and leave fresh.',
+      es: 'Fibra de eucalipto lavable en lavadora que respira como un bosque: los únicos zapatos que llegan frescos y se van frescos.',
+      fr: 'Fibre d\'eucalyptus lavable en machine qui respire comme une forêt — les seules chaussures qui arrivent et partent fraîches.',
+      ja: '洗濯機で洗えるユーカリ繊維が森のように通気する——到着時も出発時も清潔な唯一の靴。',
+      zh: '可机洗的桉树纤维，透气如林间微风——唯一一双落地清爽、离开也清爽的鞋。',
+      ko: '세탁기로 빨 수 있는 유칼립투스 섬유가 숲처럼 통기된다 — 도착할 때도, 떠날 때도 산뜻한 유일한 신발.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 48,
+    category: 'Style',
+    name: 'Patagonia Houdini Windbreaker',
+    why: {
+      en: 'Stuffs into its own chest pocket and weighs under 100g — the jacket that disappears until the wind decides otherwise.',
+      es: 'Se guarda en su propio bolsillo del pecho y pesa menos de 100g: la chaqueta que desaparece hasta que el viento dice lo contrario.',
+      fr: 'Se range dans sa propre poche poitrine et pèse moins de 100g — la veste qui disparaît jusqu\'à ce que le vent en décide autrement.',
+      ja: '自身の胸ポケットに収納でき、100g未満——風が決める時まで消えているジャケット。',
+      zh: '能塞进自身胸袋，重量不到100克——在风说话之前悄然消失的夹克。',
+      ko: '가슴 포켓 안으로 들어가고 100g 미만 — 바람이 결정을 내리기 전까지는 없는 것처럼 사라지는 재킷.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 49,
+    category: 'Style',
+    name: 'Vuori Sunday Performance Jogger',
+    why: {
+      en: 'Moves like athletic wear, reads as casual — equally at home on a trail, a plane, or a coffee shop chair.',
+      es: 'Se mueve como ropa deportiva y parece casual: igual de cómodo en un sendero, un avión o una silla de cafetería.',
+      fr: 'Bouge comme du sportswear, s\'habille comme du casual — aussi à l\'aise sur un sentier, dans un avion ou dans un café.',
+      ja: 'スポーツウェアのように動き、カジュアルに見える——トレイル、飛行機、カフェのどこでも自然。',
+      zh: '穿着像运动服，看上去像休闲裤——在步道、飞机或咖啡馆的椅子上都同样自在。',
+      ko: '운동복처럼 움직이고 캐주얼처럼 보인다 — 트레일에서도, 비행기에서도, 카페 의자에서도 자연스럽다.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+  {
+    id: 50,
+    category: 'Style',
+    name: 'Pacsafe RFIDsafe TEC Wallet',
+    why: {
+      en: 'RFID-blocking slim wallet that holds ten cards and never bulges a back pocket — security that wears like nothing.',
+      es: 'Cartera delgada con bloqueo RFID para diez tarjetas que nunca abultará el bolsillo trasero: seguridad que no se nota.',
+      fr: 'Portefeuille fin anti-RFID pour dix cartes, sans jamais gonfler la poche arrière — sécurité qui se porte comme rien.',
+      ja: 'RFID遮断の薄型ウォレットが10枚のカードを収納し、バックポケットを膨らませない——着けていることを忘れるセキュリティ。',
+      zh: 'RFID屏蔽超薄钱包，可放十张卡，后裤袋从不鼓包——安全感穿起来轻若无物。',
+      ko: 'RFID 차단 슬림 지갑으로 카드 10장을 담아도 뒷주머니가 불룩해지지 않는다 — 아무것도 없는 것처럼 착용하는 보안.',
+    },
+    amazonUrl: 'AMAZON_LINK_PLACEHOLDER',
+  },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const LS_LANG_KEY   = 'gear-widget:lang';
+const ROTATION_MS   = 12000;
+const ENGAGED_MS    = 8000;
+
+let currentIndex = Math.floor(Math.random() * QUOTES.length);
+let currentLang  = 'en';
+let autoTimer    = null;
+let engageTimer  = null;
+let timerStart   = null;
+let timerRafId   = null;
+let isPaused     = false;
+let isFading     = false;
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const widgetEl      = document.getElementById('widget');
+const card          = document.getElementById('quote-card');
+const categoryLbl   = document.getElementById('category-label');
+const textEl        = document.getElementById('quote-text');
+const authorEl      = document.getElementById('quote-author');
+const ctaEl         = document.getElementById('quote-cta');
+const footerCtaEl   = document.getElementById('footer-cta');
+const timerFill     = document.getElementById('timer-fill');
+const progressBar   = document.getElementById('progress-bar');
+const langBar       = document.getElementById('lang-bar');
+const stage         = document.getElementById('quote-stage');
+
+// ── GA4 helpers ───────────────────────────────────────────────────────────────
+function gaEvent(name, params) {
+  if (window.gtag) {
+    gtag('event', name, Object.assign({ widget: 'gear' }, params));
+  }
+}
+
+// ── Language ──────────────────────────────────────────────────────────────────
+function setLanguage(lang, fromChange) {
+  const prev = currentLang;
+  currentLang = lang;
+  try { localStorage.setItem(LS_LANG_KEY, lang); } catch(_) {}
+
+  langBar.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+
+  renderItemContent(QUOTES[currentIndex], false);
+  renderFooterCta();
+
+  if (fromChange && prev !== lang) {
+    gaEvent('language_change', { from: prev, to: lang });
+  }
+}
+
+function getWhy(item, lang) {
+  return (item.why[lang] && item.why[lang].trim()) ? item.why[lang] : item.why['en'];
+}
+
+function getCtaStr(map, lang) {
+  return map[lang in map ? lang : 'en'];
+}
+
+// ── Footer CTA render ─────────────────────────────────────────────────────────
+function renderFooterCta() {
+  footerCtaEl.textContent = getCtaStr(CTA_FOOTER, currentLang);
+  const pending = AMAZON_FOOTER_URL === 'AMAZON_FOOTER_PLACEHOLDER';
+  if (pending) {
+    footerCtaEl.classList.add('cta-pending');
+    footerCtaEl.setAttribute('aria-disabled', 'true');
+    footerCtaEl.href = '#';
+  } else {
+    footerCtaEl.classList.remove('cta-pending');
+    footerCtaEl.removeAttribute('aria-disabled');
+    footerCtaEl.href = AMAZON_FOOTER_URL;
+  }
+}
+
+// ── Progress dots ─────────────────────────────────────────────────────────────
+function buildDots() {
+  progressBar.innerHTML = '';
+  const total = QUOTES.length;
+  const show  = Math.min(total, 10);
+  for (let i = 0; i < show; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === currentIndex % show ? ' active' : '');
+    dot.setAttribute('aria-label', `Item ${i + 1}`);
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const target = Math.floor(currentIndex / show) * show + i;
+      goTo(target < total ? target : i, true);
+    });
+    progressBar.appendChild(dot);
+  }
+}
+
+function updateDots() {
+  const show = Math.min(QUOTES.length, 10);
+  const active = currentIndex % show;
+  progressBar.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === active);
+  });
+}
+
+// ── Timer bar ─────────────────────────────────────────────────────────────────
+function startTimerBar() {
+  timerStart = performance.now();
+  cancelAnimationFrame(timerRafId);
+  function frame(now) {
+    if (isPaused) { timerRafId = requestAnimationFrame(frame); return; }
+    const elapsed = now - timerStart;
+    const pct = Math.min(100, (elapsed / ROTATION_MS) * 100);
+    timerFill.style.width = pct + '%';
+    if (pct < 100) timerRafId = requestAnimationFrame(frame);
+  }
+  timerRafId = requestAnimationFrame(frame);
+}
+
+function resetTimerBar() {
+  cancelAnimationFrame(timerRafId);
+  timerFill.style.width = '0%';
+}
+
+// ── Auto-advance ──────────────────────────────────────────────────────────────
+function startAutoRotation() {
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => {
+    if (!isPaused) advance(1);
+  }, ROTATION_MS);
+}
+
+function stopAutoRotation() {
+  clearTimeout(autoTimer);
+}
+
+// ── Engagement timer ──────────────────────────────────────────────────────────
+function startEngageTimer(item) {
+  clearTimeout(engageTimer);
+  engageTimer = setTimeout(() => {
+    gaEvent('item_engaged', {
+      item_id:  item.id,
+      category: item.category,
+      language: currentLang,
+    });
+  }, ENGAGED_MS);
+}
+
+// ── Render item content (no transition) ──────────────────────────────────────
+function renderItemContent(item, fireGA) {
+  // Category label: e.g. "TECH · ITEM 14 / 50"
+  categoryLbl.textContent = item.category.toUpperCase() + ' · ITEM ' + item.id + ' / ' + QUOTES.length;
+
+  // Name — product names are universal, no translation
+  textEl.textContent = item.name;
+
+  // Why-line
+  authorEl.textContent = getWhy(item, currentLang);
+
+  // Per-item CTA
+  const ctaText    = getCtaStr(CTA_ITEM, currentLang);
+  ctaEl.textContent = ctaText;
+  const pending = item.amazonUrl === 'AMAZON_LINK_PLACEHOLDER';
+  if (pending) {
+    // User fills these in later; CTA shows but is disabled
+    ctaEl.classList.add('cta-pending');
+    ctaEl.setAttribute('aria-disabled', 'true');
+    ctaEl.href = '#';
+  } else {
+    ctaEl.classList.remove('cta-pending');
+    ctaEl.removeAttribute('aria-disabled');
+    ctaEl.href = item.amazonUrl;
+  }
+  ctaEl.dataset.pending = pending ? 'true' : 'false';
+
+  if (fireGA) {
+    gaEvent('item_view', {
+      item_id:  item.id,
+      category: item.category,
+      language: currentLang,
+    });
+  }
+}
+
+// ── Transition to an item ─────────────────────────────────────────────────────
+function goTo(index, manual) {
+  if (isFading) return;
+  isFading = true;
+
+  stopAutoRotation();
+  clearTimeout(engageTimer);
+  resetTimerBar();
+
+  card.classList.remove('fade-in');
+  card.classList.add('fade-out');
+
+  setTimeout(() => {
+    currentIndex = ((index % QUOTES.length) + QUOTES.length) % QUOTES.length;
+    const item   = QUOTES[currentIndex];
+
+    renderItemContent(item, true);
+    renderFooterCta();
+    updateDots();
+
+    card.classList.remove('fade-out');
+    card.classList.add('fade-in');
+
+    isFading = false;
+
+    startEngageTimer(item);
+    startAutoRotation();
+    startTimerBar();
+  }, 620);
+}
+
+function advance(dir) {
+  goTo(currentIndex + dir, false);
+}
+
+// ── Per-item CTA click ────────────────────────────────────────────────────────
+ctaEl.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const item = QUOTES[currentIndex];
+  // If placeholder, block navigation
+  if (item.amazonUrl === 'AMAZON_LINK_PLACEHOLDER') {
+    e.preventDefault();
+    return;
+  }
+  gaEvent('item_cta_click', {
+    item_id:  item.id,
+    category: item.category,
+    language: currentLang,
+    cta_type: 'item',
+  });
+});
+
+// ── Footer CTA click ──────────────────────────────────────────────────────────
+footerCtaEl.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (AMAZON_FOOTER_URL === 'AMAZON_FOOTER_PLACEHOLDER') {
+    e.preventDefault();
+    return;
+  }
+  const item = QUOTES[currentIndex];
+  gaEvent('item_cta_click', {
+    item_id:  item.id,
+    category: item.category,
+    language: currentLang,
+    cta_type: 'footer',
+  });
+});
+
+// ── Stage click = next ────────────────────────────────────────────────────────
+stage.addEventListener('click', (e) => {
+  if (e.target === ctaEl || ctaEl.contains(e.target)) return;
+  advance(1);
+});
+
+// ── Arrow buttons ─────────────────────────────────────────────────────────────
+document.getElementById('btn-prev').addEventListener('click', (e) => {
+  e.stopPropagation();
+  advance(-1);
+});
+document.getElementById('btn-next').addEventListener('click', (e) => {
+  e.stopPropagation();
+  advance(1);
+});
+
+// ── Pause on hover ────────────────────────────────────────────────────────────
+widgetEl.addEventListener('mouseenter', () => { isPaused = true; });
+widgetEl.addEventListener('mouseleave', () => { isPaused = false; });
+
+// ── Language bar clicks ───────────────────────────────────────────────────────
+langBar.addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-btn');
+  if (!btn) return;
+  e.stopPropagation();
+  setLanguage(btn.dataset.lang, true);
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+try {
+  // Restore language
+  try {
+    const saved = localStorage.getItem(LS_LANG_KEY);
+    if (saved && ['en','es','fr','ja','zh','ko'].includes(saved)) {
+      currentLang = saved;
+      langBar.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === currentLang);
+      });
+    }
+  } catch(_) {}
+
+  // GA4 widget view
+  if (window.gtag) {
+    gtag('event', 'widget_view', { widget: 'gear', language: currentLang });
+    gtag('set', { 'widget': 'gear' });
+  }
+
+  // Build UI
+  buildDots();
+  renderFooterCta();
+
+  const initItem = QUOTES[currentIndex];
+  renderItemContent(initItem, true);
+  card.classList.add('fade-in');
+
+  startEngageTimer(initItem);
+  startAutoRotation();
+  startTimerBar();
+
+} catch(err) {
+  showFallback();
+}
+</script>
+</body>
+</html>
