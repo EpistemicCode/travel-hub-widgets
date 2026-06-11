@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="widget-version" content="1.0.0">
+<title>Visa Check</title>
+<!--
+  visa-check.html — Static visa-info directory · fluid (fills any iframe size)
+  Recommended native size: 480×320
+
+  No query params. No data fetch. No tracking.
+  Three trusted external sources, opened in a new tab:
+    • iVisa            — clean UI, broad coverage
+    • Passport Index   — visual passport ranking + visa map
+    • Gov.UK travel    — authoritative official advisory (works for any traveler as a sanity check)
+
+  Why a directory and not a live widget?
+  Visa rules change without notice and no free real-time feed exists.
+  Pointing users to maintained sources is safer than risking stale data.
+-->
+<link rel="stylesheet" href="assets/tokens.css">
+<style>
+  html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: transparent; }
+  .wrap { position: absolute; inset: 0; box-sizing: border-box; container-type: size;
+          padding: clamp(12px, 4cqw, 24px) clamp(14px, 4.5cqw, 28px);
+          display: flex; flex-direction: column; gap: clamp(8px, 2cqh, 14px); }
+  .hdr { display: flex; align-items: center; justify-content: space-between; }
+  h2 { font-size: clamp(18px, 6.5cqw, 28px); margin: 0; }
+  h2 em { font-style: italic; color: var(--accent); }
+  .lede { color: var(--text-dim); font-size: clamp(11px, 2.8cqw, 13px); line-height: 1.45; margin: 0; }
+  .links { display: flex; flex-direction: column; gap: clamp(6px, 1.5cqh, 10px); margin-top: clamp(4px, 1cqh, 8px); }
+  a.row { display: flex; align-items: center; justify-content: space-between;
+          padding: clamp(8px, 2.5cqw, 12px) clamp(10px, 3cqw, 14px);
+          border: var(--hairline); border-radius: 6px;
+          background: rgba(255,255,255,0.02);
+          color: var(--text); text-decoration: none;
+          transition: background 0.15s ease, border-color 0.15s ease; }
+  a.row:hover { background: var(--accent-soft); border-color: var(--accent-line); }
+  a.row .name { font-family: var(--font-display); font-size: clamp(14px, 4cqw, 18px); }
+  a.row .tag { font-size: clamp(9px, 2.2cqw, 11px); color: var(--text-faint);
+               letter-spacing: 0.1em; text-transform: uppercase; }
+  a.row .arrow { color: var(--text-faint); font-size: 14px; margin-left: 8px; }
+  a.row:hover .arrow { color: var(--accent); }
+  .foot { color: var(--text-faint); font-size: clamp(9px, 2.3cqw, 10px); line-height: 1.4;
+          margin-top: auto; padding-top: 6px; }
+  @container (max-width: 320px) {
+    a.row .tag { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="card wrap">
+  <div class="grain"></div>
+
+  <div class="hdr">
+    <span class="caps">Before you book</span>
+  </div>
+  <h2 class="serif">Check your <em>visa</em></h2>
+  <p class="lede">Rules change often. Always confirm with an official source before booking flights.</p>
+
+  <div class="links">
+    <a class="row" href="https://www.ivisa.com/" target="_blank" rel="noopener noreferrer">
+      <span>
+        <span class="name">iVisa</span>
+        <span class="tag" style="margin-left:10px">most travelers</span>
+      </span>
+      <span class="arrow">↗</span>
+    </a>
+    <a class="row" href="https://www.passportindex.org/" target="_blank" rel="noopener noreferrer">
+      <span>
+        <span class="name">Passport Index</span>
+        <span class="tag" style="margin-left:10px">visual map</span>
+      </span>
+      <span class="arrow">↗</span>
+    </a>
+    <a class="row" href="https://www.gov.uk/foreign-travel-advice" target="_blank" rel="noopener noreferrer">
+      <span>
+        <span class="name">Gov.UK Travel Advice</span>
+        <span class="tag" style="margin-left:10px">official</span>
+      </span>
+      <span class="arrow">↗</span>
+    </a>
+  </div>
+
+  <div class="foot">Not legal advice. Verify with your government's official travel advisory.</div>
+</div>
+</body>
+</html>
