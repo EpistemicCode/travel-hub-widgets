@@ -116,3 +116,20 @@ input:focus, select:focus {
   outline: none;
   border-color: var(--accent-line);
 }
+
+/* ── Light theme (?theme=light) — transparent bg blends into white Notion pages ── */
+html.theme-light {
+  --bg: transparent;
+  --card: #ffffff;
+  --card-2: #faf7f2;
+  --line: rgba(0, 0, 0, 0.08);
+  --text: #2d2a26;
+  --text-dim: #6b675f;
+  --text-faint: #a39e93;
+  --accent: #e2643b;
+  --accent-soft: rgba(226, 100, 59, 0.10);
+  --accent-line: rgba(226, 100, 59, 0.35);
+  --good: #3d8f5f;
+  --warn: #b3873a;
+}
+html.theme-light body { background: transparent; }

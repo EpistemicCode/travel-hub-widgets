@@ -21,6 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<script>(function(){var p=new URLSearchParams(location.search);if(p.get("theme")==="light")document.documentElement.classList.add("theme-light");})();</script>
 <style>
   /* ── Reset & base ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -273,6 +274,19 @@
   @media (max-width: 340px) {
     .lang-bar { flex-wrap: wrap; padding: 6px 8px 0; }
     .lang-btn { padding: 2px 5px; font-size: 9px; }
+  }
+
+  /* ── Light theme (?theme=light) ── */
+  html.theme-light {
+    --bg-start: transparent; --bg-end: transparent;
+    --card: #ffffff;
+    --line: rgba(0,0,0,0.08);
+    --text: #2d2a26; --text-dim: #6b675f; --text-faint: #a39e93;
+    --accent: #a87a4f;
+    --accent-soft: rgba(168,122,79,0.10);
+    --accent-line: rgba(168,122,79,0.30);
+    --glyph: rgba(168,122,79,0.15);
+    --pink: #b35e4d;
   }
 </style>
 </head>

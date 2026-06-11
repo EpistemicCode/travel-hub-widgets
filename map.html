@@ -26,9 +26,10 @@
 
   GA events: widget_view, map_open (route→Google Maps), stays_from_map
 -->
+<script>(function(){var p=new URLSearchParams(location.search);if(p.get("theme")==="light")document.documentElement.classList.add("theme-light");})();</script>
 <link rel="stylesheet" href="assets/tokens.css">
 <style>
-  html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: #2F3438; }
+  html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--bg, #2F3438); }
   .map { position: absolute; inset: 0; box-sizing: border-box; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
   .hdr { display: flex; justify-content: space-between; align-items: baseline; }
   .hdr h2 { font-family: var(--font-display); font-size: 18px; font-style: italic; color: var(--accent); margin: 0; line-height: 1.1; }
