@@ -6,6 +6,16 @@ can curl any widget and verify which release is live.
 
 ## [Unreleased]
 
+## [1.6.1] — 2026-06-11
+### Changed
+- **countdown.html + map.html:** Converted all fixed-px typography to fluid `clamp(min, vw, max)` sizes so the layout scales with the Notion embed width (previously rendered tiny at 480-720px embeds). Countdown digits now scale 32→80px, destination 22→50px; map route title 20→40px. Added fluid `html { font-size: clamp(14px, 2.2vw, 20px) }` base. Map SVG route labels bumped 10→12 viewBox units (they already scaled with width).
+- **nowin.html + quote.html:** Raised the caps and floors of the existing fluid clamps — time/temp figures now scale 30→92px (was 22→42px), city name 20→54px; quote text 19→48px (was 16→36px), author/CTA/lang-pill floors raised. Small-caps labels stay proportionally small (floors raised from 8-9px to 10-11px).
+- Setup/edit forms, footers, copy-URL toasts, and the city picker raised to an 11-12px minimum, fluid above that.
+- `widget-version` meta set to 1.6.1 in countdown, nowin, map, quote.
+
+### Added
+- **quote.html:** `?lang=en|es|fr|ja|zh|ko` URL param pre-selects the language on load (default remains `en`). The param takes precedence over a previously saved choice; the in-widget switcher still works and persists to localStorage as before.
+
 ## [1.5.1] — 2026-04-23
 ### Fixed
 - **flights.html + stays.html:** Expedia deep-links were routed through `prf.hn/click/camref:.../destination:...` (generic Partnerize), which redirected to Expedia's homepage instead of the search page. Switched to Expedia Group Creator Network's native endpoint: `https://expedia.com/affiliate?siteid=1&landingPage=<encoded-target>&camref=1100l5Jqrn`. Verified from EG widget's own output format.

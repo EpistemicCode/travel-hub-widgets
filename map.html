@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.4.0">
+<meta name="widget-version" content="1.6.1">
 <title>Route map</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
@@ -29,51 +29,54 @@
 <script>(function(){var p=new URLSearchParams(location.search);if(p.get("theme")==="light")document.documentElement.classList.add("theme-light");})();</script>
 <link rel="stylesheet" href="assets/tokens.css">
 <style>
+  /* Fluid base — scales the whole widget with the embed width */
+  html { font-size: clamp(14px, 2.2vw, 20px); }
   html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--bg, #2F3438); }
-  .map { position: absolute; inset: 0; box-sizing: border-box; padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+  .map { position: absolute; inset: 0; box-sizing: border-box; padding: clamp(14px, 2.8vw, 24px) clamp(16px, 3.2vw, 28px) clamp(12px, 2.4vw, 20px); display: flex; flex-direction: column; gap: clamp(8px, 1.6vw, 14px); cursor: pointer; }
   .hdr { display: flex; justify-content: space-between; align-items: baseline; }
-  .hdr h2 { font-family: var(--font-display); font-size: 18px; font-style: italic; color: var(--accent); margin: 0; line-height: 1.1; }
-  .hdr .caps { font-size: 9px; color: var(--text-faint); }
+  .hdr h2 { font-family: var(--font-display); font-size: clamp(20px, 5.2vw, 40px); font-style: italic; color: var(--accent); margin: 0; line-height: 1.1; }
+  .hdr .caps { font-size: clamp(10px, 1.6vw, 13px); color: var(--text-faint); }
   .canvas { flex: 1; min-height: 0; position: relative; background: var(--card-2); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
   .canvas svg { display: block; width: 100%; height: 100%; }
-  .canvas .loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); }
+  .canvas .loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: clamp(11px, 1.8vw, 14px); letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint); }
   .route-line { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; opacity: 0.75; }
   .pin { fill: var(--card); stroke: var(--accent); stroke-width: 1.5; }
   .pin-active { fill: var(--accent); }
   .pin-pulse { fill: var(--accent); opacity: 0.45; transform-origin: center; animation: pulse 1.8s ease-out infinite; }
   @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(3.2); opacity: 0; } }
-  .label { font-family: var(--font-sans, sans-serif); font-size: 10px; fill: var(--text-dim); letter-spacing: 0.02em; }
+  /* SVG labels scale with the viewBox (480×220) — 12 units ≈ 12px at 480w, ≈17px at 700w */
+  .label { font-family: var(--font-sans, sans-serif); font-size: 12px; fill: var(--text-dim); letter-spacing: 0.02em; }
   .label-active { fill: var(--accent); font-weight: 500; }
-  .ft { display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
+  .ft { display: flex; justify-content: space-between; align-items: center; font-size: clamp(11px, 1.8vw, 14px); color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
   .ft .cta { color: var(--text-dim); }
   .map:hover .ft .cta { color: var(--accent); }
-  .stays-row { display: flex; justify-content: space-between; align-items: center; font-size: 10px; padding-top: 6px; border-top: 1px dashed var(--line); }
+  .stays-row { display: flex; justify-content: space-between; align-items: center; font-size: clamp(11px, 1.8vw, 14px); padding-top: 6px; border-top: 1px dashed var(--line); }
   .stays-row .stays-link { color: var(--text-dim); text-decoration: none; letter-spacing: 0.04em; }
   .stays-row .stays-link em { font-style: normal; color: var(--accent); }
   .stays-row .stays-link:hover { color: var(--accent); }
-  .stays-row .disclosure { color: var(--text-faint); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .stays-row .disclosure { color: var(--text-faint); font-size: clamp(9px, 1.5vw, 12px); letter-spacing: 0.1em; text-transform: uppercase; }
 
   /* ── edit button (top-left, mirrors countdown) ── */
-  .edit-btn { position: absolute; top: 8px; left: 10px; font-size: 10px; letter-spacing: 0.1em; color: var(--text-faint); cursor: pointer; background: none; border: none; padding: 2px 4px; z-index: 3; }
+  .edit-btn { position: absolute; top: 8px; left: 10px; font-size: clamp(10px, 1.5vw, 13px); letter-spacing: 0.1em; color: var(--text-faint); cursor: pointer; background: none; border: none; padding: 2px 4px; z-index: 3; }
   .edit-btn:hover { color: var(--accent); }
 
   /* ── edit view ── */
-  #edit-view { position: absolute; inset: 0; box-sizing: border-box; padding: 12px 14px; display: none; flex-direction: column; gap: 8px; overflow-y: auto; background: var(--card); }
+  #edit-view { position: absolute; inset: 0; box-sizing: border-box; padding: clamp(12px, 2.4vw, 22px) clamp(14px, 2.8vw, 26px); display: none; flex-direction: column; gap: 8px; overflow-y: auto; background: var(--card); }
   #edit-view.active { display: flex; }
-  #edit-view h3 { font-family: var(--font-display); font-style: italic; font-size: 17px; color: var(--accent); margin: 0; line-height: 1.1; }
-  #edit-view .subtitle { font-size: 9px; color: var(--text-faint); letter-spacing: 0.14em; text-transform: uppercase; margin-top: -4px; }
+  #edit-view h3 { font-family: var(--font-display); font-style: italic; font-size: clamp(19px, 4.5vw, 30px); color: var(--accent); margin: 0; line-height: 1.1; }
+  #edit-view .subtitle { font-size: clamp(10px, 1.5vw, 12px); color: var(--text-faint); letter-spacing: 0.14em; text-transform: uppercase; margin-top: -4px; }
   .stop-row { display: flex; gap: 6px; align-items: center; }
-  .stop-row input[type="text"] { flex: 1; min-width: 0; background: var(--card-2); border: 1px solid var(--hairline, var(--line)); border-radius: 4px; padding: 5px 7px; font-size: 11px; color: var(--text); outline: none; font-family: inherit; }
+  .stop-row input[type="text"] { flex: 1; min-width: 0; background: var(--card-2); border: 1px solid var(--hairline, var(--line)); border-radius: 4px; padding: clamp(5px, 1.2vw, 9px) clamp(7px, 1.6vw, 12px); font-size: clamp(12px, 2vw, 15px); color: var(--text); outline: none; font-family: inherit; }
   .stop-row input[type="radio"] { accent-color: var(--accent); }
-  .stop-row .rm { background: none; border: 1px solid var(--line); border-radius: 4px; padding: 3px 7px; font-size: 11px; color: var(--text-faint); cursor: pointer; }
+  .stop-row .rm { background: none; border: 1px solid var(--line); border-radius: 4px; padding: 3px 7px; font-size: clamp(11px, 1.8vw, 14px); color: var(--text-faint); cursor: pointer; }
   .stop-row .rm:hover { color: #ff5a5a; border-color: #ff5a5a; }
-  .stop-row label { font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center; gap: 3px; }
-  #add-stop { background: none; border: 1px dashed var(--line); border-radius: 4px; padding: 6px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; }
+  .stop-row label { font-size: clamp(10px, 1.4vw, 12px); color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center; gap: 3px; }
+  #add-stop { background: none; border: 1px dashed var(--line); border-radius: 4px; padding: 6px; font-size: clamp(11px, 1.6vw, 13px); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; }
   #add-stop:hover { color: var(--accent); border-color: var(--accent-line); }
   .edit-actions { display: flex; gap: 6px; margin-top: auto; }
-  .btn-apply { flex: 1; background: var(--accent); border: none; border-radius: 4px; padding: 7px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; cursor: pointer; font-family: inherit; }
+  .btn-apply { flex: 1; background: var(--accent); border: none; border-radius: 4px; padding: 7px; font-size: clamp(11px, 1.8vw, 14px); letter-spacing: 0.12em; text-transform: uppercase; color: #fff; cursor: pointer; font-family: inherit; }
   .btn-apply:hover { opacity: 0.88; }
-  .btn-edit-cancel { background: none; border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; font-family: inherit; }
+  .btn-edit-cancel { background: none; border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px; font-size: clamp(11px, 1.8vw, 14px); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); cursor: pointer; font-family: inherit; }
 </style>
 </head>
 <body>
@@ -381,7 +384,7 @@
     toast.style.cssText = [
       'position:absolute','left:10px','right:10px','bottom:10px',
       'background:var(--card-2)','border:1px solid var(--line)','border-radius:6px',
-      'padding:8px 10px','font-size:10px','color:var(--text-dim)','line-height:1.35',
+      'padding:8px 10px','font-size:12px','color:var(--text-dim)','line-height:1.35',
       'display:flex','flex-direction:column','gap:6px','z-index:5',
       'box-shadow:0 4px 16px rgba(0,0,0,0.35)',
     ].join(';');

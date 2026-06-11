@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.1.0">
+<meta name="widget-version" content="1.6.1">
 <meta name="widget" content="quote">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
@@ -17,6 +17,11 @@
   quote.html — Rotating Travel Quote Widget · fluid (fills any iframe size)
   Embeds cleanly in Notion. No external dependencies except Google Fonts.
   Affiliate: Trip.com via Travelpayouts (allianceId 8106827 / SID 307071563)
+  Query params (all optional):
+    ?theme=light          light palette + transparent background
+    ?lang=en|es|fr|ja|zh|ko   pre-select language on load (default en);
+                          takes precedence over a previously saved choice,
+                          the switcher still works and persists as before
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -87,7 +92,7 @@
     background: none; border: none; border-radius: 20px;
     padding: 3px 8px;
     font-family: var(--font-ui);
-    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: clamp(10px, 1.5cqi, 13px); letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--text-faint);
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
@@ -144,18 +149,18 @@
   .quote-text {
     font-family: var(--font-serif);
     font-style: italic;
-    font-size: clamp(16px, 4.5cqi, 36px);
-    line-height: 1.62;
+    font-size: clamp(19px, 6cqi, 48px);
+    line-height: 1.5;
     color: var(--text);
     letter-spacing: 0.01em;
-    margin-bottom: 20px;
+    margin-bottom: clamp(14px, 2.5cqi, 22px);
   }
 
   /* ── Author line ── */
   .quote-author {
     display: flex; align-items: center; gap: 8px;
     font-family: var(--font-ui);
-    font-size: clamp(9px, 1.4cqi, 14px);
+    font-size: clamp(11px, 1.9cqi, 16px);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--text-dim);
@@ -172,7 +177,7 @@
     margin-top: 16px;
     font-family: var(--font-serif);
     font-style: italic;
-    font-size: clamp(11px, 1.8cqi, 16px);
+    font-size: clamp(13px, 2.2cqi, 19px);
     color: var(--accent);
     text-decoration: none;
     letter-spacing: 0.02em;
@@ -249,7 +254,7 @@
     flex-shrink: 0;
   }
   .disclosure {
-    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: clamp(9px, 1.3cqi, 11px); letter-spacing: 0.1em; text-transform: uppercase;
     color: var(--text-faint);
   }
 
@@ -262,10 +267,10 @@
   }
   .fallback-text {
     font-family: var(--font-serif); font-style: italic;
-    font-size: 20px; color: var(--text); line-height: 1.6;
+    font-size: clamp(20px, 4cqi, 32px); color: var(--text); line-height: 1.6;
   }
   .fallback-author {
-    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-size: clamp(11px, 1.7cqi, 14px); letter-spacing: 0.14em; text-transform: uppercase;
     color: var(--text-dim);
   }
 
@@ -1373,16 +1378,25 @@ langBar.addEventListener('click', (e) => {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 try {
-  // Restore language from localStorage
+  // Resolve initial language: ?lang= URL param wins, then localStorage, then 'en'
+  const VALID_LANGS = ['en','es','fr','ja','zh','ko'];
+  let initLang = null;
   try {
-    const saved = localStorage.getItem(LS_LANG_KEY);
-    if (saved && ['en','es','fr','ja','zh','ko'].includes(saved)) {
-      currentLang = saved;
-      langBar.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === currentLang);
-      });
-    }
+    const urlLang = (new URLSearchParams(location.search).get('lang') || '').toLowerCase();
+    if (VALID_LANGS.includes(urlLang)) initLang = urlLang;
   } catch(_) {}
+  if (!initLang) {
+    try {
+      const saved = localStorage.getItem(LS_LANG_KEY);
+      if (saved && VALID_LANGS.includes(saved)) initLang = saved;
+    } catch(_) {}
+  }
+  if (initLang) {
+    currentLang = initLang;
+    langBar.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    });
+  }
 
   // Register GA4 custom dimensions
   if (window.gtag) {
