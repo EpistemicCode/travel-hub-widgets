@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.5.1">
+<meta name="widget-version" content="1.7.0">
 <title>travel-hub-widgets — directory</title>
 <meta name="description" content="Embed-only widgets for Notion travel templates. Hotel + flight search, local weather, trip countdown, rotating quotes, currency converter.">
 <meta property="og:title" content="Travel Hub Widgets">
@@ -95,6 +95,7 @@
       <a href="./README.md">Terms</a>
       <a href="./LICENSE">License</a>
       <a href="https://github.com/EpistemicCode/travel-hub-widgets" target="_blank" rel="noopener">Repository</a>
+      <a href="#" id="theme-toggle" title="Preview widgets for light (day-mode) Notion pages">☀ Day mode</a>
     </div>
   </header>
 
@@ -112,6 +113,7 @@
         </ul>
       </li>
       <li>Size the embed to match the dimensions shown on each card.</li>
+      <li><strong>Light (day-mode) Notion page?</strong> Add <code>?theme=light</code> to any widget URL — light palette + transparent background. Or hit <strong>☀ Day mode</strong> above and the Copy buttons do it for you.</li>
     </ol>
   </section>
 
@@ -147,6 +149,7 @@
         <code>&amp;adults=2</code>
         <code>&amp;children=0</code>
         <code>&amp;currency=USD</code>
+        <code>&amp;theme=light</code>
       </details>
     </article>
 
@@ -180,6 +183,7 @@
         <code>&amp;return=2026-05-08</code>
         <code>&amp;adults=1</code>
         <code>&amp;type=RT</code>
+        <code>&amp;theme=light</code>
       </details>
     </article>
 
@@ -210,6 +214,7 @@
         <code>&amp;lon=115.2625</code>
         <code>&amp;tz=Asia/Makassar</code>
         <code>&amp;place=Ubud</code>
+        <code>&amp;theme=light</code>
       </details>
     </article>
 
@@ -239,6 +244,7 @@
         <code>?to=2026-05-02T21:40</code>
         <code>&amp;dest=Ubud,+Bali</code>
         <code>&amp;flight=GA+881</code>
+        <code>&amp;theme=light</code>
       </details>
     </article>
 
@@ -268,6 +274,7 @@
         <summary>Pre-configure with URL params</summary>
         <code>?stops=Canggu,Ubud,Nusa+Penida,Ceningan</code>
         <code>&amp;active=Ubud</code>
+        <code>&amp;theme=light</code>
       </details>
     </article>
 
@@ -293,6 +300,11 @@
         <span><strong>Size:</strong> 480 × 300</span>
         <span><strong>Data:</strong> none · 6 langs</span>
       </div>
+      <details class="params">
+        <summary>Pre-configure with URL params</summary>
+        <code>?lang=en|es|fr|ja|zh|ko</code>
+        <code>&amp;theme=light</code>
+      </details>
     </article>
 
     <!-- currency.html -->
@@ -319,19 +331,146 @@
       </div>
     </article>
 
+    <!-- gear.html -->
+    <article class="widget">
+      <div class="grain"></div>
+      <div class="meta">
+        <h2>Travel <em>gear</em></h2>
+        <div class="badges">
+          <span class="badge live">Live</span>
+          <span class="badge aff">Affiliate</span>
+        </div>
+      </div>
+      <p class="desc">Rotating travel-gear picks in the same editorial style as the quote widget. Each item links out so readers can grab it in one tap.</p>
+      <div class="preview">
+        <iframe src="./gear.html" width="480" height="340" loading="lazy" title="Gear widget preview"></iframe>
+      </div>
+      <div class="url-row">
+        <input type="text" readonly value="https://epistemiccode.github.io/travel-hub-widgets/gear.html" aria-label="Embed URL for gear widget">
+        <button class="copy-btn" data-url="https://epistemiccode.github.io/travel-hub-widgets/gear.html">Copy</button>
+      </div>
+      <div class="specs">
+        <span><strong>Size:</strong> 480 × 340</span>
+        <span><strong>Data:</strong> none</span>
+      </div>
+      <details class="params">
+        <summary>Pre-configure with URL params</summary>
+        <code>?theme=light</code>
+      </details>
+    </article>
+
+    <!-- hotels-map.html -->
+    <article class="widget">
+      <div class="grain"></div>
+      <div class="meta">
+        <h2>Hotels on <em>map</em></h2>
+        <div class="badges">
+          <span class="badge live">Live</span>
+          <span class="badge aff">Affiliate</span>
+        </div>
+      </div>
+      <p class="desc">Agoda's interactive hotel map, pin-marked and bookable in place. Auto-detects the viewer's area, or pre-set any coordinates with URL params.</p>
+      <div class="preview">
+        <iframe src="./hotels-map.html" width="480" height="420" loading="lazy" title="Hotels map widget preview"></iframe>
+      </div>
+      <div class="url-row">
+        <input type="text" readonly value="https://epistemiccode.github.io/travel-hub-widgets/hotels-map.html" aria-label="Embed URL for hotels map widget">
+        <button class="copy-btn" data-url="https://epistemiccode.github.io/travel-hub-widgets/hotels-map.html">Copy</button>
+      </div>
+      <div class="specs">
+        <span><strong>Size:</strong> 480 × 540</span>
+        <span><strong>Data:</strong> Agoda</span>
+      </div>
+      <details class="params">
+        <summary>Pre-configure with URL params</summary>
+        <code>?dest=Paris,France</code>
+        <code>&amp;lat=48.8534</code>
+        <code>&amp;lon=2.3483</code>
+        <code>&amp;checkin=2026-07-01</code>
+        <code>&amp;checkout=2026-07-06</code>
+        <code>&amp;adults=2</code>
+        <code>&amp;radius=5</code>
+      </details>
+    </article>
+
+    <!-- visa-check.html -->
+    <article class="widget">
+      <div class="grain"></div>
+      <div class="meta">
+        <h2>Visa <em>check</em></h2>
+        <div class="badges">
+          <span class="badge live">Live</span>
+        </div>
+      </div>
+      <p class="desc">Three trusted visa-info sources — iVisa, Passport Index, Gov.UK — one tap away. A curated directory beats stale data when rules change weekly.</p>
+      <div class="preview">
+        <iframe src="./visa-check.html" width="480" height="320" loading="lazy" title="Visa check widget preview"></iframe>
+      </div>
+      <div class="url-row">
+        <input type="text" readonly value="https://epistemiccode.github.io/travel-hub-widgets/visa-check.html" aria-label="Embed URL for visa check widget">
+        <button class="copy-btn" data-url="https://epistemiccode.github.io/travel-hub-widgets/visa-check.html">Copy</button>
+      </div>
+      <div class="specs">
+        <span><strong>Size:</strong> 480 × 320</span>
+        <span><strong>Data:</strong> none</span>
+      </div>
+      <details class="params">
+        <summary>Pre-configure with URL params</summary>
+        <code>?theme=light</code>
+      </details>
+    </article>
+
   </div>
 
   <footer>
-    <div>© 2026 EpistemicCode · Originally built for the Travel Planning OS Notion template</div>
+    <div>© 2026 EpistemicCode · Built for the Travel Planning OS Notion template — free to embed in your own pages &amp; templates</div>
     <div style="margin-top: 6px;">
       Embed-only use under the <a href="./LICENSE">proprietary license</a>.
-      Affiliate links on Stays, Flights, Quote &amp; Currency widgets (Trip.com · Wise) support ongoing development.
+      Affiliate links on Stays, Flights, Map, Quote, Currency, Gear &amp; Hotels-map widgets (Trip.com · Expedia · Wise · Agoda · Amazon) support ongoing development.
     </div>
   </footer>
 
 </div>
 
 <script>
+  // ── Day-mode toggle ──
+  // Flips the directory itself AND rewrites every preview iframe + copy URL
+  // with ?theme=light, so what you copy is exactly what you previewed.
+  (function () {
+    const toggle = document.getElementById("theme-toggle");
+    const root = document.documentElement;
+
+    function withTheme(url, light) {
+      const u = new URL(url, location.href);
+      if (light) u.searchParams.set("theme", "light");
+      else u.searchParams.delete("theme");
+      return u.href;
+    }
+
+    function apply(light) {
+      root.classList.toggle("theme-light", light);
+      toggle.textContent = light ? "☾ Night mode" : "☀ Day mode";
+      document.querySelectorAll(".preview iframe").forEach((f) => {
+        f.src = withTheme(f.getAttribute("src"), light);
+      });
+      document.querySelectorAll(".url-row").forEach((row) => {
+        const input = row.querySelector("input");
+        const btn = row.querySelector(".copy-btn");
+        const url = withTheme(btn.dataset.url, light);
+        input.value = url;
+        btn.dataset.url = url;
+      });
+    }
+
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      apply(!root.classList.contains("theme-light"));
+    });
+
+    // Honor ?theme=light on the directory URL itself
+    if (root.classList.contains("theme-light")) apply(true);
+  })();
+
   // Click-to-copy for each URL box
   document.querySelectorAll(".copy-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {

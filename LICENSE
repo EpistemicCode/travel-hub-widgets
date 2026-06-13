@@ -17,6 +17,22 @@ embedded affiliate identifiers, and provided that the embedding
 context itself is lawful (no sites promoting illegal activity,
 infringement, harassment, or sanctioned content).
 
+Appending the documented display query parameters (for example
+"?theme=light" for day-mode pages, language, destination, or date
+presets) is expressly permitted and does not count as modifying the
+URLs, so long as the affiliate identifiers baked into the widgets
+remain untouched.
+
+NOTION TEMPLATE USE (expressly permitted)
+-----------------------------------------
+You MAY include the hosted widget URLs as embed blocks inside Notion
+pages and Notion templates that you distribute or sell — free or
+paid — including duplicated template copies delivered to your buyers.
+The widgets remain hosted at the original GitHub Pages URLs; what you
+distribute is the embed link, not the source code. You may not
+present the widgets themselves as your own product, and the
+restrictions below still apply.
+
 WHAT YOU MAY NOT DO
 -------------------
 Without prior written permission from the copyright holder, you may

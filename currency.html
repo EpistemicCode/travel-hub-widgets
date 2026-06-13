@@ -12,6 +12,9 @@
   Compare CTA opens wise.com/compare/ deep-link in a new tab.
 
   Affiliate: Wise via Partnerize (camref:1110lELMy). Footer CTA tracks via partnerize click URL.
+
+  Query params (all optional):
+    ?theme=light          light palette + transparent background (Notion day mode)
 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-D8GYSB22FR"></script>
 <script>
@@ -24,6 +27,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<script>(function(){var p=new URLSearchParams(location.search);if(p.get("theme")==="light")document.documentElement.classList.add("theme-light");})();</script>
 <style>
   /* ── Reset & base ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,6 +51,26 @@
     --radius:         10px;
     --transition:     300ms ease;
   }
+
+  /* ── Light theme (?theme=light) — transparent bg blends into white Notion pages ── */
+  html.theme-light {
+    --bg-start: transparent; --bg-end: transparent;
+    --card: #ffffff;
+    --line: rgba(0,0,0,0.08);
+    --text: #2d2a26; --text-dim: #6b675f; --text-faint: #a39e93;
+    --accent: #a87a4f;
+    --accent-soft: rgba(168,122,79,0.10);
+    --accent-line: rgba(168,122,79,0.30);
+    --accent-glow: rgba(168,122,79,0.08);
+    --glyph: rgba(168,122,79,0.15);
+    --pink: #b35e4d;
+  }
+  html.theme-light .currency-widget { background: transparent; }
+  html.theme-light .lang-btn:hover { color: var(--text-dim); background: rgba(0,0,0,0.05); }
+  html.theme-light .get-rate-cta { color: #ffffff; background: #a87a4f; border-color: #8f6640; }
+  html.theme-light .get-rate-cta:hover { background: #b88a5d; box-shadow: 0 4px 12px rgba(168,122,79,0.30); }
+  html.theme-light .compare-cta { border-color: rgba(168,122,79,0.35); }
+  html.theme-light .compare-cta:hover { background: rgba(168,122,79,0.08); border-color: rgba(168,122,79,0.65); }
 
   html, body {
     width: 100%; height: 100%;

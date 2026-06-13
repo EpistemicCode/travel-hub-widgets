@@ -19,6 +19,7 @@
     &checkin=2026-05-05&checkout=2026-05-11
     &adults=2&children=0&rooms=1&radius=5
     &currency=USD&language=en-us&city=15470
+    &theme=light          light palette + transparent background (Notion day mode)
 
   Behavior:
     - Renders Agoda's official interactive map widget (iframe) for the
@@ -29,6 +30,7 @@
 
   GA events: widget_view, hotels_map_view
 -->
+<script>(function(){var p=new URLSearchParams(location.search);if(p.get("theme")==="light")document.documentElement.classList.add("theme-light");})();</script>
 <link rel="stylesheet" href="assets/tokens.css">
 <style>
   html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: transparent; }
@@ -42,6 +44,7 @@
   .ft { display: flex; justify-content: space-between; align-items: center; font-size: 9px; }
   .ft .meta { color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; }
   .ft .disclosure { color: var(--text-faint); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+  html.theme-light .wrap { background: transparent; }
 </style>
 </head>
 <body>

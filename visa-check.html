@@ -9,7 +9,10 @@
   visa-check.html — Static visa-info directory · fluid (fills any iframe size)
   Recommended native size: 480×320
 
-  No query params. No data fetch. No tracking.
+  Query params (all optional):
+    ?theme=light          light palette + transparent background (Notion day mode)
+
+  No data fetch. No tracking.
   Three trusted external sources, opened in a new tab:
     • iVisa            — clean UI, broad coverage
     • Passport Index   — visual passport ranking + visa map
@@ -19,6 +22,7 @@
   Visa rules change without notice and no free real-time feed exists.
   Pointing users to maintained sources is safer than risking stale data.
 -->
+<script>(function(){var p=new URLSearchParams(location.search);if(p.get("theme")==="light")document.documentElement.classList.add("theme-light");})();</script>
 <link rel="stylesheet" href="assets/tokens.css">
 <style>
   html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: transparent; }
@@ -47,6 +51,7 @@
   @container (max-width: 320px) {
     a.row .tag { display: none; }
   }
+  html.theme-light a.row { background: rgba(0,0,0,0.02); }
 </style>
 </head>
 <body>
