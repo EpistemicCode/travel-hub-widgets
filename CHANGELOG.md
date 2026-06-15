@@ -6,6 +6,16 @@ can curl any widget and verify which release is live.
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-06-15
+### Added
+- **currency.html, visa-check.html, hotels-map.html, offline.html:** `?theme=light` support — light palette + transparent background so widgets blend into white (day-mode) Notion pages. Completes light-theme coverage across the entire widget set.
+- **index.html:** **☀ Day mode** toggle in the header. Flips the directory itself to light AND rewrites every preview iframe + Copy URL with `?theme=light`, so what you copy matches what you previewed. Honors `?theme=light` on the directory URL itself.
+- **index.html:** Added directory cards for the three previously-unlisted live widgets — **gear**, **hotels-map**, and **visa-check** — and a `?theme=light` chip to every existing card's params list.
+- **LICENSE:** Explicit **Notion Template Use** grant — embedding the hosted widget URLs inside Notion templates you distribute or sell (including duplicated buyer copies) is expressly permitted. Clarified that appending documented display params (e.g. `?theme=light`) is not "modifying the URLs."
+
+### Changed
+- **offline.html:** Default background changed from solid `#2F3438` to `transparent` so the error card sits flush on any host page (light or dark), not just dark Notion.
+
 ## [1.6.1] — 2026-06-11
 ### Changed
 - **countdown.html + map.html:** Converted all fixed-px typography to fluid `clamp(min, vw, max)` sizes so the layout scales with the Notion embed width (previously rendered tiny at 480-720px embeds). Countdown digits now scale 32→80px, destination 22→50px; map route title 20→40px. Added fluid `html { font-size: clamp(14px, 2.2vw, 20px) }` base. Map SVG route labels bumped 10→12 viewBox units (they already scaled with width).
