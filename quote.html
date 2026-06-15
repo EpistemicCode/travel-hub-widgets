@@ -293,6 +293,10 @@
     --glyph: rgba(168,122,79,0.15);
     --pink: #b35e4d;
   }
+  /* The shell uses a literal dark bg above; flip it transparent in day mode so
+     the widget blends into white Notion pages instead of showing a dark box. */
+  html.theme-light .quote-widget { background: transparent; }
+  html.theme-light .lang-btn:hover { color: var(--text-dim); background: rgba(0,0,0,0.05); }
 </style>
 </head>
 <body>
