@@ -1,0 +1,34 @@
+/* Source: Template/design-system.md v2 */
+
+:root {
+  /* ── Colour palette (Quiet Atlas — cream/editorial light theme) ─────────── */
+  --ink:           #1B2A3A;  /* Primary text, line-art, icons   */
+  --cream:         #F4EFE6;  /* Page background                 */
+  --terracotta:    #C46A4A;  /* Single-accent CTA               */
+  --sage:          #7A8C7A;  /* Secondary tag/status bar        */
+  --brass:         #B8894A;  /* Ornaments only                  */
+  --paper-shadow:  #E5DFD2;  /* Subtle shading on cream         */
+
+  /* ── Derived semantic aliases ──────────────────────────────────────────── */
+  --text:          var(--ink);
+  --text-dim:      color-mix(in srgb, var(--ink) 60%, var(--cream));
+  --text-faint:    color-mix(in srgb, var(--ink) 38%, var(--cream));
+  --bg:            var(--cream);
+  --hairline:      1px solid var(--paper-shadow);
+
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  --font-display:  'Fraunces', Georgia, serif;
+  --font-body:     'Inter', system-ui, sans-serif;
+  --font-mono:     'JetBrains Mono', ui-monospace, monospace;
+
+  /* ── Spacing / layout ───────────────────────────────────────────────────── */
+  --radius:        5px;
+  --measure:       60ch;
+  --wrapper:       min(1100px, 92vw);
+
+  /* ── CTA ─────────────────────────────────────────────────────────────────── */
+  --cta-bg:        var(--terracotta);
+  --cta-text:      var(--cream);
+}
+
+*, *::before, *::after { box-sizing: border-box; }

@@ -1,0 +1,255 @@
+/*
+ * covers.css — Quiet Atlas cover generator
+ * Part of travel-hub-widgets / covers/
+ * TODO: self-host Fraunces, Inter, JetBrains Mono (currently via Google Fonts CDN)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;1,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap');
+
+/* ── Quiet Atlas design tokens ── */
+:root {
+  --qa-cream:        #F4EFE6;
+  --qa-ink:          #1B2A3A;
+  --qa-terracotta:   #C46A4A;
+  --qa-sage:         #7A8C7A;
+  --qa-brass:        #B8894A;
+  --qa-paper-shadow: #E5DFD2;
+  --qa-rule:         #cbb89a;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-ui:      'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Cover shell ── */
+.cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  overflow: hidden;
+  background: var(--qa-cream);
+}
+
+/* Size variants */
+.cover[data-size="hub"]    { width: 1500px; height: 600px; }
+.cover[data-size="module"] { width: 1500px; height: 400px; }
+.cover[data-size="banner"] { width: 1500px; height: 300px; }
+
+/* ── Split layout: hub + module ── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 64px;
+  background: var(--qa-cream);
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.cover[data-size="hub"]    .panel { width: 44%; height: 100%; }
+.cover[data-size="module"] .panel { width: 40%; height: 100%; }
+
+/* 1px hairline divider */
+.divider {
+  width: 1px;
+  background: var(--qa-paper-shadow);
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+/* ── Scene zone ── */
+.scene {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.scene svg.horizon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.scene-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Panel typography ── */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--qa-sage);
+  margin-bottom: 20px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--qa-ink);
+  line-height: 1.1;
+  margin-bottom: 0;
+}
+
+.cover[data-size="hub"]    .title { font-size: 52px; }
+.cover[data-size="module"] .title { font-size: 44px; }
+
+.subtitle {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--qa-sage);
+  margin-top: 14px;
+}
+
+.cover[data-size="hub"]    .subtitle { font-size: 20px; }
+.cover[data-size="module"] .subtitle { font-size: 16px; }
+
+/* ── Hairline rule + terracotta dot ── */
+.rule-row {
+  display: flex;
+  align-items: center;
+  margin-top: 28px;
+  margin-bottom: 28px;
+}
+
+.rule-line {
+  flex: 1;
+  height: 1px;
+  background: var(--qa-rule);
+  max-width: 140px;
+}
+
+.rule-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--qa-terracotta);
+  margin-left: 0;
+  flex-shrink: 0;
+}
+
+/* ── Glyph ── */
+.glyph {
+  color: var(--qa-terracotta);
+  display: flex;
+  align-items: center;
+}
+
+.glyph svg {
+  display: block;
+}
+
+/* ── Banner variant ── */
+.cover[data-size="banner"] {
+  flex-direction: column;
+}
+
+.cover[data-size="banner"] .scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.cover[data-size="banner"] .banner-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  width: 280px;
+  padding: 20px 28px 24px;
+  background: rgba(244, 239, 230, 0.92);
+  backdrop-filter: blur(2px);
+}
+
+.cover[data-size="banner"] .banner-caption .eyebrow {
+  font-size: 10px;
+  margin-bottom: 8px;
+}
+
+.cover[data-size="banner"] .banner-caption .title {
+  font-size: 28px;
+  color: var(--qa-ink);
+}
+
+/* ── Contact sheet (index.html) ── */
+.contact-sheet {
+  background: #f0ebe0;
+  min-height: 100vh;
+  padding: 48px;
+  font-family: var(--font-ui);
+  color: var(--qa-ink);
+}
+
+.contact-sheet h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
+  color: var(--qa-ink);
+  margin-bottom: 8px;
+}
+
+.contact-sheet .sheet-sub {
+  font-size: 13px;
+  color: var(--qa-sage);
+  margin-bottom: 48px;
+}
+
+.preset-row {
+  margin-bottom: 40px;
+}
+
+.preset-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--qa-sage);
+  margin-bottom: 10px;
+}
+
+.preview-wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--qa-paper-shadow);
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(27,42,58,0.08);
+}
+
+/* Scale wrappers for each size to ~480px wide */
+.preview-hub    { width: 480px; height: 192px; }
+.preview-module { width: 480px; height: 128px; }
+.preview-banner { width: 480px; height:  96px; }
+
+.preview-hub    .cover-scaled,
+.preview-module .cover-scaled,
+.preview-banner .cover-scaled {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+
+.preview-hub    .cover-scaled { transform: scale(calc(480/1500)); }
+.preview-module .cover-scaled { transform: scale(calc(480/1500)); }
+.preview-banner .cover-scaled { transform: scale(calc(480/1500)); }

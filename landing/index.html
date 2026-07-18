@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  Travel Planning OS — Sales Landing Page                            ║
+  ║  Brand: Quiet Atlas  |  Seller: EpistemicCode                       ║
+  ║  Source plan: .claude/plans/help-me-to-improve-rippling-petal.md    ║
+  ╠══════════════════════════════════════════════════════════════════════╣
+  ║  TODO PLACEHOLDERS — search "TODO:" to find all:                    ║
+  ║                                                                      ║
+  ║  GUMROAD URLS (5 instances):                                         ║
+  ║    • GUMROAD_URL_TODO?utm_source=landing&utm_medium=web              ║
+  ║      &utm_campaign=evergreen&utm_content=hero        (hero CTA)      ║
+  ║    • GUMROAD_URL_TODO?...utm_content=offer           (offer card)    ║
+  ║    • GUMROAD_URL_TODO?...utm_content=faq             (FAQ CTA)       ║
+  ║    • GUMROAD_URL_TODO?...utm_content=final-cta       (final CTA)     ║
+  ║    • PACKING_FREE_URL_TODO?...utm_content=lead-magnet (free packing) ║
+  ║                                                                      ║
+  ║  IMAGES (placeholders — replace with real WebP):                     ║
+  ║    • /img/og-cover.png       (1200×630 OG image)                    ║
+  ║    • /img/hero.webp          (hero screenshot 1600×1000)             ║
+  ║    • /img/gallery-01.webp    (Hub dashboard)                        ║
+  ║    • /img/gallery-02.webp    (Live budget)                          ║
+  ║    • /img/gallery-03.webp    (AI Assistant)                         ║
+  ║    • /img/gallery-04.webp    (Route map)                            ║
+  ║    • /img/gallery-05.webp    (Packing checklist)                    ║
+  ║    • /img/favicon.ico        (site favicon)                         ║
+  ║                                                                      ║
+  ║  FONTS: Google Fonts interim — replace with self-hosted woff2        ║
+  ║    (see landing/fonts/README.md for exact files)                     ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F4EFE6">
+
+  <!-- SEO -->
+  <title>Travel Planning OS — Notion Travel Planner Template | Quiet Atlas</title>
+  <meta name="description" content="A relational Notion travel template: itinerary, budget, bookings, and packing in one live dashboard. AI-ready, works on free Notion. $35.">
+  <link rel="canonical" href="https://epistemiccode.github.io/travel-hub-widgets/landing/">
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website">
+  <meta property="og:title"       content="Travel Planning OS — Notion Travel Planner Template | Quiet Atlas">
+  <meta property="og:description" content="A relational Notion travel template: itinerary, budget, bookings, and packing in one live dashboard. AI-ready, works on free Notion. $35.">
+  <meta property="og:image"       content="/img/og-cover.png"><!-- TODO: replace with full absolute URL after deploy -->
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url"         content="https://epistemiccode.github.io/travel-hub-widgets/landing/">
+  <meta property="og:locale"      content="en_US">
+  <meta property="og:site_name"   content="Quiet Atlas">
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Travel Planning OS — Notion Travel Planner Template | Quiet Atlas">
+  <meta name="twitter:description" content="A relational Notion travel template: itinerary, budget, bookings, and packing in one live dashboard. AI-ready, works on free Notion. $35.">
+  <meta name="twitter:image"       content="/img/og-cover.png"><!-- TODO: replace with full absolute URL after deploy -->
+
+  <!-- Favicon (placeholder) -->
+  <!-- TODO: add /img/favicon.ico and optionally /img/favicon.svg -->
+
+  <!-- JSON-LD Product schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": "Travel Planning OS",
+    "brand": {
+      "@type": "Brand",
+      "name": "Quiet Atlas"
+    },
+    "description": "A relational Notion travel template: itinerary, budget, bookings, and packing in one live dashboard. AI-ready, works on free Notion.",
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "USD",
+      "price": "35",
+      "availability": "https://schema.org/InStock",
+      "url": "GUMROAD_URL_TODO"
+    }
+  }
+  </script>
+
+  <!-- TODO: replace Google Fonts with self-hosted woff2 in /fonts/ for perf -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="tokens.landing.css">
+  <link rel="stylesheet" href="pulse.css">
+  <link rel="stylesheet" href="landing.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     § 1 — HERO
+══════════════════════════════════════════════════════ -->
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="wrapper">
+    <div class="hero-inner">
+
+      <!-- Copy -->
+      <div class="hero-copy">
+        <span class="eyebrow">Quiet Atlas · Travel Planning OS</span>
+        <h1 id="hero-heading">Plan your whole trip in an afternoon — and arrive actually ready.</h1>
+        <p class="hero-subhead">One relational Notion workspace for your itinerary, budget, bookings, and packing — that updates itself as you plan. No spreadsheets. No thirty open tabs. No setup.</p>
+
+        <div class="cta-cluster">
+          <!-- TODO: replace GUMROAD_URL_TODO with real Gumroad URL before deploy -->
+          <a href="GUMROAD_URL_TODO?utm_source=landing&utm_medium=web&utm_campaign=evergreen&utm_content=hero"
+             class="btn-primary"
+             target="_blank"
+             rel="noopener">Get instant access — $35</a>
+        </div>
+        <p class="trust-line">Works on free Notion · 30-second setup · Lifetime updates</p>
+      </div>
+
+      <!-- Mini live-dashboard card -->
+      <aside class="dashboard-card" aria-label="Live dashboard preview">
+        <div class="dashboard-card-header">
+          <span class="dashboard-card-title">Travel Planning OS</span>
+          <span class="pulse-countdown" aria-label="121 days to go">121 days to go</span>
+        </div>
+
+        <!-- Packing 56% (14/25 packed) -->
+        <div class="pulse-row">
+          <div class="pulse-label">
+            <span>Packing</span>
+            <span class="pulse-value">14 / 25 packed</span>
+          </div>
+          <div class="pulse-track" role="progressbar" aria-valuenow="56" aria-valuemin="0" aria-valuemax="100" aria-label="Packing progress 56%">
+            <div class="pulse-fill" style="width:56%"></div>
+          </div>
+        </div>
+
+        <!-- Budget 90% ($2,707/$3,000) -->
+        <div class="pulse-row">
+          <div class="pulse-label">
+            <span>Budget</span>
+            <span class="pulse-value">$2,707 / $3,000</span>
+          </div>
+          <div class="pulse-track" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100" aria-label="Budget used 90%">
+            <div class="pulse-fill" style="width:90%"></div>
+          </div>
+        </div>
+
+        <!-- Bookings 8/8 — sage bar -->
+        <div class="pulse-row">
+          <div class="pulse-label">
+            <span>Bookings</span>
+            <span class="pulse-value">8 / 8</span>
+          </div>
+          <div class="pulse-track" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Bookings complete 8 of 8">
+            <div class="pulse-fill sage" style="width:100%"></div>
+          </div>
+        </div>
+
+        <!-- Hero placeholder — real WebP screenshot goes here -->
+        <!-- TODO: replace with real WebP screenshot -->
+        <figure style="margin:1.25rem 0 0; border-radius:var(--radius); overflow:hidden; border:var(--hairline);">
+          <svg viewBox="0 0 480 200" xmlns="http://www.w3.org/2000/svg" aria-label="Hub dashboard screenshot placeholder" role="img" style="display:block;width:100%;height:auto;">
+            <rect width="480" height="200" fill="#F4EFE6"/>
+            <rect x="0.5" y="0.5" width="479" height="199" fill="none" stroke="#E5DFD2"/>
+            <text x="240" y="96" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#1B2A3A" opacity="0.4" letter-spacing="2">HUB SCREENSHOT</text>
+            <text x="240" y="114" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#1B2A3A" opacity="0.25" letter-spacing="1">1600 × 1000</text>
+          </svg>
+          <figcaption class="mono-label" style="padding:6px 10px;background:white;">Hub dashboard · live pulse bars</figcaption>
+        </figure>
+      </aside>
+
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- ══════════════════════════════════════════════════════
+     § 2 — VALUE EQUATION BAND
+══════════════════════════════════════════════════════ -->
+<section class="value-band" aria-label="Why it works">
+  <div class="wrapper">
+    <div class="value-grid">
+
+      <div class="value-cell">
+        <span class="value-arrow" aria-hidden="true">↑</span>
+        <p class="value-headline">Dream outcome</p>
+        <p class="value-sub">Arrive ready, nothing forgotten</p>
+      </div>
+
+      <div class="value-cell">
+        <span class="value-arrow" aria-hidden="true">↑</span>
+        <p class="value-headline">Likelihood</p>
+        <p class="value-sub">Done-for-you demo trips show it working</p>
+      </div>
+
+      <div class="value-cell">
+        <span class="value-arrow" aria-hidden="true">↓</span>
+        <p class="value-headline">Time to result</p>
+        <p class="value-sub">A whole trip planned in one afternoon</p>
+      </div>
+
+      <div class="value-cell">
+        <span class="value-arrow" aria-hidden="true">↓</span>
+        <p class="value-headline">Effort &amp; friction</p>
+        <p class="value-sub">No formulas, no setup, no manual</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     § 3 — PROOF STRIP
+══════════════════════════════════════════════════════ -->
+<section aria-labelledby="proof-heading">
+  <div class="wrapper">
+
+    <div class="proof-header">
+      <span class="live-dot" aria-hidden="true"></span>
+      <h2 id="proof-heading" style="margin:0;font-size:clamp(1.1rem,2vw,1.4rem);">Real screenshots — watch the packing %, budget, and countdown move on their own.</h2>
+    </div>
+
+    <!-- 5 gallery screenshots -->
+    <div class="gallery-grid">
+
+      <!-- Gallery 1 — Hub dashboard (main, wider on tablet+) -->
+      <!-- TODO: replace with real WebP screenshot /img/gallery-01.webp -->
+      <div class="gallery-item">
+        <svg viewBox="0 0 800 350" xmlns="http://www.w3.org/2000/svg" aria-label="Hub dashboard screenshot" role="img" style="display:block;width:100%;height:100%;position:absolute;inset:0;">
+          <rect width="800" height="350" fill="#F4EFE6"/>
+          <rect x="0.5" y="0.5" width="799" height="349" fill="none" stroke="#E5DFD2"/>
+          <text x="400" y="170" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="12" fill="#1B2A3A" opacity="0.35" letter-spacing="2">HUB DASHBOARD · GALLERY 1</text>
+          <text x="400" y="190" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#1B2A3A" opacity="0.2" letter-spacing="1">REPLACE WITH /img/gallery-01.webp</text>
+        </svg>
+      </div>
+
+      <!-- Gallery 2 — Live budget -->
+      <!-- TODO: replace with real WebP screenshot /img/gallery-02.webp -->
+      <div class="gallery-item">
+        <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" aria-label="Live budget screenshot" role="img" style="display:block;width:100%;height:100%;position:absolute;inset:0;">
+          <rect width="480" height="300" fill="#F4EFE6"/>
+          <rect x="0.5" y="0.5" width="479" height="299" fill="none" stroke="#E5DFD2"/>
+          <text x="240" y="146" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#1B2A3A" opacity="0.35" letter-spacing="2">LIVE BUDGET · GALLERY 2</text>
+          <text x="240" y="164" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#1B2A3A" opacity="0.2" letter-spacing="1">REPLACE WITH /img/gallery-02.webp</text>
+        </svg>
+      </div>
+
+      <!-- Gallery 3 — AI Assistant -->
+      <!-- TODO: replace with real WebP screenshot /img/gallery-03.webp -->
+      <div class="gallery-item">
+        <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" aria-label="AI Assistant screenshot" role="img" style="display:block;width:100%;height:100%;position:absolute;inset:0;">
+          <rect width="480" height="300" fill="#F4EFE6"/>
+          <rect x="0.5" y="0.5" width="479" height="299" fill="none" stroke="#E5DFD2"/>
+          <text x="240" y="146" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#1B2A3A" opacity="0.35" letter-spacing="2">AI ASSISTANT · GALLERY 3</text>
+          <text x="240" y="164" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#1B2A3A" opacity="0.2" letter-spacing="1">REPLACE WITH /img/gallery-03.webp</text>
+        </svg>
+      </div>
+
+      <!-- Gallery 4 — Route map -->
+      <!-- TODO: replace with real WebP screenshot /img/gallery-04.webp -->
+      <div class="gallery-item">
+        <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" aria-label="Route map screenshot" role="img" style="display:block;width:100%;height:100%;position:absolute;inset:0;">
+          <rect width="480" height="300" fill="#F4EFE6"/>
+          <rect x="0.5" y="0.5" width="479" height="299" fill="none" stroke="#E5DFD2"/>
+          <text x="240" y="146" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#1B2A3A" opacity="0.35" letter-spacing="2">ROUTE MAP · GALLERY 4</text>
+          <text x="240" y="164" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#1B2A3A" opacity="0.2" letter-spacing="1">REPLACE WITH /img/gallery-04.webp</text>
+        </svg>
+      </div>
+
+      <!-- Gallery 5 — Packing checklist -->
+      <!-- TODO: replace with real WebP screenshot /img/gallery-05.webp -->
+      <div class="gallery-item">
+        <svg viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" aria-label="Packing checklist screenshot" role="img" style="display:block;width:100%;height:100%;position:absolute;inset:0;">
+          <rect width="480" height="300" fill="#F4EFE6"/>
+          <rect x="0.5" y="0.5" width="479" height="299" fill="none" stroke="#E5DFD2"/>
+          <text x="240" y="146" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="11" fill="#1B2A3A" opacity="0.35" letter-spacing="2">PACKING CHECKLIST · GALLERY 5</text>
+          <text x="240" y="164" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="10" fill="#1B2A3A" opacity="0.2" letter-spacing="1">REPLACE WITH /img/gallery-05.webp</text>
+        </svg>
+      </div>
+
+    </div>
+
+    <p class="proof-caption">Real screenshots and a 20-second live demo — watch the packing %, budget, and countdown move on their own.</p>
+
+    <!-- Wall of Love — reserved slot -->
+    <div class="wall-of-love" role="note">
+      <p><em>Built by EpistemicCode after two years of over-planning my own trips.</em></p>
+      <p style="margin-top:0.75rem;font-size:0.8125rem;color:var(--text-faint);font-style:normal;">Reviews appear here as they arrive.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     § 4 — PAIN → TRANSFORMATION
+══════════════════════════════════════════════════════ -->
+<section aria-labelledby="pain-heading">
+  <div class="wrapper">
+    <h2 id="pain-heading" style="margin-bottom:2rem;">Two ways to plan a trip.</h2>
+
+    <div class="pain-transform">
+
+      <div class="pain-col">
+        <h3>Without it</h3>
+        <ul class="pain-list">
+          <li>47 browser tabs and a spreadsheet you stopped updating</li>
+          <li>Booking confirmations lost in your inbox</li>
+          <li>The nagging sense you've forgotten something important</li>
+        </ul>
+      </div>
+
+      <div class="transform-col">
+        <h3>With Travel Planning OS</h3>
+        <ul class="transform-list">
+          <li>Every booking, dollar, and item in one calm dashboard</li>
+          <li>Packing %, budget, and countdown update live as you go</li>
+          <li>One trip in focus at a time — the rest waits quietly</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <blockquote class="so-that">
+      It tracks every expense against your budget <strong>so that</strong> you never discover you've overspent on day three.
+    </blockquote>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     § 5 — HOW IT WORKS (3 steps)
+══════════════════════════════════════════════════════ -->
+<section aria-labelledby="steps-heading">
+  <div class="wrapper">
+    <h2 id="steps-heading">How it works</h2>
+    <ol class="steps-ol">
+
+      <li class="step-item">
+        <div class="step-num" aria-hidden="true">01</div>
+        <div>
+          <p class="step-title">Duplicate it</p>
+          <p class="step-desc">One click and it's in your Notion in 30 seconds. The free plan is all you need.</p>
+        </div>
+      </li>
+
+      <li class="step-item">
+        <div class="step-num" aria-hidden="true">02</div>
+        <div>
+          <p class="step-title">Add a trip — or let Claude</p>
+          <p class="step-desc">Type your destination, or paste the built-in AI prompt and let Claude fill your itinerary, budget, and packing list.</p>
+        </div>
+      </li>
+
+      <li class="step-item">
+        <div class="step-num" aria-hidden="true">03</div>
+        <div>
+          <p class="step-title">Watch it run itself</p>
+          <p class="step-desc">Tick a packing item and the dashboard updates. Log a cost and the budget bar moves. No formulas to touch.</p>
+        </div>
+      </li>
+
+    </ol>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     § 6 — OFFER / VALUE STACK
+══════════════════════════════════════════════════════ -->
+<section aria-labelledby="offer-heading">
+  <div class="wrapper">
+    <h2 id="offer-heading">Everything in one workspace.</h2>
+    <p style="color:var(--text-dim);max-width:52ch;">Each piece is connected — so the whole system updates every time you do one thing.</p>
+
+    <div class="offer-card">
+      <ul class="stack-list">
+
+        <li class="stack-item">
+          <span class="stack-check" aria-hidden="true">✓</span>
+          <p class="stack-text"><strong>The Hub + 9 linked databases</strong> (trips, itinerary, stays, eats, transit, packing, budget, documents, contacts) — <em>so everything about a trip lives in one place</em></p>
+        </li>
+
+        <li class="stack-item">
+          <span class="stack-check" aria-hidden="true">✓</span>
+          <p class="stack-text"><strong>Live Dashboard Engine</strong> — packing %, budget, countdown, bookings update automatically <em>so you always know where the trip stands</em></p>
+        </li>
+
+        <li class="stack-item">
+          <span class="stack-check" aria-hidden="true">✓</span>
+          <p class="stack-text"><strong>AI Assistant page + Master Prompt</strong> — connect Claude and it fills the template <em>so a blank page is never the start</em></p>
+        </li>
+
+        <li class="stack-item">
+          <span class="stack-check" aria-hidden="true">✓</span>
+          <p class="stack-text"><strong>36-item Kit Library</strong> — one-tap packing checklists <em>so you stop re-listing the same gear</em></p>
+        </li>
+
+        <li class="stack-item">
+          <span class="stack-check" aria-hidden="true">✓</span>
+          <p class="stack-text"><strong>Two done-for-you demo trips</strong> (Bali + Tokyo) — <em>so you see it working before adding a thing</em></p>
+        </li>
+
+        <li class="stack-item">
+          <span class="stack-check" aria-hidden="true">✓</span>
+          <p class="stack-text"><strong>Live travel widgets</strong> — countdown, local weather, route map — <em>so the page feels alive, not static</em></p>
+        </li>
+
+        <li class="stack-item">
+          <span class="stack-check" aria-hidden="true">✓</span>
+          <p class="stack-text"><strong>Bonus: the free Packing Planner, included</strong></p>
+        </li>
+
+      </ul>
+
+      <hr class="offer-divider">
+
+      <p class="value-line">Sold separately as modules, this stacks past <strong>$120</strong>.</p>
+
+      <div class="price-block">
+        <span class="price-amount">$35</span>
+        <span class="price-desc">one payment · lifetime updates</span>
+      </div>
+
+      <!-- TODO: replace GUMROAD_URL_TODO with real Gumroad URL -->
+      <a href="GUMROAD_URL_TODO?utm_source=landing&utm_medium=web&utm_campaign=evergreen&utm_content=offer"
+         class="btn-primary"
+         target="_blank"
+         rel="noopener">Get Travel Planning OS — $35</a>
+
+      <p class="evergreen-note">New modules are added over time. Buy once, and every update is yours — at today's price.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     § 7 — RISK REVERSAL (free Packing Planner)
+     NOTE: No guarantee block. No urgency / countdown.
+     Risk-reversal = free lead-magnet + proof section only.
+══════════════════════════════════════════════════════ -->
+<section aria-labelledby="risk-heading">
+  <div class="wrapper">
+    <div class="risk-reversal">
+      <h2 id="risk-heading" style="font-size:clamp(1.25rem,2.5vw,1.75rem);">Want to feel how it works first?</h2>
+      <p>Start with the free Packing Planner — the full OS is the same system scaled to your whole trip.</p>
+      <!-- TODO: replace PACKING_FREE_URL_TODO with real $0 Gumroad URL -->
+      <a href="PACKING_FREE_URL_TODO?utm_source=landing&utm_medium=web&utm_campaign=evergreen&utm_content=lead-magnet"
+         class="btn-secondary"
+         target="_blank"
+         rel="noopener">Get the free Packing Planner</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     § 8 — FAQ
+     Native <details>/<summary> — NO JavaScript required.
+══════════════════════════════════════════════════════ -->
+<section aria-labelledby="faq-heading">
+  <div class="wrapper">
+    <h2 id="faq-heading">Questions</h2>
+
+    <div class="faq-list">
+
+      <details class="faq-item">
+        <summary>Do I need a paid Notion account?</summary>
+        <div class="faq-answer"><p>No. It runs entirely on Notion's free plan.</p></div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Do I need to know Notion?</summary>
+        <div class="faq-answer"><p>If you can duplicate a page, you can use this. It's all set up.</p></div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Do I have to use AI?</summary>
+        <div class="faq-answer"><p>No. Fully manual-friendly; the AI just makes it faster if you want it.</p></div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Can I use it for more than one trip?</summary>
+        <div class="faq-answer"><p>Yes. Unlimited trips, one in focus at a time so the view stays calm.</p></div>
+      </details>
+
+      <details class="faq-item">
+        <summary>How do I get it after buying?</summary>
+        <div class="faq-answer"><p>Instantly: a Notion duplicate link + quick-start guide at checkout.</p></div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Not sure it's for you?</summary>
+        <div class="faq-answer">
+          <p>Start with the free Packing Planner first to see how it works — no cost, no risk.
+            <!-- TODO: replace PACKING_FREE_URL_TODO with real $0 Gumroad URL -->
+            <a href="PACKING_FREE_URL_TODO?utm_source=landing&utm_medium=web&utm_campaign=evergreen&utm_content=faq"
+               target="_blank"
+               rel="noopener"
+               style="color:var(--terracotta);">Get it free →</a>
+          </p>
+        </div>
+      </details>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     § 9 — FINAL CTA
+══════════════════════════════════════════════════════ -->
+<section class="final-cta" aria-labelledby="final-cta-heading">
+  <div class="wrapper">
+    <h2 id="final-cta-heading">Your next trip, finally organized.</h2>
+
+    <div class="cta-cluster">
+      <!-- TODO: replace GUMROAD_URL_TODO with real Gumroad URL -->
+      <a href="GUMROAD_URL_TODO?utm_source=landing&utm_medium=web&utm_campaign=evergreen&utm_content=final-cta"
+         class="btn-primary"
+         target="_blank"
+         rel="noopener">Get Travel Planning OS — $35</a>
+
+      <!-- TODO: replace PACKING_FREE_URL_TODO with real $0 Gumroad URL -->
+      <a href="PACKING_FREE_URL_TODO?utm_source=landing&utm_medium=web&utm_campaign=evergreen&utm_content=lead-magnet"
+         class="btn-secondary"
+         target="_blank"
+         rel="noopener">Or start free with the Packing Planner</a>
+    </div>
+
+    <div class="final-trust" role="list" aria-label="Trust signals">
+      <span class="trust-pill" role="listitem">Works on free Notion</span>
+      <span class="trust-pill" role="listitem">·</span>
+      <span class="trust-pill" role="listitem">Instant access</span>
+      <span class="trust-pill" role="listitem">·</span>
+      <span class="trust-pill" role="listitem">Lifetime updates</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ──────────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="wrapper">
+    <p>
+      &copy; <time datetime="2026">2026</time> EpistemicCode · Quiet Atlas ·
+      <a href="https://gum.co" target="_blank" rel="noopener">Sold on Gumroad</a>
+    </p>
+  </div>
+</footer>
+
+<!-- NO JavaScript. The page works fully with JS disabled. -->
+
+</body>
+</html>

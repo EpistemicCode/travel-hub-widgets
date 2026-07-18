@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<!--
+  cover.html — Quiet Atlas parametric cover generator
+  Usage: cover.html?preset=NAME
+  Presets: hub | trips | itinerary | stays | eats | transit | packing | expenses | documents | contacts | banner
+  Default: hub
+
+  Export PNGs: open at exact viewport in headless browser:
+    hub      → 1500×600
+    module   → 1500×400
+    banner   → 1500×300
+  Screenshot the page. Photo upgrade: replace .scene SVG with <img class="scene-photo">.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quiet Atlas Cover</title>
+  <link rel="stylesheet" href="covers.css">
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent; }
+  </style>
+</head>
+<body>
+<script>
+/* ─── Preset definitions ─── */
+const PRESETS = {
+  hub: {
+    size: 'hub',
+    eyebrow: 'QUIET ATLAS',
+    title: ['Travel', 'Planning OS'],
+    subtitle: 'plan it once, live it fully',
+    glyph: 'compass'
+  },
+  trips: {
+    size: 'module',
+    eyebrow: 'MODULE · TRIPS',
+    title: ['Every trip,', 'one place.'],
+    glyph: 'suitcase'
+  },
+  itinerary: {
+    size: 'module',
+    eyebrow: 'MODULE · ITINERARY',
+    title: ['Day by', 'day.'],
+    glyph: 'map-pin'
+  },
+  stays: {
+    size: 'module',
+    eyebrow: 'MODULE · STAYS',
+    title: ['Rest', 'easy.'],
+    glyph: 'bed'
+  },
+  eats: {
+    size: 'module',
+    eyebrow: 'MODULE · EATS',
+    title: ['Taste the', 'place.'],
+    glyph: 'cup-and-saucer'
+  },
+  transit: {
+    size: 'module',
+    eyebrow: 'MODULE · TRANSIT',
+    title: ['Get', 'there.'],
+    glyph: 'paper-plane'
+  },
+  packing: {
+    size: 'module',
+    eyebrow: 'MODULE · PACKING',
+    title: ['Pack', 'light.'],
+    glyph: 'checklist'
+  },
+  expenses: {
+    size: 'module',
+    eyebrow: 'MODULE · EXPENSES',
+    title: ['Every', 'dollar.'],
+    glyph: 'wallet'
+  },
+  documents: {
+    size: 'module',
+    eyebrow: 'MODULE · DOCUMENTS',
+    title: ['Papers,', 'sorted.'],
+    glyph: 'document'
+  },
+  contacts: {
+    size: 'module',
+    eyebrow: 'MODULE · CONTACTS',
+    title: ['Help,', 'on hand.'],
+    glyph: 'phone'
+  },
+  banner: {
+    size: 'banner',
+    eyebrow: 'QUIET ATLAS',
+    title: 'where to next',
+    glyph: null
+  }
+};
+
+/* ─── Monoline glyphs (2px stroke, rounded caps/joins, currentColor) ─── */
+const GLYPHS = {
+  compass: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="20" cy="20" r="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="20" cy="20" r="2" fill="currentColor"/>
+    <polygon points="20,9 23,19 20,18 17,19" fill="currentColor" opacity="0.9"/>
+    <polygon points="20,31 17,21 20,22 23,21" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" opacity="0.55"/>
+    <line x1="20" y1="5" x2="20" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+    <line x1="20" y1="32" x2="20" y2="35" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+    <line x1="5" y1="20" x2="8" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+    <line x1="32" y1="20" x2="35" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+  </svg>`,
+
+  suitcase: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="7" y="15" width="26" height="19" rx="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M15 15v-3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="20" y1="15" x2="20" y2="34" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+    <line x1="7" y1="23" x2="33" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+    <line x1="7" y1="31" x2="10" y2="34" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <line x1="33" y1="31" x2="30" y2="34" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  </svg>`,
+
+  'map-pin': `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 7C14.477 7 10 11.477 10 17c0 7.667 10 18 10 18s10-10.333 10-18c0-5.523-4.477-10-10-10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="20" cy="17" r="3.5" stroke="currentColor" stroke-width="2"/>
+  </svg>`,
+
+  bed: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 27v-8a2 2 0 0 1 2-2h22a2 2 0 0 1 2 2v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="7" y1="27" x2="7" y2="32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <line x1="33" y1="27" x2="33" y2="32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <line x1="7" y1="27" x2="33" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <rect x="11" y="13" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+    <rect x="22" y="13" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+    <line x1="7" y1="17" x2="7" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </svg>`,
+
+  'cup-and-saucer': `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 14h16l-2.5 12a2 2 0 0 1-2 1.7h-7a2 2 0 0 1-2-1.7L12 14z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M28 16h3a3 3 0 0 1 0 6h-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <line x1="8" y1="30" x2="32" y2="30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M17 10 Q17 12 20 12 Q23 12 23 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+  </svg>`,
+
+  'paper-plane': `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 20 L34 8 L22 34 L18 22 Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="18" y1="22" x2="34" y2="8" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+  </svg>`,
+
+  checklist: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="8" y="7" width="24" height="28" rx="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="14" y1="15" x2="26" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <line x1="14" y1="21" x2="26" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <line x1="14" y1="27" x2="20" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <polyline points="22,26 24,28.5 28,24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`,
+
+  wallet: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="12" width="28" height="20" rx="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M6 18h28" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <rect x="26" y="20" width="8" height="6" rx="2" stroke="currentColor" stroke-width="1.5"/>
+    <circle cx="30" cy="23" r="1" fill="currentColor"/>
+    <path d="M10 12v-2a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </svg>`,
+
+  document: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 7h12l8 8v20a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="24,7 24,15 32,15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="15" y1="22" x2="25" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <line x1="15" y1="27" x2="25" y2="27" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <line x1="15" y1="32" x2="20" y2="32" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </svg>`,
+
+  phone: `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="11" y="5" width="18" height="32" rx="4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="17" y1="10" x2="23" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="20" cy="31" r="1.5" fill="currentColor"/>
+  </svg>`
+};
+
+/* ─── Horizon scene SVG ─── */
+function buildHorizonSVG() {
+  return `<svg class="horizon" viewBox="0 0 900 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#bcc6c2"/>
+        <stop offset="52%"  stop-color="#e6d7c0"/>
+        <stop offset="100%" stop-color="#d2ab85"/>
+      </linearGradient>
+      <radialGradient id="sunGrad" cx="68%" cy="42%" r="18%">
+        <stop offset="0%"   stop-color="#f1e6d0" stop-opacity="0.85"/>
+        <stop offset="60%"  stop-color="#f1e6d0" stop-opacity="0.45"/>
+        <stop offset="100%" stop-color="#f1e6d0" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <!-- Sky -->
+    <rect width="900" height="600" fill="url(#skyGrad)"/>
+    <!-- Sun glow -->
+    <ellipse cx="612" cy="252" rx="162" ry="108" fill="url(#sunGrad)"/>
+    <!-- Sun disc -->
+    <circle cx="612" cy="252" r="38" fill="#f1e6d0" opacity="0.85"/>
+    <!-- Horizon land silhouette -->
+    <path d="M0 420 Q90 395 180 408 Q270 420 360 400 Q450 380 540 398 Q630 415 720 392 Q810 370 900 385 L900 600 L0 600 Z"
+          fill="#9a8a73" opacity="0.5"/>
+    <!-- Subtle mid-distance land -->
+    <path d="M0 460 Q120 445 240 455 Q360 465 480 450 Q600 435 720 448 Q810 458 900 444 L900 600 L0 600 Z"
+          fill="#8c7d6a" opacity="0.28"/>
+    <!-- Flight-path arc (dotted) -->
+    <path d="M80 490 Q300 220 820 160"
+          fill="none"
+          stroke="#5c4e40"
+          stroke-width="2"
+          stroke-dasharray="6 10"
+          stroke-linecap="round"
+          opacity="0.55"/>
+    <!-- Small plane dot on arc -->
+    <circle cx="820" cy="160" r="4" fill="#5c4e40" opacity="0.55"/>
+    <circle cx="80"  cy="490" r="3.5" fill="#5c4e40" opacity="0.4"/>
+  </svg>`;
+}
+
+/* ─── Build the cover DOM ─── */
+function buildCover(preset) {
+  const p = PRESETS[preset] || PRESETS.hub;
+  const cover = document.createElement('div');
+  cover.className = 'cover';
+  cover.setAttribute('data-size', p.size);
+
+  if (p.size === 'banner') {
+    /* Scene spans full cover, caption strip bottom-left */
+    const scene = document.createElement('div');
+    scene.className = 'scene';
+    scene.innerHTML = buildHorizonSVG();
+    cover.appendChild(scene);
+
+    const caption = document.createElement('div');
+    caption.className = 'banner-caption';
+    caption.innerHTML = `
+      <div class="eyebrow">${p.eyebrow}</div>
+      <div class="title">${p.title}</div>
+    `;
+    cover.appendChild(caption);
+  } else {
+    /* Panel | Divider | Scene */
+    const titleLines = Array.isArray(p.title) ? p.title.join('<br>') : p.title;
+
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+
+    let panelHTML = `<div class="eyebrow">${p.eyebrow}</div>`;
+    panelHTML += `<div class="title">${titleLines}</div>`;
+    if (p.subtitle) {
+      panelHTML += `<div class="subtitle">${p.subtitle}</div>`;
+    }
+    panelHTML += `<div class="rule-row"><div class="rule-line"></div><div class="rule-dot"></div></div>`;
+    if (p.glyph && GLYPHS[p.glyph]) {
+      panelHTML += `<div class="glyph">${GLYPHS[p.glyph]}</div>`;
+    }
+    panel.innerHTML = panelHTML;
+
+    const divider = document.createElement('div');
+    divider.className = 'divider';
+
+    const scene = document.createElement('div');
+    scene.className = 'scene';
+    scene.innerHTML = buildHorizonSVG();
+
+    cover.appendChild(panel);
+    cover.appendChild(divider);
+    cover.appendChild(scene);
+  }
+
+  return cover;
+}
+
+/* ─── Init ─── */
+const params = new URLSearchParams(window.location.search);
+const preset = params.get('preset') || 'hub';
+document.body.appendChild(buildCover(preset));
+</script>
+</body>
+</html>

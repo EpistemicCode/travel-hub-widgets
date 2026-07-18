@@ -1,0 +1,121 @@
+/* ── Pulse-bar animations (landing page hero + proof strip)
+   Honors prefers-reduced-motion — see final block below.
+   ─────────────────────────────────────────────────────── */
+
+/* Keyframes */
+@keyframes pulseExpand {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.72; }
+}
+
+/* ── Base bar track ──────────────────────────────────────────── */
+.pulse-track {
+  width: 100%;
+  height: 6px;
+  background: var(--paper-shadow);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Filled segment (terracotta default) ─────────────────────── */
+.pulse-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--terracotta) 0%,
+    color-mix(in srgb, var(--terracotta) 70%, white) 50%,
+    var(--terracotta) 100%
+  );
+  background-size: 200% 100%;
+  animation:
+    pulseExpand 2.8s ease-in-out infinite,
+    pulseGlow   2.8s ease-in-out infinite;
+  transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Sage variant (used for bookings bar) */
+.pulse-fill.sage {
+  background: linear-gradient(
+    90deg,
+    var(--sage) 0%,
+    color-mix(in srgb, var(--sage) 70%, white) 50%,
+    var(--sage) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* ── Dashboard card labels ──────────────────────────────────── */
+.pulse-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.pulse-label .pulse-value {
+  font-size: 11px;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.pulse-row {
+  margin-bottom: 14px;
+}
+.pulse-row:last-child { margin-bottom: 0; }
+
+/* ── Countdown badge ─────────────────────────────────────────── */
+.pulse-countdown {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--terracotta);
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, var(--terracotta) 40%, transparent);
+  border-radius: var(--radius);
+  display: inline-block;
+}
+
+/* ── Proof strip — animated indicator dot ──────────────────── */
+.live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--terracotta);
+  margin-right: 6px;
+  animation: pulseGlow 1.6s ease-in-out infinite;
+  vertical-align: middle;
+}
+
+/* ── REDUCED MOTION — disable all animation, keep fills visible ── */
+@media (prefers-reduced-motion: reduce) {
+  .pulse-fill {
+    animation: none;
+    background: var(--terracotta);
+    background-size: unset;
+  }
+
+  .pulse-fill.sage {
+    animation: none;
+    background: var(--sage);
+    background-size: unset;
+  }
+
+  .live-dot {
+    animation: none;
+  }
+}
