@@ -6,6 +6,17 @@ can curl any widget and verify which release is live.
 
 ## [Unreleased]
 
+## [1.7.1] — 2026-07-18
+### Fixed
+- **nowin.html:** Multiple embeds on one page no longer sync to the same city. Root cause: every embed shared the single `nowin:place` localStorage key, so a viewer's city pick in one embed leaked into all others (e.g. three "Places" tabs all flipping together). Embeds that carry `?place=` (or a new optional `?id=`) now save the viewer's picker choice under their own per-instance key `nowin:place:<id|place>`. Embeds with no place/id keep the legacy shared key — existing single-widget setups are unaffected.
+
+### Changed
+- **nowin.html:** Resolution order gained step (a2): the viewer's saved per-embed pick now beats the `?place=` URL default, so a buyer's manual city change survives reloads without editing the embed URL. "↺ auto" clears only that embed's saved pick and returns a pinned embed to its `?place=` city (or auto-detect when unpinned), and now restores the original URL params (previously it stripped `?theme=` too). City-picker saves also preserve `theme`/`v` params in the address bar (previously overwritten with bare `?place=`).
+- `widget-version` meta set to 1.7.1 in nowin.
+
+### Usage (Notion "Places" tabs pattern)
+- Tab Paris → `nowin.html?theme=light&v=2&place=Paris` · Tab Tokyo → `…&place=Tokyo` · Tab Bali → `…&place=Denpasar`. Each tab starts on its own city, buyers can re-pick per tab, no crosstalk. Two tabs sharing the same starting city can be separated with `&id=slot-a` / `&id=slot-b`.
+
 ## [1.7.0] — 2026-06-15
 ### Added
 - **currency.html, visa-check.html, hotels-map.html, offline.html:** `?theme=light` support — light palette + transparent background so widgets blend into white (day-mode) Notion pages. Completes light-theme coverage across the entire widget set.

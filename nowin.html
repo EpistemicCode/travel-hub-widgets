@@ -3,22 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="widget-version" content="1.6.1">
+<meta name="widget-version" content="1.7.1">
 <title>Now in …</title>
 <!--
   nowin.html — Local time + weather · fluid (fills any iframe size)
   Query params (all optional):
     ?lat=-8.5069&lon=115.2625&place=Ubud
     ?place=Tokyo          (looks up CITIES list, uses that city's coords/tz)
+    ?id=hub-slot-2        (optional instance name when two embeds share one ?place=)
     (no params)           (IP geo → snap to nearest major city via Haversine)
 
   Location resolution order:
     (a) ?lat= + ?lon= explicit → use directly; place from ?place= or "your location"
-    (b) ?place=<name> only    → case-insensitive match in CITIES list
+    (a2) viewer's saved pick for THIS embed (localStorage "nowin:place:<id|place>")
+    (b) ?place=<name>         → case-insensitive match in CITIES list
+    (b2) legacy shared save ("nowin:place") — only when URL has no place/id
     (c) IP geo (ipapi.co)     → snap to nearest CITIES entry by Haversine distance
     (d) Browser Intl tz       → match CITIES by tz string, fallback to tz name
 
   Viewer can also override via the city picker select rendered below the place name.
+  Embeds WITH ?place= (or ?id=) each get their own memory slot, so multiple widgets
+  on one page never sync; the picker choice persists per-embed, and "↺ auto" returns
+  a pinned embed to its ?place= city (or to auto-detect when unpinned).
 
   Data sources (all free, no keys):
     • Weather  — Open-Meteo  (api.open-meteo.com)
@@ -111,6 +117,8 @@
 
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
+  const instanceId = params.get("id") || params.get("place") || "";
+  const storeKey = instanceId ? "nowin:place:" + instanceId.toLowerCase() : "nowin:place";
 
   // ── Major world cities (G20 capitals + major travel hubs) ───────────
   const CITIES = [
@@ -257,20 +265,33 @@
         place: params.get("place") || "your location",
       };
     }
+    // (a2) viewer's saved pick for THIS embed — beats the ?place= default so
+    // a buyer's manual choice survives reloads without affecting other embeds
+    if (instanceId) {
+      try {
+        const saved = localStorage.getItem(storeKey);
+        if (saved) {
+          const match = CITIES.find(c => c.name === saved);
+          if (match) return {lat: match.lat, lon: match.lon, tz: match.tz, place: match.name};
+        }
+      } catch (e) { /* sandbox */ }
+    }
     // (b) ?place= name only — look up in CITIES list
     const placeParam = params.get("place");
     if (placeParam) {
       const match = CITIES.find(c => c.name.toLowerCase() === placeParam.toLowerCase());
       if (match) return {lat: match.lat, lon: match.lon, tz: match.tz, place: match.name};
     }
-    // (b2) localStorage backstop — used when URL params are stripped
-    try {
-      const saved = localStorage.getItem('nowin:place');
-      if (saved) {
-        const match = CITIES.find(c => c.name === saved);
-        if (match) return {lat: match.lat, lon: match.lon, tz: match.tz, place: match.name};
-      }
-    } catch (e) { /* sandbox */ }
+    // (b2) legacy shared backstop — only for embeds with no place/id in the URL
+    if (!instanceId) {
+      try {
+        const saved = localStorage.getItem(storeKey);
+        if (saved) {
+          const match = CITIES.find(c => c.name === saved);
+          if (match) return {lat: match.lat, lon: match.lon, tz: match.tz, place: match.name};
+        }
+      } catch (e) { /* sandbox */ }
+    }
     // (c) IP geo via ipapi.co → snap to nearest CITIES entry
     try {
       const r = await fetch('https://ipapi.co/json/');
@@ -310,13 +331,15 @@
     sel.addEventListener("change", async () => {
       const city = CITIES.find(c => c.name === sel.value);
       if (!city) return;
-      history.replaceState(null, '', '?place=' + encodeURIComponent(city.name));
-      try { localStorage.setItem('nowin:place', city.name); } catch (e) { /* sandbox */ }
+      const u = new URLSearchParams(location.search);
+      u.set("place", city.name);
+      history.replaceState(null, "", "?" + u.toString());
+      try { localStorage.setItem(storeKey, city.name); } catch (e) { /* sandbox */ }
       applyLocation({lat: city.lat, lon: city.lon, tz: city.tz, place: city.name});
     });
     $("auto-btn").addEventListener("click", async () => {
-      history.replaceState(null, '', location.pathname);
-      try { localStorage.removeItem('nowin:place'); } catch (e) { /* sandbox */ }
+      history.replaceState(null, "", params.toString() ? "?" + params.toString() : location.pathname);
+      try { localStorage.removeItem(storeKey); } catch (e) { /* sandbox */ }
       const loc = await resolveLocation();
       if (loc) { buildPicker(loc.place); await applyLocation(loc); }
       else     { buildPicker(""); showEmpty(); }
